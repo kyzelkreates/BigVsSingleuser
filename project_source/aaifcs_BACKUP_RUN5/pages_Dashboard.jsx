@@ -1697,7 +1697,7 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 5 · Driver PWA GPS + Safe Navigation</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 4 · OSM 2D + MapLibre 3D Map Layer</div>
             </div>
           </div>
         </div>

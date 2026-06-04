@@ -79,9 +79,6 @@ import RouteReplayView   from './modules_safety_ui_RouteReplayView'
 import ExportCenter      from './modules_safety_ui_ExportCenter'
 import { startSafetySync, stopSafetySync } from './services_safety_syncService'
 
-// ── Run 5: BV Safe Navigation Module ─────────────────────────
-import BvRouteNav from './modules_driver_BvRouteNav'
-
 // ── Fix default Leaflet marker icons ─────────────────────────
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -1751,7 +1748,6 @@ function DriverAppMain({ profile, onLogout }) {
   const distToNext   = currentStep?.distance ? fmtDist(currentStep.distance) : null
 
   const TABS = [
-    { key: 'route',  label: 'Route',  icon: 'Navigation'    },  // Run 5: BV Safe Navigation
     { key: 'map',    label: 'Nav',    icon: 'Map'           },
     { key: 'safety', label: 'Safety', icon: 'Shield'        },
     { key: 'chat',   label: 'Fleet',  icon: 'MessageSquare', badge: unread },
@@ -1955,13 +1951,6 @@ function DriverAppMain({ profile, onLogout }) {
               )}
             </button>
           ))}
-        </div>
-      )}
-
-      {/* ══════════ ROUTE TAB (Run 5 — BV Safe Navigation) ══════════ */}
-      {tab === 'route' && (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <BvRouteNav />
         </div>
       )}
 

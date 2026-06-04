@@ -48,9 +48,6 @@ export const STORAGE_KEYS = {
   BV_GPS_STATUS:      'bigv:gpsStatus',         // 'unknown'|'ready'|'denied'|'unavailable'
   BV_LAST_POSITION:   'bigv:lastKnownPosition', // {lat, lng, accuracy, timestamp}
 
-  // Big V Navigation Session (Run 5)
-  BV_NAV_SESSION:     'bigv:navSession',        // driverNavigationSession object
-
   // AI
   AI_PROVIDER:        'apex:ai:provider',
   AI_MODEL:           'apex:ai:model',
@@ -264,130 +261,6 @@ export const useMapStore = create((set) => ({
 }))
 
 
-// ─── Big V Navigation Session Store (Run 5 SSOT) ────────────
-// Persisted to localStorage via bigv:navSession.
-// Single source of truth for driver navigation session state.
-//
-// Navigation statuses:
-//   notStarted → awaitingAcknowledgement → ready → gpsStarting
-//   → inProgress → paused → inProgress → completed
-//   any unsafe condition → needsReview
-//   GPS failure → gpsUnavailable → inProgress (map-review mode)
-//   error
-//
-// ADVISORY: navigation is route-support only. Driver remains
-// fully responsible for safe and legal driving.
-export const useNavStore = create((set, get) => ({
-  session: persist.get(STORAGE_KEYS.BV_NAV_SESSION, null),
-
-  // ── Getters ─────────────────────────────────────────────
-  getSession: () => get().session,
-
-  // ── Set full session ───────────────────────────────────
-  setSession: (s) => {
-    const updated = { ...s, lastSavedAt: new Date().toISOString() }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, updated)
-    set({ session: updated })
-  },
-
-  // ── Patch session fields ───────────────────────────────
-  patchSession: (fields) => {
-    const prev = get().session
-    if (!prev) return
-    const updated = { ...prev, ...fields, lastSavedAt: new Date().toISOString() }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, updated)
-    set({ session: updated })
-  },
-
-  // ── Status transition ──────────────────────────────────
-  setStatus: (status) => {
-    const prev = get().session
-    if (!prev) return
-    const now   = new Date().toISOString()
-    const times = {}
-    if (status === 'inProgress'  && !prev.startedAt)   times.startedAt   = now
-    if (status === 'paused')                            times.pausedAt    = now
-    if (status === 'inProgress'  && prev.pausedAt)     times.resumedAt   = now
-    if (status === 'completed')                         times.completedAt = now
-    const updated = { ...prev, ...times, status, lastSavedAt: now }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, updated)
-    set({ session: updated })
-  },
-
-  // ── Initialise a new session for a route+vehicle ───────
-  initSession: (routeId, vehicleId, demoMode = false) => {
-    const s = {
-      sessionId:                `bv-nav-${Date.now()}`,
-      routeId,
-      vehicleId,
-      status:                   'notStarted',
-      startedAt:                null,
-      pausedAt:                 null,
-      resumedAt:                null,
-      completedAt:              null,
-      lastKnownPosition:        null,
-      gpsStatus:                'idle',
-      mapMode:                  '2d',
-      acknowledgementAccepted:  false,
-      acknowledgementAcceptedAt: null,
-      checklist:                {
-        correctVehicle:      false,
-        dimensionsReviewed:  false,
-        weightReviewed:      false,
-        routeReviewed:       false,
-        advisoryUnderstood:  false,
-        willFollowLiveSigns: false,
-        deviceSafelyMounted: false,
-        gpsBatteryChecked:   false,
-        willStopIfUnsure:    false,
-      },
-      warningsAtStart:          [],
-      warningsDuringRoute:      [],
-      demoMode,
-      syncStatus:               'local',
-      lastSavedAt:              new Date().toISOString(),
-    }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, s)
-    set({ session: s })
-    return s
-  },
-
-  // ── Clear session ──────────────────────────────────────
-  clearSession: () => {
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, null)
-    set({ session: null })
-  },
-
-  // ── Checklist update ───────────────────────────────────
-  setChecklistItem: (key, value) => {
-    const prev = get().session
-    if (!prev) return
-    const checklist = { ...prev.checklist, [key]: value }
-    const updated   = { ...prev, checklist, lastSavedAt: new Date().toISOString() }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, updated)
-    set({ session: updated })
-  },
-
-  // ── Update last known position ────────────────────────
-  updatePosition: (pos) => {
-    const prev = get().session
-    if (!prev) return
-    const updated = { ...prev, lastKnownPosition: pos, lastSavedAt: new Date().toISOString() }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, updated)
-    set({ session: updated })
-  },
-
-  // ── Add a warning ─────────────────────────────────────
-  addWarning: (warning, phase = 'during') => {
-    const prev = get().session
-    if (!prev) return
-    const key     = phase === 'start' ? 'warningsAtStart' : 'warningsDuringRoute'
-    const updated = { ...prev, [key]: [...(prev[key] || []), { ...warning, at: new Date().toISOString() }] }
-    persist.set(STORAGE_KEYS.BV_NAV_SESSION, updated)
-    set({ session: updated })
-  },
-}))
-
 // ─── Big V Vehicle Store (Run 2 SSOT) ────────────────────────
 // Single source of truth for all saved vehicle profiles.
 // Persisted to localStorage via bigv:vehicles / bigv:activeVehicleId.
@@ -572,7 +445,42 @@ export const useDriverStore = create((set) => ({
   setLoading: (isLoading) => set({ isLoading })
 }))
 
-// ─── Navigation Store (merged into useNavStore in Run 5) ────────────────────
+// ─── Navigation Store ─────────────────────────────────────────
+export const useNavStore = create((set) => ({
+  // ── State ──
+  route:          persist.get(STORAGE_KEYS.NAV_ROUTE, null),
+  destination:    persist.get(STORAGE_KEYS.NAV_DESTINATION, null),
+  mode:           persist.get(STORAGE_KEYS.NAV_MODE, 'drive'),
+  isNavigating:   false,
+  currentPosition: null,
+  eta:            null,
+  distanceLeft:   null,
+  turnInstructions: [],
+
+  // ── Actions ──
+  setRoute: (route) => {
+    persist.set(STORAGE_KEYS.NAV_ROUTE, route)
+    set({ route })
+  },
+  setDestination: (dest) => {
+    persist.set(STORAGE_KEYS.NAV_DESTINATION, dest)
+    set({ destination: dest })
+  },
+  setMode: (mode) => {
+    persist.set(STORAGE_KEYS.NAV_MODE, mode)
+    set({ mode })
+  },
+  setNavigating: (val) => set({ isNavigating: val }),
+  setCurrentPosition: (pos) => set({ currentPosition: pos }),
+  setEta: (eta) => set({ eta }),
+  setDistanceLeft: (dist) => set({ distanceLeft: dist }),
+  setTurnInstructions: (instr) => set({ turnInstructions: instr }),
+  clearNavigation: () => {
+    persist.remove(STORAGE_KEYS.NAV_ROUTE)
+    persist.remove(STORAGE_KEYS.NAV_DESTINATION)
+    set({ route: null, destination: null, isNavigating: false, eta: null, distanceLeft: null, turnInstructions: [] })
+  }
+}))
 
 // ─── Realtime Store ───────────────────────────────────────────
 export const useRealtimeStore = create((set) => ({
