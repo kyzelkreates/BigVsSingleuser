@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Vehicles Detail Page (Full Build)
+ * Big V's Best Routes™ — Vehicle Profiles
  * Individual vehicle profile · telemetry · history · service log
  * Rendered from /vehicles route (browse) + /vehicles/:id (detail)
  * ============================================================
@@ -175,7 +175,7 @@ function VehicleBrowse({ vehicles, isLoading, onSelect }) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-6 py-4 border-b border-slate-800/60 flex-shrink-0">
-        <h1 className="font-display text-xl font-bold text-white mb-4">Vehicles</h1>
+        <h1 className="font-display text-xl font-bold text-white mb-4">Vehicle Profiles</h1>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Icon name="Search" size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />

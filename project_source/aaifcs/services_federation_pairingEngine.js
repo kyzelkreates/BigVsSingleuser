@@ -171,7 +171,7 @@ async function sbUpsertFleetNode(state) {
     const client = getSupabaseClient()
     const existingId = lsGet(FC_KEYS.FLEET_NODE_ID)
     const payload = {
-      node_name:       state.companyName || 'Fleet Control OS',
+      node_name:       state.companyName || "Big V's Best Routes",
       online:          true,
       last_seen:       new Date().toISOString(),
       pairing_status:  state.status,

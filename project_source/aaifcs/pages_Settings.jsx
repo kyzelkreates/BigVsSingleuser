@@ -36,14 +36,18 @@ import { probeConnection, onConnectionStatus } from './services_backend_backendS
 
 // ─── Section tabs ─────────────────────────────────────────────
 const TABS = [
-  { key: 'profile',      label: 'Profile',       icon: 'User' },
-  { key: 'fleet',        label: 'Vehicle Config', icon: 'Truck' },
-  { key: 'ai',           label: 'AI Providers',  icon: 'Brain' },
-  { key: 'map',          label: 'Map Config',    icon: 'Map' },
-  { key: 'security',     label: 'Security',      icon: 'Shield' },
-  { key: 'integrations', label: 'Integrations',  icon: 'Plug' },
-  { key: 'federation',   label: 'Federation',    icon: 'Globe2' },
-  { key: 'backend',      label: 'Backend',       icon: 'Database' },
+  { key: 'profile',      label: 'Profile',         icon: 'User' },
+  { key: 'fleet',        label: 'Vehicle Config',   icon: 'Truck' },
+  { key: 'ai',           label: 'AI Providers',     icon: 'Brain' },
+  { key: 'map',          label: 'Map Config',       icon: 'Map' },
+  { key: 'mapsettings',  label: 'Map Providers',    icon: 'MapPin' },
+  { key: 'demolive',     label: 'Demo / Live',      icon: 'ToggleRight' },
+  { key: 'backendopts',  label: 'Backend Options',  icon: 'Server' },
+  { key: 'safetylegal',  label: 'Safety & Legal',   icon: 'ShieldCheck' },
+  { key: 'security',     label: 'Security',         icon: 'Shield' },
+  { key: 'integrations', label: 'Integrations',     icon: 'Plug' },
+  { key: 'federation',   label: 'Federation',       icon: 'Globe2' },
+  { key: 'backend',      label: 'Backend',          icon: 'Database' },
 ]
 
 // ─── Setting Row ──────────────────────────────────────────────
@@ -127,6 +131,79 @@ function ProfilePanel({ user }) {
             <Icon name="CheckCircle2" size={13} /> Saved
           </span>
         )}
+      </div>
+    </div>
+  )
+}
+
+
+// ─── Run 1 Placeholder Panels ────────────────────────────────
+
+function PlaceholderInfoBox({ tag, color, bg, children }) {
+  return (
+    <div className={"bg-slate-900/40 border rounded-xl p-4 " + (color || "border-slate-800/60")}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className={"text-2xs font-mono px-1.5 py-0.5 rounded border " + (bg || "border-slate-700 text-slate-500 bg-slate-900/60")}>{tag}</span>
+        <span className="text-2xs text-slate-600">Coming in this run</span>
+      </div>
+      <p className="text-xs text-slate-500 leading-relaxed">{children}</p>
+    </div>
+  )
+}
+
+function MapProvidersPanel() {
+  return (
+    <div className="space-y-4">
+      <SectionHead label="Map Providers" />
+      <PlaceholderInfoBox tag="Run 4" color="border-cyan-500/20" bg="border-cyan-500/20 text-cyan-400 bg-cyan-500/8">
+        Run 4 will configure OpenStreetMap public/OSM-compatible tiles for 2D maps and MapLibre
+        for 3D/tilted rendering where supported. Google Maps may be added later only as an
+        optional provider after concept verification.
+      </PlaceholderInfoBox>
+    </div>
+  )
+}
+
+function DemoLivePanel() {
+  return (
+    <div className="space-y-4">
+      <SectionHead label="Demo / Live Mode" />
+      <PlaceholderInfoBox tag="Run 7" color="border-yellow-600/25" bg="border-yellow-600/25 text-yellow-500 bg-yellow-600/8">
+        Run 7 will add demo/live switching. Demo mode will use local/demo data. Live mode will
+        support backend-ready sync with your configured Supabase, Firebase, or custom REST backend.
+      </PlaceholderInfoBox>
+    </div>
+  )
+}
+
+function BackendOptionsPanel() {
+  return (
+    <div className="space-y-4">
+      <SectionHead label="Backend Options" />
+      <PlaceholderInfoBox tag="Run 7" color="border-violet-500/20" bg="border-violet-500/20 text-violet-400 bg-violet-500/8">
+        Run 7 will add backend configuration for Supabase first, plus optional Firebase,
+        custom REST/API, or local-only fallback. No backend-only secrets will be stored
+        in frontend code — all keys will be managed via secure settings only.
+      </PlaceholderInfoBox>
+    </div>
+  )
+}
+
+function SafetyLegalPanel() {
+  return (
+    <div className="space-y-4">
+      <SectionHead label="Safety and Legal Settings" />
+      <PlaceholderInfoBox tag="Run 6" color="border-emerald-500/20" bg="border-emerald-500/20 text-emerald-400 bg-emerald-500/8">
+        Run 6 will add advisory safety and legal oversight checks. These checks will support
+        decision-making for vehicle-aware route planning but will not guarantee legal compliance.
+        The driver/operator remains responsible for all route safety and legal verification.
+      </PlaceholderInfoBox>
+      <div className="mt-1 p-3 rounded-lg bg-slate-950 border border-yellow-700/20">
+        <p className="text-2xs text-yellow-700 leading-relaxed">
+          Advisory only: Big V's Best Routes(tm) supports route planning and risk awareness,
+          but it does not guarantee legal compliance. The driver/operator remains responsible
+          for checking live road signs, restrictions, vehicle suitability, and route safety.
+        </p>
       </div>
     </div>
   )
@@ -596,7 +673,7 @@ function AIPanel() {
           <span className="text-xs font-semibold text-slate-400">Automatic Fallback Chain</span>
         </div>
         <p className="text-2xs text-slate-600 leading-relaxed">
-          If the active provider fails, Apex AI automatically tries the next available provider in order.
+          If the active provider fails, 4P3X Intelligent AI™ automatically tries the next available provider in order.
           Providers with 3+ consecutive failures enter a 5-minute cooldown before retrying.
           Configure multiple keys for maximum AI uptime.
         </p>
@@ -1585,6 +1662,10 @@ export default function Settings() {
     fleet:        <FleetPanel />,
     ai:           <AIPanel />,
     map:          <MapPanel />,
+    mapsettings:  <MapProvidersPanel />,
+    demolive:     <DemoLivePanel />,
+    backendopts:  <BackendOptionsPanel />,
+    safetylegal:  <SafetyLegalPanel />,
     security:     <SecurityPanel user={user} />,
     integrations: <IntegrationsPanel />,
     federation:   <FederationPanel />,
@@ -1597,6 +1678,7 @@ export default function Settings() {
       <div className="w-full sm:w-48 lg:w-52 flex-shrink-0 sm:border-r border-b sm:border-b-0 border-slate-800/60 py-2 sm:py-4 overflow-x-auto sm:overflow-y-auto">
         <div className="px-4 mb-4">
           <h1 className="font-display text-sm font-bold text-white">Settings</h1>
+          <p className="text-2xs text-slate-600 mt-0.5">Big V's Best Routes™</p>
         </div>
         <nav className="flex sm:flex-col gap-0.5 sm:gap-0 px-2 overflow-x-auto sm:overflow-visible scrollbar-none">
           {TABS.map(t => (

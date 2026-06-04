@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * AP3X — Service Worker: Job Sync Background Handler
+ * Big V's Best Routes™ — Service Worker: Job Sync Background Handler
  * public/sw-job-sync.js
  *
  * Handles:
@@ -12,7 +12,7 @@
  * ============================================================
  */
 
-const CACHE_NAME     = 'apex-pwa-v1'
+const CACHE_NAME     = 'bigv-routes-pwa-v1'
 const OFFLINE_QUEUE_KEY = 'apex:pwa:offline_job_queue'
 const SYNC_TAG       = 'apex-job-sync'
 

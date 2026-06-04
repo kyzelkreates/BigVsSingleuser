@@ -55,13 +55,13 @@ export function sendViaEmail(driverId, driverEmail) {
   const b64   = pkg2b64(pkg)
   const link  = `${window.location.href.split('#')[0]}#/driver-import?pkg=${encodeURIComponent(b64)}`
   const jobs  = pkg.jobs.length
-  const subj  = encodeURIComponent(`[Apex AI] ${jobs} job${jobs !== 1 ? 's' : ''} assigned to you`)
+  const subj  = encodeURIComponent(`[Big V's Best Routes] ${jobs} job${jobs !== 1 ? 's' : ''} assigned to you`)
   const body  = encodeURIComponent(
     `Hi ${pkg.driver_name},\n\n` +
     `You have ${jobs} job${jobs !== 1 ? 's' : ''} assigned in Apex Fleet Control.\n\n` +
     `Open on your device:\n${link}\n\n` +
     `Or paste this sync code into the AP3X Driver app > Import Jobs:\n\n${pkgStr(pkg)}\n\n` +
-    `— Apex Intelligent AI`
+    `— Big V's Best Routes™`
   )
   const mailto = `mailto:${driverEmail || ''}?subject=${subj}&body=${body}`
   window.open(mailto, '_blank')
@@ -81,7 +81,7 @@ export async function sendViaShare(driverId) {
 
   try {
     await navigator.share({
-      title: `Apex AI — Jobs for ${pkg.driver_name}`,
+      title: `Big V's Best Routes™ — Jobs for ${pkg.driver_name}`,
       text:  `${jobs} job${jobs !== 1 ? 's' : ''} assigned. Open link in AP3X Driver app.`,
       url:   link,
     })

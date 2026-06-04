@@ -13,18 +13,22 @@ export default {
       },
       colors: {
         apex: {
-          base:    '#050810',
-          surface: '#0a0f1e',
-          card:    '#0d1426',
-          border:  '#1a2035',
-          muted:   '#2a3a5c',
-          overlay: 'rgba(26,32,53,0.85)',
+          base:    '#070708',
+          surface: '#0a0a0b',
+          card:    '#0d0d0f',
+          border:  '#1a1a1e',
+          muted:   '#2a2a30',
+          overlay: 'rgba(10,10,12,0.85)',
           cyan:    '#22d3ee',
           blue:    '#3b82f6',
           green:   '#34d399',
           amber:   '#fbbf24',
           red:     '#f87171',
           purple:  '#a78bfa',
+          // Big V's Best Routes™ brand palette
+          gold:    '#d4a017',
+          goldDim: '#b8860b',
+          silver:  '#c0c0c0',
           text: {
             primary:   '#f1f5f9',
             secondary: '#94a3b8',

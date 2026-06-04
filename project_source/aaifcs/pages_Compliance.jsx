@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Compliance Engine Page (Run 9)
+ * Big V's Best Routes™ — Legal Awareness
  * ============================================================
  */
 
@@ -272,7 +272,7 @@ export default function Compliance() {
       <div className="px-6 py-4 border-b border-slate-800/60 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="font-display text-xl font-bold text-white">Compliance Engine</h1>
+            <h1 className="font-display text-xl font-bold text-white">Legal Awareness</h1>
             <p className="text-slate-500 text-xs mt-0.5">Regulatory compliance tracking and audit</p>
           </div>
           <button onClick={() => setModal('create')} className="btn-primary text-sm px-4 py-2">

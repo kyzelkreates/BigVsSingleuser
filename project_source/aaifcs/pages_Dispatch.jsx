@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Dispatch Center (Local DB + Driver Sync)
+ * Big V's Best Routes™ — Route Planner
  * Create jobs, assign drivers, send to driver app via:
  *   Bluetooth · Email · Web Share (WiFi Direct/AirDrop) · QR · Link
  * Listens for live telemetry coming back from driver.
@@ -100,7 +100,7 @@ function DriverSyncModal({ job, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60">
           <div>
-            <h2 className="font-display font-semibold text-white text-sm">Send to Driver</h2>
+            <h2 className="font-display font-semibold text-white text-sm">Send to Driver PWA</h2>
             <p className="text-slate-500 text-2xs mt-0.5 truncate max-w-[260px]">{job.title}</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-white p-1.5 rounded-md hover:bg-slate-800/60">
@@ -668,7 +668,7 @@ function JobModal({ onClose, onSaved, vehicles, drivers }) {
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800/50 flex-shrink-0">
           <div>
-            <h2 className="font-semibold text-white">New Dispatch Job</h2>
+            <h2 className="font-semibold text-white">New Planned Route</h2>
             <p className="text-2xs text-slate-600 mt-0.5">Route planner · Vehicle-profile aware · Syncs to driver app</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors">
@@ -1030,7 +1030,7 @@ export default function Dispatch() {
         {/* Title row — stacks gracefully on mobile */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="min-w-0">
-            <h1 className="font-display text-lg sm:text-xl font-bold text-white leading-tight">Dispatch Center</h1>
+            <h1 className="font-display text-lg sm:text-xl font-bold text-white leading-tight">Route Planner</h1>
             <p className="text-slate-500 text-xs mt-0.5 truncate">
               {safeJobs.length} job{safeJobs.length !== 1 ? 's' : ''} · {counts.pending || 0} pending
             </p>

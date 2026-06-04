@@ -1,6 +1,7 @@
 /**
  * ============================================================
- * APEX AI — Global Styles
+ * Big V's Best Routes™ — Global Styles
+ * Powered by 4P3X Intelligent AI™ | Created by Kyzel Kreates™
  * /src/styles/globals.css
  * ============================================================
  */
@@ -41,7 +42,7 @@
   ::-webkit-scrollbar          { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track    { background: theme('colors.apex.base'); }
   ::-webkit-scrollbar-thumb    { background: theme('colors.apex.muted'); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: theme('colors.apex.cyan'); }
+  ::-webkit-scrollbar-thumb:hover { background: theme('colors.apex.gold'); }
 }
 
 /* ─── Component Layer ────────────────────────────────────── */
@@ -63,10 +64,15 @@
   }
 
   /* Neon Text */
-  .text-neon-cyan   { @apply text-apex-cyan; text-shadow: 0 0 12px rgba(0,212,255,0.6); }
+  .text-neon-cyan   { @apply text-apex-cyan; text-shadow: 0 0 12px rgba(34,211,238,0.6); }
   .text-neon-green  { @apply text-apex-green; text-shadow: 0 0 12px rgba(16,185,129,0.6); }
   .text-neon-red    { @apply text-apex-red; text-shadow: 0 0 12px rgba(239,68,68,0.6); }
   .text-neon-amber  { @apply text-apex-amber; text-shadow: 0 0 12px rgba(245,158,11,0.6); }
+
+
+  /* Big V's Best Routes™ brand neon */
+  .text-neon-gold   { color: #d4a017; text-shadow: 0 0 12px rgba(212,160,23,0.7); }
+  .text-neon-silver { color: #c0c0c0; text-shadow: 0 0 8px rgba(192,192,192,0.4); }
 
   /* Status Dot */
   .status-dot {

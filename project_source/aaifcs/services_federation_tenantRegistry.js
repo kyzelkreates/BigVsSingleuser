@@ -1,9 +1,9 @@
 /**
  * ============================================================
  * APEX AI — Tenant Registry
- * Multi-tenant isolation layer for the Fleet Control OS.
+ * Multi-tenant isolation layer for Big V's Best Routes™.
  *
- * Each Fleet Control OS installation operates as an isolated
+ * Each Big V's Best Routes™ installation operates as an isolated
  * company entity (tenant). All data stored under tenant-scoped
  * keys — NO cross-tenant leakage possible.
  *

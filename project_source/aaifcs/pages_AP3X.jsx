@@ -1,8 +1,8 @@
 /**
  * ============================================================
- * APEX AI — AP3X Driver Platform (Live — No Mock Data)
+ * Big V's Best Routes™ — Driver PWA (Route Planner Dashboard)
  * Pulls real jobs from localStorage dispatch store.
- * Pushes live telemetry back to fleet dashboard via
+ * Pushes live telemetry back to Route Planner Dashboard via
  * BroadcastChannel (same device) + localStorage.
  * ============================================================
  */
@@ -133,7 +133,7 @@ function NoJobs({ onImport }) {
       </div>
       <div className="text-center">
         <p className="text-slate-400 text-sm font-medium">No jobs assigned</p>
-        <p className="text-slate-600 text-xs mt-1">Ask fleet to send your assignment via the sync options.</p>
+        <p className="text-slate-600 text-xs mt-1">Ask the operator to send your assignment via the sync options.</p>
       </div>
 
       {/* Manual import */}
@@ -242,7 +242,7 @@ export default function AP3X() {
           engine:  true,
         }
         setTelemetry(t)
-        // Push to fleet
+        // Push telemetry to Route Planner Dashboard
         pushTelemetryToFleet(driverId, { ...t, vehicle_id: activeJob?.vehicle_id, job_id: activeJob?.id })
         // Update map marker
         setMapMarkers([{ id: 'driver', lat: t.lat, lng: t.lng, label: driverName.slice(0,2).toUpperCase(), status: 'active' }])
@@ -267,7 +267,7 @@ export default function AP3X() {
   // ── Driver Chat: listen for fleet/AI replies ──────────────
   useEffect(() => {
     const unsub = listenForDriverMessages((msg) => {
-      if (msg.from === 'fleet' || msg.from === 'ai') {
+      if (msg.from === 'fleet' || msg.from === 'ai') { // 'fleet' = operator dashboard
         setChatMsgs(prev => [...prev, msg])
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       }
@@ -310,7 +310,7 @@ export default function AP3X() {
               <Icon name="Navigation" size={15} className="text-violet-400" />
             </div>
             <div>
-              <div className="font-display font-bold text-white text-sm">AP3X Driver</div>
+              <div className="font-display font-bold text-white text-sm">Big V's Best Routes™</div>
               <div className="text-slate-500 text-2xs">{driverName}</div>
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function AP3X() {
         {[
           { key: 'job',  label: 'Current Job',           icon: 'Package'      },
           { key: 'map',  label: 'Map',                   icon: 'Map'          },
-          { key: 'chat', label: 'Fleet Chat',            icon: 'MessageSquare'},
+          { key: 'chat', label: 'Operator Chat',         icon: 'MessageSquare'},
           { key: 'all',  label: `All Jobs (${jobs.length})`, icon: 'List'    },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
@@ -414,7 +414,7 @@ export default function AP3X() {
               {chatMsgs.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-32 gap-2 text-slate-700">
                   <Icon name="MessageSquare" size={24} className="opacity-20" />
-                  <span className="text-xs text-center">Send a message to fleet ops.<br/>Fleet can reply here in real time.</span>
+                  <span className="text-xs text-center">Send a message to the operator.<br/>They can reply here in real time.</span>
                 </div>
               )}
               {chatMsgs.map((msg, i) => (
@@ -429,7 +429,7 @@ export default function AP3X() {
                     {(msg.from === 'fleet' || msg.from === 'ai') && (
                       <div className="text-2xs text-slate-500 mb-1 flex items-center gap-1">
                         <Icon name={msg.from === 'ai' ? 'Cpu' : 'Radio'} size={9} />
-                        {msg.from === 'ai' ? 'Apex AI' : 'Fleet Ops'}
+                        {msg.from === 'ai' ? '4P3X AI' : 'Operator'}
                       </div>
                     )}
                     <div>{msg.text}</div>
@@ -447,7 +447,7 @@ export default function AP3X() {
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendChat()}
-                placeholder="Message to fleet ops…"
+                placeholder="Message to operator…"
                 className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-violet-500 focus:outline-none"
               />
               <button onClick={sendChat} disabled={!chatInput.trim()}
@@ -462,7 +462,7 @@ export default function AP3X() {
       <div className="px-4 py-2 border-t border-slate-800/60 flex items-center gap-3 flex-shrink-0">
         <StatusDot status={gpsActive ? 'online' : 'idle'} />
         <span className="text-2xs text-slate-600">
-          {gpsActive ? 'Live GPS · sending telemetry to fleet' : 'GPS offline'}
+          {gpsActive ? 'Live GPS · sending telemetry to dashboard' : 'GPS offline'}
         </span>
         {telemetry.lat && (
           <span className="ml-auto text-2xs text-slate-700 font-mono">

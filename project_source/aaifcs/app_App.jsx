@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Root App Component (Run 16 — System status wired)
+ * Big V's Best Routes™ — Root App Component
  * /src/app/App.jsx
  * ============================================================
  */

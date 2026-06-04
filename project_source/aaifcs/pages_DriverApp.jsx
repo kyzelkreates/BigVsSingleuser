@@ -1,17 +1,17 @@
 /**
  * ============================================================
- * APEX AP3X — Standalone Driver App  (Full Enterprise Build)
- * Route: /driver-app  (no auth guard — driver-side standalone)
+ * Big V's Best Routes™ — Driver PWA (Companion Mobile App)
+ * Route: /driver-app  (public — driver device companion app)
  *
  * Features:
  *  ✅ OSM / OSRM navigation — live route, polyline, step-by-step turn guidance
- *  ✅ Live GPS telemetry push → fleet dashboard (BroadcastChannel + localStorage)
+ *  ✅ Live GPS telemetry push → Route Planner Dashboard (BroadcastChannel + localStorage)
  *  ✅ Fatigue detection: session timer, behavioural signals (speed variance,
  *      heading jitter, stop patterns), EU 4.5h break enforcement
  *  ✅ Harsh-event detection (DeviceMotion: braking, acceleration, cornering)
- *  ✅ Speeding alerts → safetyService → fleet dashboard
- *  ✅ Apex Sentinel AI — live safety coaching + proactive alerts
- *  ✅ Apex RouteMind AI — route optimisation tips on destination set
+ *  ✅ Speeding alerts → safetyService → Route Planner Dashboard
+ *  ✅ 4P3X Safety AI — live safety coaching + proactive alerts
+ *  ✅ 4P3X Route AI — route optimisation tips on destination set
  *  ✅ Fleet two-way chat (BroadcastChannel + localStorage persistence)
  *  ✅ Trip timer, odometer, heading compass
  *  ✅ Assigned jobs — pulled from dispatch store, tap to auto-navigate
@@ -526,7 +526,7 @@ function SetupScreen({ onReady }) {
     if (trimmed.toUpperCase().startsWith('APXS-')) {
       const res = activateSyncCode(trimmed, null)
       setChecking(false)
-      if (!res.ok) return setErr(res.error || 'Code invalid or expired. Get a fresh one from the fleet dashboard.')
+      if (!res.ok) return setErr(res.error || 'Code invalid or expired. Get a fresh one from the Route Planner Dashboard.')
       const rec = res.record
       setPaired({ driverId: rec.driver_id, driverName: rec.driver_name, vehicleReg: rec.vehicle_reg, record: rec, injectedKeys: res.injectedKeys || [] })
       setName(rec.driver_name || '')
@@ -535,7 +535,7 @@ function SetupScreen({ onReady }) {
     }
 
     setChecking(false)
-    setErr('Invalid code. Make sure you copied the full code starting with APXS- from the fleet dashboard.')
+    setErr('Invalid code. Make sure you copied the full code starting with APXS- from the Route Planner Dashboard.')
   }
 
   const submitProfile = () => {
@@ -562,7 +562,7 @@ function SetupScreen({ onReady }) {
           <div className="w-16 h-16 mx-auto rounded-2xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center">
             <Icon name="Navigation" size={28} className="text-violet-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">AP3X Driver</div>
+          <div className="text-2xl font-bold text-white tracking-tight">Big V's Best Routes™</div>
           <div className="text-sm text-slate-500">Apex Intelligent Fleet Navigation</div>
         </div>
 
@@ -572,7 +572,7 @@ function SetupScreen({ onReady }) {
               <Icon name="ShieldCheck" size={16} className="text-violet-400 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-slate-400 leading-relaxed">
                 Get your <span className="text-violet-300 font-semibold">fleet sync code</span> from the{' '}
-                <span className="text-violet-400 font-mono">Set Driver Up With App</span> section of the fleet dashboard.
+                <span className="text-violet-400 font-mono">Driver PWA Setup</span> section of the Route Planner Dashboard.
                 Code format: <span className="font-mono text-violet-400">APEX-XXXXXXXX-XXXX-FC</span>.
                 Syncs jobs, maps &amp; AI access to this device.
               </div>
@@ -603,7 +603,7 @@ function SetupScreen({ onReady }) {
                     ? '✓ Valid code — tap Connect'
                     : !code.trim().toUpperCase().startsWith('APXS-') && code.length > 4
                     ? '✗ Code must start with APXS-'
-                    : 'Paste the full code from the fleet dashboard…'}
+                    : 'Paste the full code from the Route Planner Dashboard…'}
                 </div>
               )}
             </div>
@@ -650,7 +650,7 @@ function SetupScreen({ onReady }) {
             </button>
           </div>
         )}
-        <p className="text-center text-2xs text-slate-700">AP3X Driver · Secured by Apex pairing code · Isolated from fleet management</p>
+        <p className="text-center text-2xs text-slate-700">Big V's Best Routes™ Driver PWA · Secured by 4P3X pairing code · Powered by 4P3X Intelligent AI™</p>
       </div>
     </div>
   )
@@ -704,7 +704,7 @@ function LoginScreen({ profile, onLogin, onReset }) {
 // ══════════════════════════════════════════════════════════════
 function DriverAppMain({ profile, onLogout }) {
 
-  // Fleet portal modal removed — driver app is fully isolated from fleet dashboard
+  // Fleet portal: driver app is fully isolated from the Route Planner Dashboard
 
   // ── Apex Command Center Bridge (additive — no existing logic changes) ─
   const apexBridgeRef = useRef(null)
@@ -1062,10 +1062,10 @@ function DriverAppMain({ profile, onLogout }) {
   const submitFleetCode = useCallback(() => {
     setFleetLinkError('')
     const trimmed = fleetLinkCode.trim()
-    if (!trimmed) { setFleetLinkError('Paste your APXS sync code from the fleet dashboard'); return }
+    if (!trimmed) { setFleetLinkError('Paste your APXS sync code from the Route Planner Dashboard'); return }
 
     if (!trimmed.toUpperCase().startsWith('APXS-')) {
-      setFleetLinkError('Invalid code — must start with APXS-. Copy the full code from the fleet dashboard.')
+      setFleetLinkError('Invalid code — must start with APXS-. Copy the full code from the Route Planner Dashboard.')
       return
     }
 
@@ -1518,7 +1518,7 @@ function DriverAppMain({ profile, onLogout }) {
           role: 'assistant', module: 'routemind',
           text: `🧭 RouteMind: ${tip}`, ts: tsNow(),
         }])
-        // Push RouteMind insight to fleet dashboard
+        // Push 4P3X Route AI insight to Route Planner Dashboard
         try {
           pushAIReportToFleet({
             driverId:    profile.id,
@@ -1555,7 +1555,7 @@ function DriverAppMain({ profile, onLogout }) {
       const res   = await aiRouter.routeModule('apex_sentinel', `${question}\n\nDriver context: ${ctx}`)
       const reply = res?.content || (typeof res === 'string' ? res : 'No response from Sentinel')
       setSentinelLog(prev => [...prev, { role: 'assistant', module: 'sentinel', text: reply, ts: tsNow() }])
-      // Push Sentinel report to fleet dashboard
+      // Push 4P3X Safety AI report to Route Planner Dashboard
       try {
         pushAIReportToFleet({
           driverId:    profile.id,
@@ -2280,7 +2280,7 @@ function DriverAppMain({ profile, onLogout }) {
               <div className="w-6 h-6 rounded bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
                 <Icon name="Shield" size={12} className="text-violet-400" />
               </div>
-              <span className="text-sm font-semibold text-violet-300">Apex Sentinel AI</span>
+              <span className="text-sm font-semibold text-violet-300">4P3X Safety AI</span>
               {sentinelBusy && <Icon name="Loader2" size={12} className="text-violet-400 animate-spin ml-auto" />}
             </div>
 
@@ -2389,7 +2389,7 @@ function DriverAppMain({ profile, onLogout }) {
                     <Icon name={msg.from === 'driver' ? 'User' : msg.from === 'ai' ? 'Cpu' : 'Radio'} size={9}
                       className={msg.from === 'driver' ? 'text-violet-400' : msg.from === 'ai' ? 'text-cyan-400' : 'text-emerald-400'} />
                     <span className="text-2xs text-slate-600">
-                      {msg.from === 'driver' ? 'You' : msg.from === 'ai' ? 'Apex AI' : 'Fleet Ops'}
+                      {msg.from === 'driver' ? 'You' : msg.from === 'ai' ? '4P3X AI' : 'Operator'}
                     </span>
                     <span className="text-2xs text-slate-700 font-mono">
                       {new Date(msg.ts).toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' })}
@@ -2472,7 +2472,7 @@ function DriverAppMain({ profile, onLogout }) {
                 <div>
                   <div className="text-xs font-semibold text-white">Enter Fleet Sync Code</div>
                   <div className="text-2xs text-slate-500 mt-0.5">
-                    Paste your <span className="font-mono text-violet-400">APEX-XXXXXXXX-XXXX-FC</span> code from the fleet dashboard.
+                    Paste your <span className="font-mono text-violet-400">APXS-XXXXXXXX</span> sync code from the Route Planner Dashboard.
                     This syncs jobs, maps and AI provider access.
                   </div>
                 </div>
@@ -2487,7 +2487,7 @@ function DriverAppMain({ profile, onLogout }) {
                   const pasted = (e.clipboardData.getData('text') || '').trim()
                   setFleetLinkCode(pasted)
                 }}
-                placeholder="Paste APXS-… code from fleet dashboard"
+                placeholder="Paste APXS-… code from Route Planner Dashboard"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
@@ -2537,7 +2537,7 @@ function DriverAppMain({ profile, onLogout }) {
               </button>
 
               <div className="text-2xs text-slate-700 text-center">
-                Get this code from <span className="text-slate-600">Set Driver Up With App</span> in the fleet dashboard
+                Get this code from <span className="text-slate-600">Driver PWA Setup</span> in the Route Planner Dashboard
               </div>
             </div>
           )}

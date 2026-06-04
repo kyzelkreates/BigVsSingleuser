@@ -24,8 +24,8 @@ export default defineConfig({
 
       // ── Web App Manifest ───────────────────────────────────
       manifest: {
-        name:             'Apex AI Fleet Control',
-        short_name:       'Apex AI',
+        name:             "Big V's Best Routes™",
+        short_name:       'Big V Routes',
         description:      'Enterprise AI-Powered Fleet Intelligence Ecosystem',
         theme_color:      '#0a0f1e',
         background_color: '#0a0f1e',

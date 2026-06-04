@@ -5,7 +5,7 @@
  *
  * Persists fleet-wide settings (e.g. API keys, routing config)
  * to the Supabase `settings` table so ALL devices share them —
- * Fleet Control OS AND Driver PWA.
+ * Big V's Best Routes™ AND Driver PWA.
  *
  * Keys stored:
  *   graphhopper_api_key   — routing engine key

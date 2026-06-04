@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Messaging Center (Run 12 — Full Build)
+ * Big V's Best Routes™ — Messaging
  * Real-time fleet comms · Supabase channels + demo fallback
  * ============================================================
  */

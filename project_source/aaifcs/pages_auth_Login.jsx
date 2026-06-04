@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Login Page (Local Auth Mode)
+ * Big V's Best Routes™ — Login
  * Accepts username or email + password.
  * No Supabase — validates against localStorage accounts.
  * ============================================================
@@ -48,8 +48,8 @@ export default function Login() {
             <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
           </div>
           <div className="text-center">
-            <h1 className="font-display font-bold text-white text-xl">Apex Intelligent AI</h1>
-            <p className="text-slate-500 text-xs tracking-widest uppercase mt-0.5">Fleet Control OS</p>
+            <h1 className="font-display font-bold text-white text-xl">Big V's Best Routes™</h1>
+            <p className="text-slate-500 text-xs tracking-widest uppercase mt-0.5">Powered by 4P3X Intelligent AI™</p>
           </div>
         </div>
 

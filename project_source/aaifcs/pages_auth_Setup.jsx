@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — First-Run Setup Page
+ * Big V's Best Routes™ — First-Run Setup
  * Creates the initial admin + driver accounts.
  * Shown only once — when apex:setup_complete is not set.
  * ============================================================
@@ -111,7 +111,7 @@ export default function Setup() {
             <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
           </div>
           <div className="text-center">
-            <h1 className="font-display font-bold text-white text-xl">Apex Intelligent AI</h1>
+            <h1 className="font-display font-bold text-white text-xl">Big V's Best Routes™</h1>
             <p className="text-slate-500 text-xs tracking-widest uppercase mt-0.5">First-Run Setup</p>
           </div>
         </div>
@@ -139,10 +139,10 @@ export default function Setup() {
             <form onSubmit={handleNextStep1} className="space-y-4">
               <div>
                 <h2 className="text-base font-semibold text-white mb-0.5">Admin Account</h2>
-                <p className="text-slate-500 text-xs">Fleet Control OS administrator credentials</p>
+                <p className="text-slate-500 text-xs">Route Planner Dashboard — operator credentials</p>
               </div>
               <Field label="Username *"    value={admin.username} onChange={setA('username')} placeholder="e.g. admin" />
-              <Field label="Email (optional)" type="email" value={admin.email}    onChange={setA('email')}    placeholder="admin@fleet.io" required={false} />
+              <Field label="Email (optional)" type="email" value={admin.email}    onChange={setA('email')}    placeholder="operator@example.com" required={false} />
               <Field label="Password *"    type="password" value={admin.password} onChange={setA('password')} placeholder="Min 6 characters"
                      show={showPass.ap} onToggle={() => toggle('ap')} />
               <Field label="Confirm Password *" type="password" value={admin.confirm}  onChange={setA('confirm')}  placeholder="Repeat password"
@@ -168,7 +168,7 @@ export default function Setup() {
                 </div>
               </div>
               <Field label="Username *"    value={driver.username} onChange={setD('username')} placeholder="e.g. driver1" />
-              <Field label="Email (optional)" type="email" value={driver.email}    onChange={setD('email')}    placeholder="driver@fleet.io" required={false} />
+              <Field label="Email (optional)" type="email" value={driver.email}    onChange={setD('email')}    placeholder="driver@example.com" required={false} />
               <Field label="Password *"    type="password" value={driver.password} onChange={setD('password')} placeholder="Min 6 characters"
                      show={showPass.dp} onToggle={() => toggle('dp')} />
               <Field label="Confirm Password *" type="password" value={driver.confirm}  onChange={setD('confirm')}  placeholder="Repeat password"
@@ -198,7 +198,7 @@ export default function Setup() {
               <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3 space-y-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Icon name="Shield" size={13} className="text-cyan-400" />
-                  <span className="text-cyan-400 text-xs font-semibold uppercase tracking-wider">Fleet Admin</span>
+                  <span className="text-cyan-400 text-xs font-semibold uppercase tracking-wider">Operator</span>
                 </div>
                 <p className="text-white text-sm font-medium">{admin.username}</p>
                 {admin.email && <p className="text-slate-500 text-xs">{admin.email}</p>}
@@ -227,7 +227,7 @@ export default function Setup() {
 
               <button onClick={handleConfirm} className="btn-primary w-full">
                 <Icon name="CheckCircle" size={14} className="inline mr-1.5" />
-                Save & Launch Apex AI
+                Save & Launch Big V's Best Routes™
               </button>
             </div>
           )}

@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Analytics Dashboard
+ * Big V's Best Routes™ — Journey Analytics
  * 100% real data — no mock, no seed generators, no fake numbers.
  * Sources:
  *   - Vehicles:      localDB / apex:db:vehicles (via fleetService)
@@ -1029,7 +1029,7 @@ export default function Analytics() {
           <div>
             <h1 className="font-display text-xl font-bold text-white">Analytics</h1>
             <p className="text-slate-500 text-xs mt-0.5">
-              Live fleet intelligence · {telemetryRows.length.toLocaleString()} telemetry records · {aiReports.length} AI reports
+              Live route intelligence · {telemetryRows.length.toLocaleString()} telemetry records · {aiReports.length} AI reports
             </p>
           </div>
           <div className="flex items-center gap-2">

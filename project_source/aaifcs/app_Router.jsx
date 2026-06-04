@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Application Router (Local Auth Mode)
+ * Big V's Best Routes™ — Application Router
  * First-run redirects to /auth/setup to create accounts.
  * ============================================================
  */

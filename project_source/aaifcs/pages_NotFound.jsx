@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — 404 Not Found
+ * Big V's Best Routes™ — 404 Not Found
  * /src/pages/NotFound.jsx
  * ============================================================
  */
@@ -17,7 +17,7 @@ export default function NotFound() {
       </div>
       <div className="text-center">
         <div className="font-mono text-6xl font-bold text-slate-800 mb-2">404</div>
-        <p className="text-slate-400 text-sm">Route not found in Apex AI OS</p>
+        <p className="text-slate-400 text-sm">Route not found in Big V's Best Routes™ OS</p>
       </div>
       <button
         onClick={() => navigate('/dashboard')}

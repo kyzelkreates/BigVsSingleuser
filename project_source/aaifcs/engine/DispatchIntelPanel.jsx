@@ -3,7 +3,7 @@
  * AP3X FLEET INTELLIGENCE — Dispatch Intelligence Panel (UI)
  * engine/DispatchIntelPanel.jsx
  *
- * "AI DISPATCH ENGINE" panel — Fleet Control OS only.
+ * "AI DISPATCH ENGINE" panel — Big V's Best Routes™ only.
  *
  * MODES:
  *   Suggestion mode: shows top-3 ranked drivers with scores + ETA.

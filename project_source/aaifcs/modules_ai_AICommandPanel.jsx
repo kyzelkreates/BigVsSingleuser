@@ -24,7 +24,7 @@ const MODULES = [
     color:    'text-cyan-400',
     bg:       'bg-cyan-500/10',
     border:   'border-cyan-500/20',
-    desc:     'General fleet intelligence assistant',
+    desc:     'General route planning & safety intelligence assistant',
     starters: [
       'Summarise the current fleet status',
       'What are the top safety concerns this week?',

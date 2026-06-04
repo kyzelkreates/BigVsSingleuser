@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — Safety AI Page (Run 8)
+ * Big V's Best Routes™ — Route Safety AI
  * ============================================================
  */
 
@@ -249,7 +249,7 @@ export default function Safety() {
       <div className="px-6 py-4 border-b border-slate-800/60 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="font-display text-xl font-bold text-white">Safety AI</h1>
+            <h1 className="font-display text-xl font-bold text-white">Route Safety AI</h1>
             <p className="text-slate-500 text-xs mt-0.5">Real-time safety monitoring and alerts</p>
           </div>
           <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import React from 'react'
 /**
  * ============================================================
- * APEX AI — Set Driver Up With App
+ * Big V's Best Routes™ — Driver PWA Setup
  * /pages/DriverSetup.jsx
  *
  * Full standalone page for:
@@ -385,9 +385,9 @@ export default function DriverSetup() {
         <div className="text-xs text-slate-400 leading-relaxed">
           <strong className="text-amber-300">Security isolation active.</strong>{' '}
           Drivers use the standalone <span className="text-violet-300 font-mono font-semibold">AP3X Driver App</span> —
-          a completely separate interface with no access to fleet management, vehicle data, or driver records.
+          a completely separate interface with no access to the Route Planner Dashboard, vehicle data, or operator records.
           Pairing codes are one-time-use and expire in 60 minutes.{' '}
-          <strong className="text-amber-300">Never share the fleet dashboard URL with drivers.</strong>
+          <strong className="text-amber-300">Never share the Route Planner Dashboard URL with drivers.</strong>
         </div>
       </div>
 
@@ -629,10 +629,10 @@ export default function DriverSetup() {
             <Panel title="How AP3X Driver App Works" icon="Info">
               <div className="space-y-3">
                 {[
-                  { icon: 'Lock', color: 'text-emerald-400', title: 'Secure isolation', desc: 'Driver app is completely separate from fleet management — drivers see only navigation and their own data' },
-                  { icon: 'Gauge', color: 'text-cyan-400', title: 'Live telemetry', desc: 'GPS, speed, heading, and AI safety scores stream to fleet dashboard in real time' },
+                  { icon: 'Lock', color: 'text-emerald-400', title: 'Secure isolation', desc: 'Driver PWA is completely separate from the Route Planner Dashboard — drivers see only navigation and their own data' },
+                  { icon: 'Gauge', color: 'text-cyan-400', title: 'Live telemetry', desc: 'GPS, speed, heading, and 4P3X safety scores stream to the Route Planner Dashboard in real time' },
                   { icon: 'BrainCircuit', color: 'text-violet-400', title: 'AI Sentinel onboard', desc: 'Fatigue detection, harsh event monitoring, and driving performance AI run locally on the driver device' },
-                  { icon: 'MessageSquare', color: 'text-blue-400', title: 'Two-way messaging', desc: 'Fleet operators and drivers can message each other directly through the paired channel' },
+                  { icon: 'MessageSquare', color: 'text-blue-400', title: 'Two-way messaging', desc: 'The operator and driver can message each other directly through the paired channel' },
                   { icon: 'Navigation', color: 'text-amber-400', title: 'Smart navigation', desc: 'GraphHopper / Google Maps routing with AI-generated route guidance via Apex RouteMind' },
                 ].map(f => (
                   <div key={f.title} className="flex items-start gap-3">

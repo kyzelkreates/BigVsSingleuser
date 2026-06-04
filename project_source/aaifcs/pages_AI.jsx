@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * APEX AI — AI Intelligence Page (Run 15)
+ * Big V's Best Routes™ — 4P3X AI Command
  * Hub for all 5 AI modules: General · Sentinel · RouteMind ·
  * Compliance · Predict
  * ============================================================
@@ -58,7 +58,7 @@ export default function AIPage() {
               <div className="w-8 h-8 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex items-center justify-center">
                 <Icon name="Brain" size={16} className="text-cyan-400" />
               </div>
-              <h1 className="font-display text-xl font-bold text-white">AI Intelligence</h1>
+              <h1 className="font-display text-xl font-bold text-white">4P3X AI Command</h1>
             </div>
             <p className="text-slate-500 text-xs mt-1.5">5 AI modules · Multi-provider fallback chain · Streaming responses</p>
           </div>

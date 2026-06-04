@@ -533,13 +533,13 @@ export async function copySyncCode(code) {
 
 export function shareSyncCodeWhatsApp(code, driverName, vehicleReg) {
   const url = `${window.location.origin}${window.location.pathname}#/driver-app?sync=${encodeURIComponent(code)}`
-  const msg = `*Apex AI Fleet Control — Driver Sync*\n\n🚛 Driver: ${driverName}\n🚘 Vehicle: ${vehicleReg}\n\n*Sync Code:*\n\`${code}\`\n\n📱 Open the AP3X Driver App and paste this code to connect, or tap:\n${url}\n\n_Code expires in 1 hour._`
+  const msg = `*Big V's Best Routes™ — Driver PWA Sync*\n\n🚛 Driver: ${driverName}\n🚘 Vehicle: ${vehicleReg}\n\n*Sync Code:*\n\`${code}\`\n\n📱 Open the Big V's Best Routes™ Driver PWA and paste this code to connect, or tap:\n${url}\n\n_Code expires in 1 hour._`
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer')
 }
 
 export function shareSyncCodeEmail(code, driverName, vehicleReg, email = '') {
   const url = `${window.location.origin}${window.location.pathname}#/driver-app?sync=${encodeURIComponent(code)}`
-  const subj = encodeURIComponent(`[Apex AI] Sync Code — ${driverName} / ${vehicleReg}`)
+  const subj = encodeURIComponent(`[Big V's Best Routes] Sync Code — ${driverName} / ${vehicleReg}`)
   const body = encodeURIComponent(
     `Hi ${driverName},\n\nYour Apex AI Fleet Control sync code is ready.\n\n` +
     `Sync Code: ${code}\n\nSteps:\n` +
@@ -547,7 +547,7 @@ export function shareSyncCodeEmail(code, driverName, vehicleReg, email = '') {
     `2. Tap "Enter Sync Code"\n` +
     `3. Paste: ${code}\n\n` +
     `Or tap this link to auto-fill: ${url}\n\n` +
-    `This code expires in 1 hour.\n\n— Apex Intelligent AI Fleet Control OS`
+    `This code expires in 1 hour.\n\n— Big V's Best Routes™ / 4P3X Intelligent AI™`
   )
   window.open(`mailto:${email}?subject=${subj}&body=${body}`, '_blank')
 }
@@ -556,7 +556,7 @@ export async function shareSyncCodeNative(code, driverName, vehicleReg) {
   const url = `${window.location.origin}${window.location.pathname}#/driver-app?sync=${encodeURIComponent(code)}`
   if (!navigator.share) return { ok: false, error: 'Web Share not supported' }
   try {
-    await navigator.share({ title: 'Apex AI — Driver Sync', text: `Sync code: ${code} | Driver: ${driverName}`, url })
+    await navigator.share({ title: "Big V's Best Routes™ — Driver Sync", text: `Sync code: ${code} | Driver: ${driverName}`, url })
     return { ok: true }
   } catch (e) {
     return { ok: false, error: e.name === 'AbortError' ? 'Cancelled' : e.message }

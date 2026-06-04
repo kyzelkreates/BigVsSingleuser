@@ -62,7 +62,7 @@ export function useAIChat(module = null) {
       } else {
         // Generic stream
         const fullMessages = [
-          { role: 'system', content: 'You are an expert AI assistant embedded in the Apex Intelligent AI Fleet Control OS. Be concise, accurate, and enterprise-grade in tone.' },
+          { role: 'system', content: 'You are an expert AI assistant embedded in Big V's Best Routes™, a single-user multi-vehicle safe and legal route planner powered by 4P3X Intelligent AI™. Be concise, accurate, and safety-aware in tone.' },
           ...history,
           { role: 'user', content: userText },
         ]
