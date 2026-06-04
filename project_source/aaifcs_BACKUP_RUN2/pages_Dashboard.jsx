@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * Big V's Best Routes™ — Route Planner Dashboard (Run 2)
+ * Big Vs Best Routes™ — Route Planner Dashboard
  * Real-time data from localStorage. Empty state prompts add data.
  * Driver App panel: send nav app link + live telemetry feed.
  * ============================================================
@@ -12,8 +12,7 @@ import Icon from './components_ui_Icon'
 import Badge from './components_ui_Badge'
 import StatusDot from './components_ui_StatusDot'
 import TelemetryValue from './components_ui_TelemetryValue'
-import { useFleetStore, useDriverStore, useAppStore, useVehicleStore } from './core_storage'
-import { getVehicleTemplate, calculateVehicleReadiness, getMissingCriticalFields, getReadinessLabel } from './services_vehicles_vehicleService'
+import { useFleetStore, useDriverStore, useAppStore } from './core_storage'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1057,13 +1056,6 @@ function DriverAppSummaryCard({ drivers }) {
       >
         <Icon name="KeyRound" size={13} /> Generate Driver Code &amp; Set Up Driver App
       </button>
-      {/* Run 5 placeholder */}
-      <div className="mt-3 p-2.5 bg-slate-900/40 border border-slate-800/50 rounded-lg">
-        <p className="text-2xs text-slate-600 leading-relaxed">
-          <span className="text-violet-400/70 font-medium">Run 5</span> will allow the Driver PWA
-          to receive the selected route and active vehicle profile from the dashboard.
-        </p>
-      </div>
     </div>
   )
 }
@@ -1274,11 +1266,6 @@ function SyncStatusPanel() {
 export default function Dashboard() {
   const navigate = useNavigate()
   const { vehicles } = useFleetStore(s => ({ vehicles: s.vehicles }))
-
-  // ── Run 2: Big V Vehicle Store ──────────────────────────────
-  const bvVehicles       = useVehicleStore(s => s.vehicles)
-  const bvActiveId       = useVehicleStore(s => s.activeVehicleId)
-  const bvActiveVehicle  = bvVehicles.find(v => v.id === bvActiveId) || null
   const { drivers }  = useDriverStore(s => ({ drivers:  s.drivers  }))
   const [alerts,  setAlerts]  = useState([])
   const [loading, setLoading] = useState(true)
@@ -1626,164 +1613,107 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 2 · Multi-Vehicle Manager</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 1 · Foundation</div>
             </div>
           </div>
         </div>
 
-        {/* ── Run 2 — Live Vehicle Summary Cards ──────────────────────── */}
-        {(() => {
-          const activeScore    = bvActiveVehicle ? calculateVehicleReadiness(bvActiveVehicle) : 0
-          const activeReadiness = bvActiveVehicle ? getReadinessLabel(activeScore) : null
-          const activeTmpl     = bvActiveVehicle ? getVehicleTemplate(bvActiveVehicle.type) : null
-          const missingCrit    = bvActiveVehicle ? getMissingCriticalFields(bvActiveVehicle) : []
-
-          return (
-            <div>
-              <div className="text-2xs text-slate-600 tracking-widest uppercase font-semibold mb-3">Route Planner Overview</div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-
-                {/* Saved Vehicles — live count */}
-                <div
-                  className="bg-[#b8860b]/5 border border-[#b8860b]/25 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer hover:border-[#b8860b]/50 transition-all"
-                  onClick={() => navigate('/fleet')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-[#b8860b]/8 border border-[#b8860b]/20 flex items-center justify-center">
-                      <Icon name="Truck" size={14} className="text-[#d4a017]" />
-                    </div>
-                    <span className="text-lg font-bold font-mono text-[#d4a017]">{bvVehicles.length}</span>
+        {/* ── Run 1 — Dashboard Summary Placeholder Cards ───────────────── */}
+        <div>
+          <div className="text-2xs text-slate-600 tracking-widest uppercase font-semibold mb-3">Route Planner Overview</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                label: 'Saved Vehicles',
+                icon: 'Truck',
+                color: 'text-[#d4a017]',
+                border: 'border-[#b8860b]/25',
+                bg: 'bg-[#b8860b]/5',
+                tag: 'Run 2',
+                desc: 'Manage your vehicle profiles',
+              },
+              {
+                label: 'Active Vehicle',
+                icon: 'Car',
+                color: 'text-emerald-400',
+                border: 'border-emerald-500/20',
+                bg: 'bg-emerald-500/5',
+                tag: 'Run 2',
+                desc: 'Select vehicle for route planning',
+              },
+              {
+                label: 'Route Planner',
+                icon: 'Route',
+                color: 'text-cyan-400',
+                border: 'border-cyan-500/20',
+                bg: 'bg-cyan-500/5',
+                tag: 'Run 3',
+                desc: 'Plan safe, legal-aware journeys',
+              },
+              {
+                label: 'Driver PWA',
+                icon: 'Smartphone',
+                color: 'text-violet-400',
+                border: 'border-violet-500/20',
+                bg: 'bg-violet-500/5',
+                tag: 'Active',
+                tagColor: 'text-emerald-400 bg-emerald-500/8 border-emerald-500/20',
+                desc: 'Companion PWA for route following',
+              },
+              {
+                label: 'Safety Checks',
+                icon: 'ShieldCheck',
+                color: 'text-emerald-400',
+                border: 'border-emerald-500/20',
+                bg: 'bg-emerald-500/5',
+                tag: 'Run 6',
+                desc: 'Vehicle-aware safety advisory',
+              },
+              {
+                label: 'Legal Awareness',
+                icon: 'ClipboardCheck',
+                color: 'text-amber-400',
+                border: 'border-amber-500/20',
+                bg: 'bg-amber-500/5',
+                tag: 'Run 6',
+                desc: 'Route legal risk advisory',
+              },
+              {
+                label: 'Map Mode',
+                icon: 'Map',
+                color: 'text-cyan-400',
+                border: 'border-cyan-500/20',
+                bg: 'bg-cyan-500/5',
+                tag: 'Run 4',
+                desc: 'OSM 2D + MapLibre 3D rendering',
+              },
+              {
+                label: 'Demo / Live',
+                icon: 'ToggleRight',
+                color: 'text-slate-400',
+                border: 'border-slate-700/60',
+                bg: 'bg-slate-900/40',
+                tag: 'Run 7',
+                desc: 'Switch demo or live backend',
+              },
+            ].map(card => (
+              <div key={card.label} className={`${card.bg} border ${card.border} rounded-xl p-3.5 flex flex-col gap-2`}>
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-lg ${card.bg} border ${card.border} flex items-center justify-center`}>
+                    <Icon name={card.icon} size={14} className={card.color} />
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold text-[#d4a017]">Saved Vehicles</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">
-                      {bvVehicles.length === 0 ? 'Add your first vehicle' : `${bvVehicles.length} vehicle profile${bvVehicles.length !== 1 ? 's' : ''} saved`}
-                    </div>
-                  </div>
+                  <span className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${card.tagColor || 'text-slate-600 bg-slate-900/60 border-slate-800/60'}`}>
+                    {card.tag}
+                  </span>
                 </div>
-
-                {/* Active Vehicle */}
-                <div
-                  className={`rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer transition-all ${
-                    bvActiveVehicle
-                      ? 'bg-emerald-500/5 border border-emerald-500/25 hover:border-emerald-500/50'
-                      : 'bg-slate-900/40 border border-slate-800/50 hover:border-slate-700/60'
-                  }`}
-                  onClick={() => navigate('/fleet')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${bvActiveVehicle ? 'bg-emerald-500/8 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
-                      <Icon name={activeTmpl?.icon || 'Car'} size={14} className={bvActiveVehicle ? 'text-emerald-400' : 'text-slate-600'} />
-                    </div>
-                    {bvActiveVehicle && activeReadiness && (
-                      <span className={`text-2xs font-mono px-1.5 py-0.5 rounded border font-semibold ${activeReadiness.color} ${activeReadiness.border}`}>
-                        {activeScore}%
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <div className={`text-xs font-semibold ${bvActiveVehicle ? 'text-emerald-400' : 'text-slate-500'}`}>Active Vehicle</div>
-                    <div className="text-2xs text-slate-600 mt-0.5 truncate">
-                      {bvActiveVehicle ? bvActiveVehicle.name : 'No active vehicle selected'}
-                    </div>
-                    {bvActiveVehicle && missingCrit.length > 0 && (
-                      <div className="text-2xs text-red-400/70 mt-0.5">⚠ {missingCrit.length} legal-critical field{missingCrit.length !== 1 ? 's' : ''} missing</div>
-                    )}
-                  </div>
+                <div>
+                  <div className={`text-xs font-semibold ${card.color}`}>{card.label}</div>
+                  <div className="text-2xs text-slate-600 mt-0.5">{card.desc}</div>
                 </div>
-
-                {/* Route Planner — Run 3 placeholder */}
-                <div className="bg-cyan-500/5 border border-cyan-500/15 rounded-xl p-3.5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-cyan-500/8 border border-cyan-500/15 flex items-center justify-center">
-                      <Icon name="Route" size={14} className="text-cyan-400/60" />
-                    </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 3</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-cyan-400/60">Route Planner</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">
-                      {bvActiveVehicle
-                        ? `Will use ${bvActiveVehicle.name} profile`
-                        : 'Select an active vehicle first'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Driver PWA — Active */}
-                <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3.5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-violet-500/8 border border-violet-500/20 flex items-center justify-center">
-                      <Icon name="Smartphone" size={14} className="text-violet-400" />
-                    </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-emerald-400 bg-emerald-500/8 border-emerald-500/20">Active</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-violet-400">Driver PWA</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">Companion PWA for route following</div>
-                  </div>
-                </div>
-
-                {/* Safety Checks — Run 6 */}
-                <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-3.5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/8 border border-emerald-500/15 flex items-center justify-center">
-                      <Icon name="ShieldCheck" size={14} className="text-emerald-400/50" />
-                    </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 6</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-400/50">Safety Checks</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">Vehicle-aware safety advisory</div>
-                  </div>
-                </div>
-
-                {/* Legal Awareness — Run 6 */}
-                <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-3.5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/8 border border-amber-500/15 flex items-center justify-center">
-                      <Icon name="ClipboardCheck" size={14} className="text-amber-400/50" />
-                    </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 6</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-amber-400/50">Legal Awareness</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">Route legal risk advisory</div>
-                  </div>
-                </div>
-
-                {/* Map Mode — Run 4 */}
-                <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-3.5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center">
-                      <Icon name="Map" size={14} className="text-cyan-400/40" />
-                    </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 4</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-cyan-400/40">Map Mode</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">OSM 2D + MapLibre 3D rendering</div>
-                  </div>
-                </div>
-
-                {/* Demo / Live — Run 7 */}
-                <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-3.5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center">
-                      <Icon name="ToggleRight" size={14} className="text-slate-600" />
-                    </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 7</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-slate-500">Demo / Live</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">Switch demo or live backend</div>
-                  </div>
-                </div>
-
               </div>
-            </div>
-          )
-        })()}
+            ))}
+          </div>
+        </div>
 
         {/* Quick actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">

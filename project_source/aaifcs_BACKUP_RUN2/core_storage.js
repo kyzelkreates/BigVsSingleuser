@@ -24,14 +24,10 @@ export const STORAGE_KEYS = {
   AUTH_USER:          'apex:auth:user',
   AUTH_ROLE:          'apex:auth:role',
 
-  // Fleet (original)
+  // Fleet
   FLEET_ACTIVE_VIEW:  'apex:fleet:activeView',
   FLEET_FILTERS:      'apex:fleet:filters',
   FLEET_SELECTED:     'apex:fleet:selected',
-
-  // Big V — Vehicle Manager (Run 2)
-  BV_VEHICLES:        'bigv:vehicles',
-  BV_ACTIVE_VEHICLE:  'bigv:activeVehicleId',
 
   // Map
   MAP_PROVIDER:       'apex:map:provider',
@@ -231,70 +227,6 @@ export const useMapStore = create((set) => ({
   setGeofences: (geofences) => set({ geofences })
 }))
 
-
-// ─── Big V Vehicle Store (Run 2 SSOT) ────────────────────────
-// Single source of truth for all saved vehicle profiles.
-// Persisted to localStorage via bigv:vehicles / bigv:activeVehicleId.
-// DO NOT duplicate state — all vehicle reads/writes go through here.
-//
-// Helpers (calculateVehicleReadiness, getMissingVehicleFields,
-// getVehicleTemplate) live in services_vehicles_vehicleService.js
-// and are imported there — this store is pure state/persistence only.
-export const useVehicleStore = create((set, get) => ({
-  // ── State ──
-  vehicles:        persist.get(STORAGE_KEYS.BV_VEHICLES, []),
-  activeVehicleId: persist.get(STORAGE_KEYS.BV_ACTIVE_VEHICLE, null),
-  isLoading:       false,
-
-  // ── Computed helpers (non-persisted) ──
-  getActiveVehicle: () => {
-    const s = get()
-    return s.vehicles.find(v => v.id === s.activeVehicleId) || null
-  },
-  getVehicleById: (id) => get().vehicles.find(v => v.id === id) || null,
-
-  // ── Mutations ──
-  addVehicle: (vehicle) => {
-    const vehicles = [...get().vehicles, vehicle]
-    persist.set(STORAGE_KEYS.BV_VEHICLES, vehicles)
-    set({ vehicles })
-    return vehicle
-  },
-  updateVehicle: (id, updates) => {
-    const vehicles = get().vehicles.map(v =>
-      v.id === id ? { ...v, ...updates, updatedAt: new Date().toISOString() } : v
-    )
-    persist.set(STORAGE_KEYS.BV_VEHICLES, vehicles)
-    set({ vehicles })
-    return vehicles.find(v => v.id === id)
-  },
-  deleteVehicle: (id) => {
-    const vehicles = get().vehicles.filter(v => v.id !== id)
-    persist.set(STORAGE_KEYS.BV_VEHICLES, vehicles)
-    // If deleting the active vehicle, clear active
-    let { activeVehicleId } = get()
-    if (activeVehicleId === id) {
-      activeVehicleId = null
-      persist.set(STORAGE_KEYS.BV_ACTIVE_VEHICLE, null)
-    }
-    set({ vehicles, activeVehicleId })
-  },
-  setActiveVehicle: (id) => {
-    persist.set(STORAGE_KEYS.BV_ACTIVE_VEHICLE, id)
-    set({ activeVehicleId: id })
-  },
-  clearActiveVehicle: () => {
-    persist.remove(STORAGE_KEYS.BV_ACTIVE_VEHICLE)
-    set({ activeVehicleId: null })
-  },
-  setLoading: (isLoading) => set({ isLoading }),
-  // ── Replace all vehicles (for import/restore) ──
-  setVehicles: (vehicles) => {
-    persist.set(STORAGE_KEYS.BV_VEHICLES, vehicles)
-    set({ vehicles })
-  },
-}))
-
 // ─── AI Store ─────────────────────────────────────────────────
 export const useAIStore = create((set) => ({
   // ── State ──
@@ -440,11 +372,6 @@ export const selectors = {
     telemetry:       s => s.telemetry,
     isLoading:       s => s.isLoading,
   },
-  vehicle: {
-    vehicles:        s => s.vehicles,
-    activeVehicleId: s => s.activeVehicleId,
-    isLoading:       s => s.isLoading,
-  },
   ai: {
     provider:        s => s.provider,
     model:           s => s.model,
@@ -460,7 +387,6 @@ export default {
   useAppStore,
   useAuthStore,
   useFleetStore,
-  useVehicleStore,
   useMapStore,
   useAIStore,
   useDriverStore,

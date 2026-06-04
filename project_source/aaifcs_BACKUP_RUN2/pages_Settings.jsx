@@ -193,20 +193,6 @@ function SafetyLegalPanel() {
   return (
     <div className="space-y-4">
       <SectionHead label="Safety and Legal Settings" />
-      {/* Vehicle Data Safety — Run 2 note */}
-      <div className="p-3.5 bg-[#0a0700] border border-[#b8860b]/20 rounded-xl">
-        <div className="flex items-start gap-2">
-          <span className="text-[#b8860b]/70 text-sm flex-shrink-0 mt-0.5">⚠</span>
-          <div>
-            <div className="text-xs font-semibold text-[#d4a017] mb-1">Vehicle Data Safety</div>
-            <p className="text-2xs text-slate-500 leading-relaxed">
-              Vehicle dimensions and weights should be checked against official vehicle documents
-              and physical measurements. Big V's Best Routes™ uses this information for advisory
-              route-risk checks only. It does not guarantee legal compliance.
-            </p>
-          </div>
-        </div>
-      </div>
       <PlaceholderInfoBox tag="Run 6" color="border-emerald-500/20" bg="border-emerald-500/20 text-emerald-400 bg-emerald-500/8">
         Run 6 will add advisory safety and legal oversight checks. These checks will support
         decision-making for vehicle-aware route planning but will not guarantee legal compliance.
