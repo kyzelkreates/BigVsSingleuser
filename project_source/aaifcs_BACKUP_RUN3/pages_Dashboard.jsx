@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * Big V's Best Routes™ — Route Planner Dashboard (Run 3)
+ * Big V's Best Routes™ — Route Planner Dashboard (Run 2)
  * Real-time data from localStorage. Empty state prompts add data.
  * Driver App panel: send nav app link + live telemetry feed.
  * ============================================================
@@ -12,9 +12,8 @@ import Icon from './components_ui_Icon'
 import Badge from './components_ui_Badge'
 import StatusDot from './components_ui_StatusDot'
 import TelemetryValue from './components_ui_TelemetryValue'
-import { useFleetStore, useDriverStore, useAppStore, useVehicleStore, useRouteStore } from './core_storage'
+import { useFleetStore, useDriverStore, useAppStore, useVehicleStore } from './core_storage'
 import { getVehicleTemplate, calculateVehicleReadiness, getMissingCriticalFields, getReadinessLabel } from './services_vehicles_vehicleService'
-import { getRouteReadinessLabel, getRiskLevelStyle, RISK_LEVELS } from './services_routes_routeService'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1010,14 +1009,6 @@ function DriverAppSummaryCard({ drivers }) {
   const [activeCodes,    setActiveCodes]    = useState(() => getActivePairingCodes())
   const navigate = useNavigate()
 
-  // Run 3: Read active route + vehicle for Driver PWA summary placeholder
-  const _bvVehicles    = useVehicleStore(s => s.vehicles)
-  const _bvActiveVehId = useVehicleStore(s => s.activeVehicleId)
-  const _bvActiveVeh   = _bvVehicles.find(v => v.id === _bvActiveVehId) || null
-  const _bvRoutes      = useRouteStore(s => s.routePlans)
-  const _bvActiveRtId  = useRouteStore(s => s.activeRouteId)
-  const _bvActiveRt    = _bvRoutes.find(r => r.id === _bvActiveRtId) || null
-
   useEffect(() => {
     const u1 = listenForDriverTelemetry(() => setTelemetryCount(n => n + 1))
     const u2 = listenForDriverMessages(m => { if (m.from === 'driver') setMsgCount(n => n + 1) })
@@ -1066,33 +1057,11 @@ function DriverAppSummaryCard({ drivers }) {
       >
         <Icon name="KeyRound" size={13} /> Generate Driver Code &amp; Set Up Driver App
       </button>
-      {/* Run 3: Active route + vehicle summary for Driver PWA */}
-      {(_bvActiveVeh || _bvActiveRt) && (
-        <div className="mt-3 space-y-1.5">
-          {_bvActiveVeh && (
-            <div className="flex items-center gap-2 p-2 bg-[#b8860b]/5 border border-[#b8860b]/20 rounded-lg">
-              <Icon name="Truck" size={11} className="text-[#b8860b]/70 flex-shrink-0" />
-              <span className="text-2xs text-slate-500">Active vehicle:</span>
-              <span className="text-2xs text-[#d4a017] font-medium truncate">{_bvActiveVeh.name}</span>
-            </div>
-          )}
-          {_bvActiveRt && (
-            <div className="flex items-center gap-2 p-2 bg-cyan-500/5 border border-cyan-500/15 rounded-lg">
-              <Icon name="Route" size={11} className="text-cyan-500/60 flex-shrink-0" />
-              <span className="text-2xs text-slate-500">Active route:</span>
-              <span className="text-2xs text-cyan-300 font-medium truncate">
-                {_bvActiveRt.name || `${_bvActiveRt.origin?.label} → ${_bvActiveRt.destination?.label}`}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
       {/* Run 5 placeholder */}
       <div className="mt-3 p-2.5 bg-slate-900/40 border border-slate-800/50 rounded-lg">
         <p className="text-2xs text-slate-600 leading-relaxed">
-          <span className="text-violet-400/70 font-medium">Run 5</span> will add safe mobile route following,
-          GPS current location, polyline following, and driver acknowledgement. Route prepared for future
-          Driver PWA navigation.
+          <span className="text-violet-400/70 font-medium">Run 5</span> will allow the Driver PWA
+          to receive the selected route and active vehicle profile from the dashboard.
         </p>
       </div>
     </div>
@@ -1310,11 +1279,6 @@ export default function Dashboard() {
   const bvVehicles       = useVehicleStore(s => s.vehicles)
   const bvActiveId       = useVehicleStore(s => s.activeVehicleId)
   const bvActiveVehicle  = bvVehicles.find(v => v.id === bvActiveId) || null
-
-  // ── Run 3: Big V Route Store ──────────────────────────────
-  const bvRoutePlans     = useRouteStore(s => s.routePlans)
-  const bvActiveRouteId  = useRouteStore(s => s.activeRouteId)
-  const bvActiveRoute    = bvRoutePlans.find(r => r.id === bvActiveRouteId) || null
   const { drivers }  = useDriverStore(s => ({ drivers:  s.drivers  }))
   const [alerts,  setAlerts]  = useState([])
   const [loading, setLoading] = useState(true)
@@ -1662,7 +1626,7 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 3 · Route Planner Dashboard</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 2 · Multi-Vehicle Manager</div>
             </div>
           </div>
         </div>
@@ -1728,64 +1692,23 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Saved Routes — live count (Run 3) */}
-                {(() => {
-                  const activeRouteScore = bvActiveRoute?.readinessScore ?? 0
-                  const activeRouteLabel = bvActiveRoute ? getRouteReadinessLabel(activeRouteScore) : null
-                  const activeRiskStyle  = bvActiveRoute ? getRiskLevelStyle(bvActiveRoute.riskLevel || RISK_LEVELS.UNKNOWN) : null
-                  return (
-                    <>
-                      <div
-                        className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer hover:border-cyan-500/40 transition-all"
-                        onClick={() => navigate('/dispatch')}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="w-7 h-7 rounded-lg bg-cyan-500/8 border border-cyan-500/15 flex items-center justify-center">
-                            <Icon name="Route" size={14} className="text-cyan-400" />
-                          </div>
-                          <span className="text-lg font-bold font-mono text-cyan-400">{bvRoutePlans.length}</span>
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-cyan-400">Saved Routes</div>
-                          <div className="text-2xs text-slate-600 mt-0.5">
-                            {bvRoutePlans.length === 0 ? 'Create your first route plan' : `${bvRoutePlans.length} route plan${bvRoutePlans.length !== 1 ? 's' : ''} saved`}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        className={`rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer transition-all ${
-                          bvActiveRoute
-                            ? 'bg-[#b8860b]/5 border border-[#b8860b]/30 hover:border-[#b8860b]/50'
-                            : 'bg-slate-900/40 border border-slate-800/50 hover:border-slate-700/60'
-                        }`}
-                        onClick={() => navigate('/dispatch')}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${bvActiveRoute ? 'bg-[#b8860b]/10 border border-[#b8860b]/25' : 'bg-slate-800 border border-slate-700'}`}>
-                            <Icon name="Navigation" size={14} className={bvActiveRoute ? 'text-[#d4a017]' : 'text-slate-600'} />
-                          </div>
-                          {bvActiveRoute && activeRouteLabel && (
-                            <span className={`text-2xs font-mono px-1.5 py-0.5 rounded border font-semibold ${activeRouteLabel.color} ${activeRouteLabel.border}`}>
-                              {activeRouteScore}%
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <div className={`text-xs font-semibold ${bvActiveRoute ? 'text-[#d4a017]' : 'text-slate-500'}`}>Active Route</div>
-                          <div className="text-2xs text-slate-600 mt-0.5 truncate">
-                            {bvActiveRoute
-                              ? (bvActiveRoute.name || `${bvActiveRoute.origin?.label} → ${bvActiveRoute.destination?.label}`)
-                              : 'No active route selected'}
-                          </div>
-                          {bvActiveRoute && activeRiskStyle && (
-                            <div className={`text-2xs mt-0.5 font-semibold ${activeRiskStyle.color}`}>{activeRiskStyle.label} Risk</div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )
-                })()}
+                {/* Route Planner — Run 3 placeholder */}
+                <div className="bg-cyan-500/5 border border-cyan-500/15 rounded-xl p-3.5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="w-7 h-7 rounded-lg bg-cyan-500/8 border border-cyan-500/15 flex items-center justify-center">
+                      <Icon name="Route" size={14} className="text-cyan-400/60" />
+                    </div>
+                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 3</span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-cyan-400/60">Route Planner</div>
+                    <div className="text-2xs text-slate-600 mt-0.5">
+                      {bvActiveVehicle
+                        ? `Will use ${bvActiveVehicle.name} profile`
+                        : 'Select an active vehicle first'}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Driver PWA — Active */}
                 <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3.5 flex flex-col gap-2">

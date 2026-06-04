@@ -207,34 +207,6 @@ function SafetyLegalPanel() {
           </div>
         </div>
       </div>
-      {/* Route Planning Safety — Run 3 note */}
-      <div className="p-3.5 bg-cyan-500/4 border border-cyan-500/15 rounded-xl">
-        <div className="flex items-start gap-2">
-          <span className="text-cyan-400/60 text-sm flex-shrink-0 mt-0.5">ℹ</span>
-          <div>
-            <div className="text-xs font-semibold text-cyan-400/80 mb-1">Route Planning Safety (Run 3)</div>
-            <p className="text-2xs text-slate-500 leading-relaxed">
-              Route plans created in Run 3 are planning records only. Map rendering, road restriction
-              checks, and route polyline validation are added in later runs. Always verify live road
-              signs, restrictions, and suitability before travel.
-            </p>
-          </div>
-        </div>
-      </div>
-      {/* Map Provider — API note */}
-      <div className="p-3.5 bg-slate-900/50 border border-slate-800/60 rounded-xl">
-        <div className="flex items-start gap-2">
-          <span className="text-slate-500 text-sm flex-shrink-0 mt-0.5">🗺</span>
-          <div>
-            <div className="text-xs font-semibold text-slate-400 mb-1">Map Provider (Run 4)</div>
-            <p className="text-2xs text-slate-600 leading-relaxed">
-              Run 4 will connect OpenStreetMap public/OSM-compatible tiles for 2D map rendering and
-              MapLibre for 3D/tilted rendering where supported. Google Maps may be added later as an
-              optional provider only after concept verification.
-            </p>
-          </div>
-        </div>
-      </div>
       <PlaceholderInfoBox tag="Run 6" color="border-emerald-500/20" bg="border-emerald-500/20 text-emerald-400 bg-emerald-500/8">
         Run 6 will add advisory safety and legal oversight checks. These checks will support
         decision-making for vehicle-aware route planning but will not guarantee legal compliance.

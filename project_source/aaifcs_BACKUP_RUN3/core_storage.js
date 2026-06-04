@@ -33,10 +33,6 @@ export const STORAGE_KEYS = {
   BV_VEHICLES:        'bigv:vehicles',
   BV_ACTIVE_VEHICLE:  'bigv:activeVehicleId',
 
-  // Big V — Route Planner (Run 3)
-  BV_ROUTES:          'bigv:routePlans',
-  BV_ACTIVE_ROUTE:    'bigv:activeRouteId',
-
   // Map
   MAP_PROVIDER:       'apex:map:provider',
   MAP_CENTER:         'apex:map:center',
@@ -299,64 +295,6 @@ export const useVehicleStore = create((set, get) => ({
   },
 }))
 
-
-// ─── Big V Route Store (Run 3 SSOT) ──────────────────────────
-// Single source of truth for all saved route plans.
-// Persisted to localStorage via bigv:routePlans / bigv:activeRouteId.
-// DO NOT duplicate — all route reads/writes go through here.
-export const useRouteStore = create((set, get) => ({
-  // ── State ──
-  routePlans:    persist.get(STORAGE_KEYS.BV_ROUTES, []),
-  activeRouteId: persist.get(STORAGE_KEYS.BV_ACTIVE_ROUTE, null),
-  isLoading:     false,
-
-  // ── Computed ──
-  getActiveRoute:   () => {
-    const s = get()
-    return s.routePlans.find(r => r.id === s.activeRouteId) || null
-  },
-  getRoutePlanById: (id) => get().routePlans.find(r => r.id === id) || null,
-
-  // ── Mutations ──
-  addRoutePlan: (plan) => {
-    const routePlans = [plan, ...get().routePlans]
-    persist.set(STORAGE_KEYS.BV_ROUTES, routePlans)
-    set({ routePlans })
-    return plan
-  },
-  updateRoutePlan: (id, updates) => {
-    const routePlans = get().routePlans.map(r =>
-      r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r
-    )
-    persist.set(STORAGE_KEYS.BV_ROUTES, routePlans)
-    set({ routePlans })
-    return routePlans.find(r => r.id === id)
-  },
-  deleteRoutePlan: (id) => {
-    const routePlans = get().routePlans.filter(r => r.id !== id)
-    persist.set(STORAGE_KEYS.BV_ROUTES, routePlans)
-    let { activeRouteId } = get()
-    if (activeRouteId === id) {
-      activeRouteId = null
-      persist.set(STORAGE_KEYS.BV_ACTIVE_ROUTE, null)
-    }
-    set({ routePlans, activeRouteId })
-  },
-  setActiveRoute: (id) => {
-    persist.set(STORAGE_KEYS.BV_ACTIVE_ROUTE, id)
-    set({ activeRouteId: id })
-  },
-  clearActiveRoute: () => {
-    persist.remove(STORAGE_KEYS.BV_ACTIVE_ROUTE)
-    set({ activeRouteId: null })
-  },
-  setLoading: (isLoading) => set({ isLoading }),
-  setRoutePlans: (routePlans) => {
-    persist.set(STORAGE_KEYS.BV_ROUTES, routePlans)
-    set({ routePlans })
-  },
-}))
-
 // ─── AI Store ─────────────────────────────────────────────────
 export const useAIStore = create((set) => ({
   // ── State ──
@@ -507,11 +445,6 @@ export const selectors = {
     activeVehicleId: s => s.activeVehicleId,
     isLoading:       s => s.isLoading,
   },
-  route: {
-    routePlans:    s => s.routePlans,
-    activeRouteId: s => s.activeRouteId,
-    isLoading:     s => s.isLoading,
-  },
   ai: {
     provider:        s => s.provider,
     model:           s => s.model,
@@ -528,7 +461,6 @@ export default {
   useAuthStore,
   useFleetStore,
   useVehicleStore,
-  useRouteStore,
   useMapStore,
   useAIStore,
   useDriverStore,
