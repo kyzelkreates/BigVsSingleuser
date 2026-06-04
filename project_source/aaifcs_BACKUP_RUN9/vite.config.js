@@ -26,7 +26,7 @@ export default defineConfig({
       manifest: {
         name:             "Big V's Best Routes™",
         short_name:       'Big V Routes',
-        description:      'Safety-first route planning and Driver PWA for single users with multiple vehicles. Advisory route planning, GPS-assisted navigation, and vehicle-aware checks.',
+        description:      'Enterprise AI-Powered Fleet Intelligence Ecosystem',
         theme_color:      '#0a0f1e',
         background_color: '#0a0f1e',
         display:          'standalone',

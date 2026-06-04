@@ -14,7 +14,7 @@ export const APP_CONFIG = {
   name:        "Big V's Best Routes™",
   shortName:   'Big V Routes',
   version:     '1.0.0',
-  buildStage:  'Run 9 — Final Production Hardening + Demo Pack',
+  buildStage:  'Run 8 — Backend-Ready Live Mode + Deployment Centre',
   tagline:     'Vehicle-aware route planning for safer, smarter, more legally aware journeys.',
 
   branding: {
@@ -67,10 +67,10 @@ export const APP_CONFIG = {
     // ── Future runs (placeholders — do NOT enable here) ───────
     vehicles:     true,   // Run 2 — ENABLED
     routePlanner: true,   // Run 3 — ENABLED
-    maps:         true,   // Run 4 — ENABLED
-    driverGPS:    true,   // Run 5 — ENABLED
-    safetyAI:     true,   // Run 6 — ENABLED
-    legalAI:      true,   // Run 6 — ENABLED
+    maps:         false,  // Run 4
+    driverGPS:    false,  // Run 5
+    safetyAI:     false,  // Run 6
+    legalAI:      false,  // Run 6
     demoLive:     true,   // Run 8 — ENABLED
     backend:      true,   // Run 8 — ENABLED
     auth:         false,

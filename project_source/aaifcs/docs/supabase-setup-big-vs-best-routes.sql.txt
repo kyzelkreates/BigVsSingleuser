@@ -1,0 +1,604 @@
+-- ============================================================
+-- Big V's Best Routes™ — Supabase Database Setup
+-- Powered by 4P3X Intelligent AI™ | Created by Kyzel Kreates™
+-- Version: 1.0.0 — Run 9 Final
+-- ============================================================
+--
+-- SAFETY NOTES:
+-- This file contains NO real credentials, secrets, or keys.
+-- NEVER include SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL,
+-- JWT_SECRET, PRIVATE_KEY, or any backend-only secret here.
+--
+-- EXECUTION ORDER:
+--   A. Extensions
+--   B. Tables
+--   C. Indexes
+--   D. Helper functions (if any)
+--   E. Enable RLS
+--   F. RLS Policies
+--   G. Verification queries
+--   H. Rollback notes
+--
+-- AUTH / RLS NOTE:
+-- Auth/user ownership must be connected before using these
+-- policies in production. For demo mode, keep local-only
+-- storage. Do NOT run RLS policies in production until
+-- Supabase auth (auth.uid()) is properly configured.
+--
+-- SINGLE-USER MODE:
+-- This schema is designed for a single-user/operator model.
+-- All tables include `owner_id` referencing `auth.users`.
+-- For multi-user expansion, owner_id + organisation_id
+-- should be added at that point.
+--
+-- RLS: ENABLED on all user data tables.
+-- ============================================================
+
+
+-- ============================================================
+-- A. Extensions
+-- ============================================================
+
+-- UUID generation (usually pre-enabled on Supabase)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Fuzzy text search (optional — useful for route/vehicle search)
+-- CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+
+-- ============================================================
+-- B. Tables
+-- ============================================================
+
+-- ── B.1 Vehicle Profiles ────────────────────────────────────
+-- Maps to: useVehicleStore / bigv:vehicles
+-- Sync direction: Dashboard → Backend
+-- Purpose: Stores vehicle dimensions, type templates,
+--          legal-critical fields, and route preferences.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_vehicles (
+  id                      UUID          PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id                UUID          NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  name                    TEXT          NOT NULL,
+  type                    TEXT          NOT NULL,  -- 'car'|'van'|'large_van'|'box_truck'|'motorhome'|'car_trailer'|'van_trailer'|'custom'
+  registration            TEXT,
+  make                    TEXT,
+  model                   TEXT,
+  year                    TEXT,
+  fuel_type               TEXT,
+
+  -- Legal-critical dimensions
+  height_m                NUMERIC(6,3),  -- legal-critical: low bridge checks
+  width_m                 NUMERIC(6,3),  -- legal-critical: narrow road checks
+  length_m                NUMERIC(6,3),  -- route-critical: turning/access
+  weight_kg               NUMERIC(10,2), -- legal-critical: weight restrictions
+  max_gross_weight_kg     NUMERIC(10,2), -- legal-critical: GVW / Ministry plate
+  axle_count              SMALLINT,      -- legal-critical: bridge formula
+
+  -- Trailer fields
+  has_trailer             BOOLEAN       DEFAULT FALSE,
+  trailer_length_m        NUMERIC(6,3),
+  trailer_width_m         NUMERIC(6,3),
+  trailer_weight_kg       NUMERIC(10,2),
+  total_combined_length_m NUMERIC(6,3),
+  total_combined_weight_kg NUMERIC(10,2),
+
+  -- Route preferences
+  avoid_low_bridges       BOOLEAN       DEFAULT TRUE,
+  avoid_narrow_roads      BOOLEAN       DEFAULT TRUE,
+  avoid_weight_restricted BOOLEAN       DEFAULT TRUE,
+  avoid_steep_roads       BOOLEAN       DEFAULT FALSE,
+  avoid_tight_turns       BOOLEAN       DEFAULT FALSE,
+
+  notes                   TEXT,
+  readiness_score         SMALLINT      DEFAULT 0,    -- 0–100
+  missing_critical_fields TEXT[],                     -- array of field names
+
+  is_active               BOOLEAN       DEFAULT FALSE,
+  is_demo                 BOOLEAN       DEFAULT FALSE,
+
+  created_at              TIMESTAMPTZ   DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ   DEFAULT NOW()
+);
+
+-- ── B.2 Route Plans ─────────────────────────────────────────
+-- Maps to: useRouteStore / bigv:routes
+-- Sync direction: Dashboard → Backend
+-- Purpose: Advisory route planning records with vehicle
+--          snapshot, advisory warnings, and readiness score.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_route_plans (
+  id                UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id          UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  name              TEXT        NOT NULL,
+  status            TEXT        NOT NULL DEFAULT 'draft',  -- 'draft'|'ready'|'assigned'|'archived'
+
+  origin_label      TEXT,
+  origin_address    TEXT,
+  origin_lat        NUMERIC(10,7),
+  origin_lng        NUMERIC(10,7),
+
+  destination_label TEXT,
+  destination_address TEXT,
+  destination_lat   NUMERIC(10,7),
+  destination_lng   NUMERIC(10,7),
+
+  vehicle_id        UUID        REFERENCES bv_vehicles(id) ON DELETE SET NULL,
+  vehicle_type      TEXT,       -- snapshot of vehicle type at plan time
+  vehicle_name      TEXT,       -- snapshot of vehicle name at plan time
+
+  -- Route geometry (populated by GraphHopper/OSRM when configured)
+  polyline          TEXT,       -- encoded polyline
+  distance_m        NUMERIC(12,2),
+  duration_s        NUMERIC(10,2),
+  waypoints         JSONB,      -- array of {lat, lng, label}
+
+  -- Advisory
+  risk_level        TEXT,       -- 'low'|'moderate'|'high'|'unknown'
+  readiness_score   SMALLINT    DEFAULT 0,
+  warnings          JSONB,      -- array of {key, level, text}
+  notes             TEXT,
+
+  is_demo           BOOLEAN     DEFAULT FALSE,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.3 Route Assignments ────────────────────────────────────
+-- Maps to: useAssignmentStore / bigv:assignments
+-- Sync direction: Dashboard + Driver PWA → Backend
+-- Purpose: Links a route plan to a vehicle for Driver PWA
+--          delivery. Contains full assignment lifecycle.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_route_assignments (
+  id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id        UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  route_id        UUID        REFERENCES bv_route_plans(id) ON DELETE SET NULL,
+  vehicle_id      UUID        REFERENCES bv_vehicles(id) ON DELETE SET NULL,
+
+  title           TEXT,
+  notes           TEXT,
+  priority        TEXT        DEFAULT 'normal', -- 'normal'|'important'|'reviewRequired'
+
+  status          TEXT        DEFAULT 'draft',
+  -- 'draft'|'assigned'|'received'|'inProgress'|'paused'|'completed'|'needsReview'|'cancelled'
+
+  scheduled_at    TIMESTAMPTZ,
+  completed_at    TIMESTAMPTZ,
+
+  -- Snapshots at assignment time
+  route_snapshot  JSONB,      -- origin, destination, warnings, riskLevel
+  vehicle_snapshot JSONB,     -- name, type, height, width, weight, readiness
+
+  timeline        JSONB,      -- array of {type, at, source}
+  warnings        JSONB,      -- array of {key, level, text}
+
+  is_demo         BOOLEAN     DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.4 Trip Sessions ────────────────────────────────────────
+-- Maps to: useTripSessionStore / bigv:tripSessions
+-- Sync direction: Driver PWA → Backend → Dashboard
+-- Purpose: Records navigation events, GPS status, checklist
+--          snapshot, warnings, and acknowledgement.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_trip_sessions (
+  id                        UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id                  UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  assignment_id             UUID        REFERENCES bv_route_assignments(id) ON DELETE SET NULL,
+  vehicle_id                UUID        REFERENCES bv_vehicles(id) ON DELETE SET NULL,
+  route_id                  UUID        REFERENCES bv_route_plans(id) ON DELETE SET NULL,
+
+  status                    TEXT        DEFAULT 'pending',
+  -- 'pending'|'active'|'paused'|'completed'|'abandoned'
+
+  started_at                TIMESTAMPTZ,
+  completed_at              TIMESTAMPTZ,
+  paused_at                 TIMESTAMPTZ,
+
+  gps_status                TEXT,       -- 'idle'|'requesting'|'active'|'lowAccuracy'|'denied'|'unavailable'
+  gps_accuracy_m            NUMERIC(8,2),
+
+  acknowledgement_accepted  BOOLEAN     DEFAULT FALSE,
+  acknowledgement_accepted_at TIMESTAMPTZ,
+
+  checklist_snapshot        JSONB,      -- {item_key: true/false}
+  warnings_during_trip      JSONB,      -- array of {text, severity, at}
+  linked_report_ids         UUID[],
+
+  nav_session_data          JSONB,      -- raw nav session snapshot
+
+  is_demo                   BOOLEAN     DEFAULT FALSE,
+  created_at                TIMESTAMPTZ DEFAULT NOW(),
+  updated_at                TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.5 Driver Reports ───────────────────────────────────────
+-- Maps to: useDriverReportStore / bigv:driverReports
+-- Sync direction: Driver PWA → Backend → Dashboard
+-- Purpose: Driver observations during/after trips.
+--          Advisory only — not legal evidence.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_driver_reports (
+  id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id        UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  assignment_id   UUID        REFERENCES bv_route_assignments(id) ON DELETE SET NULL,
+  trip_session_id UUID        REFERENCES bv_trip_sessions(id) ON DELETE SET NULL,
+  route_id        UUID        REFERENCES bv_route_plans(id) ON DELETE SET NULL,
+  vehicle_id      UUID        REFERENCES bv_vehicles(id) ON DELETE SET NULL,
+
+  report_type     TEXT        NOT NULL,
+  -- 'route_concern'|'legal_restriction'|'low_bridge'|'width_restriction'
+  -- 'weight_restriction'|'road_closure'|'unsafe_road_condition'
+  -- 'gps_map_issue'|'vehicle_issue'|'delay'|'completed_with_notes'|'other'
+
+  severity        TEXT        NOT NULL DEFAULT 'info',
+  -- 'info'|'low'|'high'|'critical'
+
+  title           TEXT,
+  description     TEXT,
+
+  status          TEXT        DEFAULT 'submitted',
+  -- 'submitted'|'reviewed'|'actionRequired'|'resolved'|'archived'
+
+  review_note     TEXT,
+  reviewed_at     TIMESTAMPTZ,
+
+  gps_lat         NUMERIC(10,7),
+  gps_lng         NUMERIC(10,7),
+
+  is_demo         BOOLEAN     DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.6 Sync Queue ───────────────────────────────────────────
+-- Maps to: useSyncQueueStore / bigv:syncQueue
+-- Sync direction: Internal → Backend (write-only queue)
+-- Purpose: Local-first change queue for backend sync.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_sync_queue (
+  id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id        UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  entity_type     TEXT        NOT NULL,  -- e.g. 'vehicle', 'routeAssignment'
+  entity_id       TEXT        NOT NULL,
+  action          TEXT        NOT NULL,  -- 'create'|'update'|'delete'
+  payload         JSONB,
+
+  status          TEXT        DEFAULT 'pending', -- 'pending'|'synced'|'failed'
+  attempts        SMALLINT    DEFAULT 0,
+  synced_at       TIMESTAMPTZ,
+  error_message   TEXT,
+
+  is_demo         BOOLEAN     DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.7 Audit Events ─────────────────────────────────────────
+-- Maps to: useAuditStore / bigv:auditEvents
+-- Sync direction: Dashboard → Backend
+-- Purpose: Full system event trail for advisory
+--          compliance review. Not a legal audit trail.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_audit_events (
+  id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id        UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  event_type      TEXT        NOT NULL,
+  event_label     TEXT,
+  entity_type     TEXT,
+  entity_id       TEXT,
+  details         JSONB,
+  source          TEXT        DEFAULT 'system',
+
+  is_demo         BOOLEAN     DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.8 AI Findings ─────────────────────────────────────────
+-- Maps to: useAiAdvisoryStore.findings / bigv:aiFindings
+-- Sync direction: Dashboard → Backend
+-- Purpose: 4P3X Intelligent AI™ advisory findings.
+--          Advisory only. Not legal evidence.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_ai_findings (
+  id                  UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id            UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  finding_id          TEXT        UNIQUE NOT NULL,  -- local SSOT ID
+  agent_id            TEXT        NOT NULL,          -- 'agent1'|'agent2'
+  severity            TEXT        NOT NULL,          -- 'info'|'caution'|'high'|'critical'
+  category            TEXT        NOT NULL,
+  title               TEXT        NOT NULL,
+  explanation         TEXT,
+  recommended_action  TEXT,
+  source_data         JSONB,
+  requires_human_review BOOLEAN   DEFAULT TRUE,
+  resolved_status     TEXT        DEFAULT 'open',
+  resolved_at         TIMESTAMPTZ,
+
+  is_demo             BOOLEAN     DEFAULT FALSE,
+  created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── B.9 AI Advisory Runs ─────────────────────────────────────
+-- Maps to: useAiAdvisoryStore.agentRuns / bigv:aiAgentRuns
+-- Sync direction: Dashboard → Backend
+-- Purpose: Log of 4P3X AI advisory review runs.
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bv_ai_advisory_runs (
+  id                        UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id                  UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  run_id                    TEXT        UNIQUE NOT NULL,
+  mode                      TEXT,           -- 'demo'|'localRules'|'backendReady'
+  overall_risk              TEXT,
+  vehicle_suitability_score SMALLINT,
+  evidence_completeness_score SMALLINT,
+  legal_review_status       TEXT,
+  crit_count                SMALLINT    DEFAULT 0,
+  high_count                SMALLINT    DEFAULT 0,
+  finding_count             SMALLINT    DEFAULT 0,
+
+  input_refs                JSONB,      -- {vehicleId, routeId, assignmentId, tripSessionId}
+  recommendations           JSONB,      -- array of recommendation strings
+  human_review_checklist    JSONB,      -- array of checklist items
+
+  is_demo                   BOOLEAN     DEFAULT FALSE,
+  created_at                TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- ============================================================
+-- C. Indexes
+-- ============================================================
+
+CREATE INDEX IF NOT EXISTS idx_bv_vehicles_owner
+  ON bv_vehicles(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_routes_owner
+  ON bv_route_plans(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_routes_vehicle
+  ON bv_route_plans(vehicle_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_owner
+  ON bv_route_assignments(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_route
+  ON bv_route_assignments(route_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_vehicle
+  ON bv_route_assignments(vehicle_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_status
+  ON bv_route_assignments(status);
+
+CREATE INDEX IF NOT EXISTS idx_bv_trips_owner
+  ON bv_trip_sessions(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_trips_assignment
+  ON bv_trip_sessions(assignment_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_trips_status
+  ON bv_trip_sessions(status);
+
+CREATE INDEX IF NOT EXISTS idx_bv_reports_owner
+  ON bv_driver_reports(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_reports_severity
+  ON bv_driver_reports(severity);
+
+CREATE INDEX IF NOT EXISTS idx_bv_reports_status
+  ON bv_driver_reports(status);
+
+CREATE INDEX IF NOT EXISTS idx_bv_sync_owner_status
+  ON bv_sync_queue(owner_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_bv_audit_owner
+  ON bv_audit_events(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_audit_entity
+  ON bv_audit_events(entity_type, entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_findings_owner
+  ON bv_ai_findings(owner_id);
+
+CREATE INDEX IF NOT EXISTS idx_bv_findings_severity
+  ON bv_ai_findings(severity, resolved_status);
+
+CREATE INDEX IF NOT EXISTS idx_bv_ai_runs_owner
+  ON bv_ai_advisory_runs(owner_id);
+
+
+-- ============================================================
+-- D. Helper Functions
+-- ============================================================
+
+-- Auto-update updated_at on row change
+CREATE OR REPLACE FUNCTION bv_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ============================================================
+-- E. Triggers
+-- ============================================================
+
+-- Apply updated_at trigger to all mutable tables
+DO $$
+DECLARE
+  t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'bv_vehicles', 'bv_route_plans', 'bv_route_assignments',
+    'bv_trip_sessions', 'bv_driver_reports'
+  ]
+  LOOP
+    EXECUTE format(
+      'DROP TRIGGER IF EXISTS set_updated_at ON %I;
+       CREATE TRIGGER set_updated_at
+       BEFORE UPDATE ON %I
+       FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();',
+      t, t
+    );
+  END LOOP;
+END;
+$$;
+
+
+-- ============================================================
+-- F. Enable Row Level Security (RLS)
+-- RLS: ENABLED on all user data tables.
+-- Authenticated users can only manage their own records.
+-- No public unrestricted access to operational data.
+-- ============================================================
+
+ALTER TABLE bv_vehicles           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_route_plans        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_route_assignments  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_trip_sessions      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_driver_reports     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_sync_queue         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_audit_events       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_ai_findings        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_ai_advisory_runs   ENABLE ROW LEVEL SECURITY;
+
+
+-- ============================================================
+-- G. RLS Policies
+-- Single-user owner_id isolation.
+-- All policies gate on auth.uid() = owner_id.
+-- ============================================================
+
+-- ── Vehicles ──────────────────────────────────────────────────
+CREATE POLICY "owner_vehicles_select" ON bv_vehicles
+  FOR SELECT USING (auth.uid() = owner_id);
+
+CREATE POLICY "owner_vehicles_insert" ON bv_vehicles
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+CREATE POLICY "owner_vehicles_update" ON bv_vehicles
+  FOR UPDATE USING (auth.uid() = owner_id);
+
+CREATE POLICY "owner_vehicles_delete" ON bv_vehicles
+  FOR DELETE USING (auth.uid() = owner_id);
+
+-- ── Route Plans ───────────────────────────────────────────────
+CREATE POLICY "owner_routes_all" ON bv_route_plans
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── Route Assignments ─────────────────────────────────────────
+CREATE POLICY "owner_assignments_all" ON bv_route_assignments
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── Trip Sessions ─────────────────────────────────────────────
+CREATE POLICY "owner_trips_all" ON bv_trip_sessions
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── Driver Reports ────────────────────────────────────────────
+CREATE POLICY "owner_reports_all" ON bv_driver_reports
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── Sync Queue ────────────────────────────────────────────────
+CREATE POLICY "owner_sync_all" ON bv_sync_queue
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── Audit Events ─────────────────────────────────────────────
+CREATE POLICY "owner_audit_all" ON bv_audit_events
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── AI Findings ───────────────────────────────────────────────
+CREATE POLICY "owner_findings_all" ON bv_ai_findings
+  FOR ALL USING (auth.uid() = owner_id);
+
+-- ── AI Advisory Runs ─────────────────────────────────────────
+CREATE POLICY "owner_ai_runs_all" ON bv_ai_advisory_runs
+  FOR ALL USING (auth.uid() = owner_id);
+
+
+-- ============================================================
+-- H. Demo Data Warning
+-- ============================================================
+
+-- NO demo seed data is included here.
+-- Demo mode is handled entirely by local-first SSOT
+-- (localStorage + Zustand stores) in the frontend.
+-- DO NOT seed demo data in the production database.
+-- If test data is needed, create it through the app UI
+-- in Demo Mode, then clear it before switching to Live Mode.
+
+
+-- ============================================================
+-- I. Verification Queries
+-- Run these after setup to confirm tables and RLS are active.
+-- ============================================================
+
+-- Check all tables exist
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name LIKE 'bv_%'
+ORDER BY table_name;
+
+-- Check RLS is enabled on all tables
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename LIKE 'bv_%'
+ORDER BY tablename;
+
+-- Check policies exist
+SELECT tablename, policyname, cmd, qual
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename LIKE 'bv_%'
+ORDER BY tablename, policyname;
+
+-- Check indexes exist
+SELECT indexname, tablename
+FROM pg_indexes
+WHERE schemaname = 'public'
+  AND tablename LIKE 'bv_%'
+ORDER BY tablename, indexname;
+
+
+-- ============================================================
+-- J. Rollback Notes
+-- ============================================================
+
+-- To remove all Big V's Best Routes tables and policies:
+--
+-- DROP TABLE IF EXISTS bv_ai_advisory_runs CASCADE;
+-- DROP TABLE IF EXISTS bv_ai_findings CASCADE;
+-- DROP TABLE IF EXISTS bv_audit_events CASCADE;
+-- DROP TABLE IF EXISTS bv_sync_queue CASCADE;
+-- DROP TABLE IF EXISTS bv_driver_reports CASCADE;
+-- DROP TABLE IF EXISTS bv_trip_sessions CASCADE;
+-- DROP TABLE IF EXISTS bv_route_assignments CASCADE;
+-- DROP TABLE IF EXISTS bv_route_plans CASCADE;
+-- DROP TABLE IF EXISTS bv_vehicles CASCADE;
+-- DROP FUNCTION IF EXISTS bv_set_updated_at CASCADE;
+--
+-- This will CASCADE drop all dependent policies, triggers,
+-- and indexes automatically.
+-- WARNING: This permanently deletes all data.
+-- Ensure local-first SSOT backup exists before running.
+
+-- ============================================================
+-- END OF SCHEMA
+-- Big V's Best Routes™ · Powered by 4P3X Intelligent AI™
+-- Created by Kyzel Kreates™ · Part of the 4P3X Verse
+-- Advisory only. Not a legal compliance system.
+-- ============================================================

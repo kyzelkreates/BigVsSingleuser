@@ -18,7 +18,6 @@ import { getRouteReadinessLabel, getRiskLevelStyle, RISK_LEVELS } from './servic
 const RouteMapPreview = lazy(() => import('./modules_navigation_RouteMap'))
 import BvOperations from './modules_dashboard_BvOperations'
 import BvAiOverview from './modules_dashboard_BvAiOverview'
-import BvAboutPanel from './modules_dashboard_BvAboutPanel'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1700,7 +1699,7 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 9 · Final Hardening · Demo & Investor Ready</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 7 · 4P3X Intelligent AI™ Advisory Layer</div>
             </div>
           </div>
         </div>
@@ -1909,14 +1908,6 @@ export default function Dashboard() {
             4P3X Intelligent AI™ Safety &amp; Legal Advisory Layer
           </div>
           <BvAiOverview />
-        </div>
-
-        {/* ── Run 9: About / Demo Guide Panel ────────────────────────── */}
-        <div>
-          <div className="text-2xs text-slate-600 tracking-widest uppercase font-semibold mb-3">
-            About · Demo Guide · Product
-          </div>
-          <BvAboutPanel />
         </div>
 
         {/* ── Run 6: BV Operations Panel ─────────────────────────────── */}

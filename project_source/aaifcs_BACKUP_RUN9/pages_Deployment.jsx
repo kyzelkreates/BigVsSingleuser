@@ -685,7 +685,12 @@ function DriverPwaReadinessPanel() {
   const handleCheck = useCallback(() => {
     setLoading(true)
     setTimeout(() => {
-      const pending = useSyncQueueStore.getState().queue.filter(q => q.status === 'pending').length
+      const { assignments, sessions, reports, queue } = {
+        assignments: useBackendConfigStore.getState(),
+      }
+      // Read from real stores
+      const asgns    = require || 0  // placeholder — use window.eval
+      const pending  = useSyncQueueStore.getState().queue.filter(q => q.status === 'pending').length
       setResult({
         driverRoute:      { status: 'ready',       label: 'Driver PWA route (/driver-app)',     note: 'Registered and accessible.' },
         assignmentInbox:  { status: 'ready',       label: 'Assignment Inbox',                   note: 'BvAssignmentInbox operational.' },
