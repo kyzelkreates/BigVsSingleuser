@@ -26,15 +26,7 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense, lazy, memo } from 'react'
 import Icon from './components_ui_Icon'
-import { useVehicleStore, useRouteStore, useNavStore, useMapStore, useAssignmentStore, useTripSessionStore } from './core_storage'
-import BvAssignmentInbox from './modules_driver_BvAssignmentInbox'
-import {
-  startTripSession,
-  updateTripStatus,
-  updateAssignmentStatus,
-  recordAuditEvent,
-  runSyncNow,
-} from './services_sync_bvSyncService'
+import { useVehicleStore, useRouteStore, useNavStore, useMapStore } from './core_storage'
 import { getRoutePlanPoints, getRoutePlanPolyline, routeHasMapData } from './services_maps_routeGeometry'
 import { calculateRouteReadiness, calculateRouteRiskLevel, getRouteWarnings, getRiskLevelStyle, getRouteReadinessLabel, RISK_LEVELS } from './services_routes_routeService'
 import { calculateVehicleReadiness, getMissingCriticalFields } from './services_vehicles_vehicleService'
@@ -683,7 +675,7 @@ function NavigationScreen({ routePlan, vehicle, session, gpsState, gpsPos, accur
 }
 
 // ─── Home screen ──────────────────────────────────────────────
-function HomeScreen({ routePlan, vehicle, session, gpsState, warnings, isOnline, isDemoMode, onStartReview, onOpenNav, onOpenChecklist, onOpenInbox, inboxCount = 0 }) {
+function HomeScreen({ routePlan, vehicle, session, gpsState, warnings, isOnline, isDemoMode, onStartReview, onOpenNav, onOpenChecklist }) {
   const status   = session?.status || 'notStarted'
   const navInfo  = NAV_STATUS_LABELS[status] || NAV_STATUS_LABELS.notStarted
   const criticals = warnings.filter(w => w.severity === 'critical')
@@ -788,18 +780,6 @@ function HomeScreen({ routePlan, vehicle, session, gpsState, warnings, isOnline,
         </button>
       </div>
 
-      {/* Inbox button */}
-      <button onClick={onOpenInbox}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#b8860b]/25 bg-[#b8860b]/8 text-[#d4a017] hover:bg-[#b8860b]/15 text-sm font-semibold transition-all">
-        <Icon name="ClipboardList" size={14} />
-        Assigned Routes Inbox
-        {inboxCount > 0 && (
-          <span className="ml-1 text-2xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded-full font-mono">
-            {inboxCount}
-          </span>
-        )}
-      </button>
-
       {/* Safety disclaimer */}
       <SafetyDisclaimer />
     </div>
@@ -825,25 +805,8 @@ export default memo(function BvRouteNav() {
   }))
 
   // ── Local UI state ───────────────────────────────────────────
-  const [screen, setScreen]  = useState('home') // 'home'|'review'|'nav'|'checklist'|'inbox'
+  const [screen, setScreen]  = useState('home') // 'home'|'review'|'nav'|'checklist'
   const [isOnline, setOnline] = useState(navigator.onLine)
-
-  // ── Run 6: assignment + trip session ─────────────────────────
-  const assignments         = useAssignmentStore(s => s.assignments)
-  const { createSession: createTrip, setSessionStatus, sessions: tripSessions } = useTripSessionStore(s => ({
-    createSession:    s.createSession,
-    setSessionStatus: s.setSessionStatus,
-    sessions:         s.sessions,
-  }))
-  // Active assignment: first inProgress, else first assigned/received
-  const activeAssignment = assignments.find(a => a.status === 'inProgress')
-    || assignments.find(a => a.status === 'assigned' || a.status === 'received')
-    || null
-  // Active trip session
-  const [activeTripId, setActiveTripId] = useState(
-    tripSessions.find(s => s.status === 'active')?.id || null
-  )
-  const activeTripSession = tripSessions.find(s => s.id === activeTripId) || null
 
   // ── GPS ──────────────────────────────────────────────────────
   const { gpsState, position, accuracy, startGPS, stopGPS } = useBvGPS({ active: screen === 'nav' })
@@ -883,17 +846,8 @@ export default memo(function BvRouteNav() {
     setStatus('gpsStarting')
     setScreen('nav')
     startGPS()
-    // ── Run 6: start trip session ─────────────────────────────
-    if (!activeTripSession) {
-      const trip = startTripSession(activeAssignment, session || {})
-      setActiveTripId(trip.id)
-    } else if (activeTripSession.status !== 'active') {
-      setSessionStatus(activeTripId, 'active')
-      updateTripStatus(activeTripId, 'active', activeAssignment?.id)
-    }
-    recordAuditEvent('navigation_started', 'Navigation started', 'tripSession', activeTripId || 'new', {}, 'driverPwa')
     // Transition to inProgress once GPS is active (or unavailable)
-  }, [setStatus, startGPS, activeAssignment, session, activeTripSession, activeTripId, setSessionStatus])
+  }, [setStatus, startGPS])
 
   useEffect(() => {
     if (!session) return
@@ -906,20 +860,9 @@ export default memo(function BvRouteNav() {
     }
   }, [gpsState, session?.status]) // eslint-disable-line
 
-  const handlePause    = useCallback(() => {
-    setStatus('paused')
-    if (activeTripId) updateTripStatus(activeTripId, 'paused', activeAssignment?.id)
-  }, [setStatus, activeTripId, activeAssignment])
-  const handleResume   = useCallback(() => {
-    setStatus('inProgress')
-    if (activeTripId) updateTripStatus(activeTripId, 'active', activeAssignment?.id)
-  }, [setStatus, activeTripId, activeAssignment])
-  const handleComplete = useCallback(() => {
-    setStatus('completed')
-    if (activeTripId) updateTripStatus(activeTripId, 'completed', activeAssignment?.id)
-    stopGPS()
-    setScreen('home')
-  }, [setStatus, stopGPS, activeTripId, activeAssignment])
+  const handlePause    = useCallback(() => setStatus('paused'),     [setStatus])
+  const handleResume   = useCallback(() => setStatus('inProgress'), [setStatus])
+  const handleComplete = useCallback(() => { setStatus('completed'); stopGPS(); setScreen('home') }, [setStatus, stopGPS])
   const handleExit     = useCallback(() => { stopGPS(); setScreen('home') }, [stopGPS])
   const handleRecenter = useCallback(() => {}, []) // map hook handles this internally
 
@@ -977,27 +920,6 @@ export default memo(function BvRouteNav() {
     )
   }
 
-  // ── Inbox screen ─────────────────────────────────────────────
-  if (screen === 'inbox') {
-    return (
-      <BvAssignmentInbox
-        navSession={session}
-        gpsPosition={position}
-        currentTripSessionId={activeTripId}
-        onOpenRoute={(asgn) => {
-          // Set the active route from assignment if it exists in routePlans
-          if (asgn.routeId) {
-            const { setActiveRouteId } = useRouteStore.getState()
-            if (typeof setActiveRouteId === 'function') setActiveRouteId(asgn.routeId)
-          }
-          setScreen('review')
-        }}
-      />
-    )
-  }
-
-  const inboxCount = assignments.filter(a => a.status === 'assigned').length
-
   // Home screen
   return (
     <div className="flex flex-col h-full bg-[#07080d]">
@@ -1012,8 +934,6 @@ export default memo(function BvRouteNav() {
         onStartReview={handleStartReview}
         onOpenNav={() => setScreen('nav')}
         onOpenChecklist={() => setScreen('checklist')}
-        onOpenInbox={() => setScreen('inbox')}
-        inboxCount={inboxCount}
       />
     </div>
   )

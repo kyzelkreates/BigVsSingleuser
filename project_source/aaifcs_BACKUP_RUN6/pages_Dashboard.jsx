@@ -16,7 +16,6 @@ import { useFleetStore, useDriverStore, useAppStore, useVehicleStore, useRouteSt
 import { getVehicleTemplate, calculateVehicleReadiness, getMissingCriticalFields, getReadinessLabel } from './services_vehicles_vehicleService'
 import { getRouteReadinessLabel, getRiskLevelStyle, RISK_LEVELS } from './services_routes_routeService'
 const RouteMapPreview = lazy(() => import('./modules_navigation_RouteMap'))
-import BvOperations from './modules_dashboard_BvOperations'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1092,7 +1091,7 @@ function DriverAppSummaryCard({ drivers }) {
       {/* Run 5 placeholder */}
       <div className="mt-3 p-2.5 bg-slate-900/40 border border-slate-800/50 rounded-lg">
         <p className="text-2xs text-slate-600 leading-relaxed">
-          <span className="text-violet-400/70 font-medium">Run 6</span> adds route assignments, trip sessions, and driver reports with local-first sync.
+          <span className="text-violet-400/70 font-medium">Run 5</span> will add safe mobile route following,
           GPS current location, polyline following, and driver acknowledgement. Route prepared for future
           Driver PWA navigation.
         </p>
@@ -1698,7 +1697,7 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 6 · Dashboard Sync · Assignments · Reports</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 5 · Driver PWA GPS + Safe Navigation</div>
             </div>
           </div>
         </div>
@@ -1900,14 +1899,6 @@ export default function Dashboard() {
             </div>
           )
         })()}
-
-        {/* ── Run 6: BV Operations Panel ─────────────────────────────── */}
-        <div>
-          <div className="text-2xs text-slate-600 tracking-widest uppercase font-semibold mb-3">
-            Operational Sync — Assignments · Sessions · Reports
-          </div>
-          <BvOperations />
-        </div>
 
         {/* Quick actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
