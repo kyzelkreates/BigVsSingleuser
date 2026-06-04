@@ -53,7 +53,6 @@ export const ROUTES = {
 
   // ── Settings ──────────────────────────────────────────────
   SETTINGS:               '/settings',
-  DEPLOYMENT:             '/deployment',        // Run 8 — Backend & Deployment Centre
   SETTINGS_PROFILE:       '/settings/profile',
   SETTINGS_FLEET:         '/settings/fleet',
   SETTINGS_AI:            '/settings/ai',
@@ -163,14 +162,6 @@ export const NAV_ITEMS = [
     route: ROUTES.SETTINGS,
     icon:  'Settings',
     group: 'system'
-  },
-  {
-    id:        'deployment',
-    label:     'Backend & Deploy',
-    route:     ROUTES.DEPLOYMENT,
-    icon:      'Server',
-    group:     'system',
-    highlight: false,
   }
 ]
 

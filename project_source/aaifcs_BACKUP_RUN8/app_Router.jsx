@@ -33,7 +33,6 @@ import Analytics   from './pages_Analytics'
 import Incidents   from './pages_Incidents'
 import Messaging   from './pages_Messaging'
 import Settings    from './pages_Settings'
-import Deployment  from './pages_Deployment'
 import NotFound    from './pages_NotFound'
 import AIPage      from './pages_AI'
 
@@ -105,7 +104,6 @@ export const router = createHashRouter([
       // System
       { path: 'settings',               element: <Settings /> },
       { path: 'settings/:section',      element: <Settings /> },
-      { path: 'deployment',              element: <Deployment /> },
     ]
   },
 

@@ -177,31 +177,14 @@ function DemoLivePanel() {
 }
 
 function BackendOptionsPanel() {
-  const navigate = useNavigate()
   return (
     <div className="space-y-4">
-      <SectionHead label="Backend & Deployment Centre" />
-
-      <div className="p-4 bg-[#0a0700] border border-[#b8860b]/25 rounded-xl space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-[#d4a017]">Big V's Backend &amp; Deployment Centre™</span>
-        </div>
-        <p className="text-2xs text-slate-500 leading-relaxed">
-          Demo Mode shows the product. Live Mode runs the product only after a backend is connected and validated. Configure Supabase, Firebase, AWS/custom, or local-only fallback. The 4P3X API Config Guard™ blocks backend-only secrets from the frontend.
-        </p>
-        <button
-          onClick={() => navigate('/deployment')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#b8860b]/70 hover:bg-[#b8860b] text-black text-sm font-bold transition-all"
-        >
-          Open Deployment Centre →
-        </button>
-      </div>
-
-      <div className="p-3 bg-red-950/20 border border-red-700/20 rounded-xl">
-        <p className="text-2xs text-red-400/80 leading-relaxed">
-          <strong>4P3X API Config Guard™:</strong> Backend-only secrets (SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, DATABASE_URL, JWT_SECRET, etc.) must never be placed in frontend settings, browser storage, public files, or code commits.
-        </p>
-      </div>
+      <SectionHead label="Backend Options" />
+      <PlaceholderInfoBox tag="Run 7" color="border-violet-500/20" bg="border-violet-500/20 text-violet-400 bg-violet-500/8">
+        Run 7 will add backend configuration for Supabase first, plus optional Firebase,
+        custom REST/API, or local-only fallback. No backend-only secrets will be stored
+        in frontend code — all keys will be managed via secure settings only.
+      </PlaceholderInfoBox>
     </div>
   )
 }

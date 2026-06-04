@@ -64,13 +64,6 @@ export const STORAGE_KEYS = {
   BV_AI_FINDINGS:     'bigv:aiFindings',        // aiFindings[]
   BV_AI_AGENT_RUNS:   'bigv:aiAgentRuns',       // agentRun[]
 
-  // Big V Run 8 — Backend-Ready Deployment Layer
-  BV_BACKEND_CONFIG:      'bigv:backendConfig',      // provider config (safe public fields only)
-  BV_DEPLOY_CHECKLIST:    'bigv:deployChecklist',    // productionChecklist item states
-  BV_PWA_READINESS:       'bigv:pwaReadiness',       // PWA readiness checks
-  BV_SYNC_READINESS:      'bigv:syncReadiness',      // sync readiness snapshot
-  BV_PROVIDER_HEALTH:     'bigv:providerHealth',     // last health check per provider
-
   // AI
   AI_PROVIDER:        'apex:ai:provider',
   AI_MODEL:           'apex:ai:model',
@@ -724,148 +717,6 @@ export const useSyncStatusStore = create((set, get) => ({
   setSyncing: (v) => set({ isSyncing: v }),
 }))
 
-// ─── Big V Run 8 SSOT — Backend Config Store ────────────────
-// Stores ONLY frontend-safe public configuration values.
-// NEVER stores service role keys, OPENAI_API_KEY, JWT_SECRET,
-// DATABASE_URL, WEBHOOK_SECRET, STRIPE_SECRET_KEY, GROQ_API_KEY,
-// PRIVATE_KEY, admin tokens, or any backend-only secret.
-// ─────────────────────────────────────────────────────────────
-
-const BACKEND_DEFAULTS = {
-  activeProvider:    'local',             // 'local'|'supabase'|'firebase'|'aws'|'rest'
-  demoMode:          true,               // demo mode on by default
-  providers: {
-    supabase: {
-      enabled:         false,
-      url:             '',
-      anonKey:         '',               // public anon key only — NOT service role key
-      projectRef:      '',
-      status:          'notConfigured',  // 'notConfigured'|'configured'|'testPassed'|'testFailed'
-      lastTestedAt:    null,
-      notes:           '',
-    },
-    firebase: {
-      enabled:         false,
-      projectId:       '',
-      apiKey:          '',               // public Firebase client key only
-      authDomain:      '',
-      databaseUrl:     '',
-      status:          'notConfigured',
-      lastTestedAt:    null,
-      notes:           '',
-    },
-    aws: {
-      enabled:         false,
-      apiBaseUrl:      '',
-      region:          '',
-      authModeLabel:   '',
-      status:          'notConfigured',
-      lastTestedAt:    null,
-      notes:           '',
-    },
-    rest: {
-      enabled:         false,
-      apiBaseUrl:      '',
-      healthEndpoint:  '',
-      publicClientToken: '',             // public/client-safe token only
-      status:          'notConfigured',
-      lastTestedAt:    null,
-      notes:           '',
-    },
-  },
-  localFallback: {
-    enabled:         true,
-    notes:           '',
-  },
-}
-
-export const useBackendConfigStore = create((set, get) => ({
-  config: persist.get(STORAGE_KEYS.BV_BACKEND_CONFIG, BACKEND_DEFAULTS),
-
-  // ── Selectors ─────────────────────────────────────────────
-  getActiveProvider: () => get().config.activeProvider,
-  isDemoMode:        () => get().config.demoMode,
-  isLiveMode:        () => !get().config.demoMode,
-  isBackendConfigured: () => {
-    const p = get().config.activeProvider
-    const providers = get().config.providers
-    if (p === 'local') return false
-    return providers[p]?.status === 'testPassed' || providers[p]?.status === 'configured'
-  },
-
-  // ── Mutations ─────────────────────────────────────────────
-  setDemoMode: (on) => {
-    const config = { ...get().config, demoMode: on }
-    persist.set(STORAGE_KEYS.BV_BACKEND_CONFIG, config)
-    set({ config })
-  },
-  setActiveProvider: (provider) => {
-    const config = { ...get().config, activeProvider: provider }
-    persist.set(STORAGE_KEYS.BV_BACKEND_CONFIG, config)
-    set({ config })
-  },
-  updateProvider: (providerKey, fields) => {
-    const config = {
-      ...get().config,
-      providers: {
-        ...get().config.providers,
-        [providerKey]: { ...get().config.providers[providerKey], ...fields },
-      },
-    }
-    persist.set(STORAGE_KEYS.BV_BACKEND_CONFIG, config)
-    set({ config })
-  },
-  setProviderStatus: (providerKey, status) => {
-    get().updateProvider(providerKey, { status, lastTestedAt: new Date().toISOString() })
-  },
-  resetProvider: (providerKey) => {
-    const defaults = BACKEND_DEFAULTS.providers[providerKey] || {}
-    get().updateProvider(providerKey, defaults)
-  },
-}))
-
-// ── Deployment Checklist Store ─────────────────────────────
-const CHECKLIST_DEFAULTS = [
-  { id: 'bv-cl-brand',       label: 'Branding correct — Big V's Best Routes™',                         checked: false, category: 'product' },
-  { id: 'bv-cl-demo-off',    label: 'Demo mode can be switched off',                                     checked: false, category: 'mode'    },
-  { id: 'bv-cl-demo-iso',    label: 'Demo data does not mix with live data',                             checked: false, category: 'mode'    },
-  { id: 'bv-cl-backend',     label: 'Backend provider selected',                                         checked: false, category: 'backend' },
-  { id: 'bv-cl-pub-keys',    label: 'Frontend-safe public keys configured',                              checked: false, category: 'backend' },
-  { id: 'bv-cl-no-secrets',  label: 'Backend-only secrets excluded from frontend',                       checked: false, category: 'security'},
-  { id: 'bv-cl-sync-queue',  label: 'Sync queue visible and working',                                    checked: false, category: 'sync'    },
-  { id: 'bv-cl-driver-pwa',  label: 'Driver PWA opens correctly',                                        checked: false, category: 'pwa'     },
-  { id: 'bv-cl-map',         label: 'OSM/MapLibre map layer works',                                      checked: false, category: 'features'},
-  { id: 'bv-cl-gps',         label: 'GPS safe navigation works',                                         checked: false, category: 'features'},
-  { id: 'bv-cl-assignments',  label: 'Route assignments work',                                            checked: false, category: 'features'},
-  { id: 'bv-cl-trips',       label: 'Trip sessions work',                                                checked: false, category: 'features'},
-  { id: 'bv-cl-reports',     label: 'Driver reports work',                                               checked: false, category: 'features'},
-  { id: 'bv-cl-ai',          label: 'AI advisory layer works',                                           checked: false, category: 'ai'      },
-  { id: 'bv-cl-disclaimers', label: 'Safety/legal disclaimers visible',                                  checked: false, category: 'safety'  },
-  { id: 'bv-cl-pwa-checks',  label: 'PWA install readiness checks passed',                               checked: false, category: 'pwa'     },
-  { id: 'bv-cl-mobile',      label: 'Mobile responsiveness checked',                                     checked: false, category: 'ux'      },
-  { id: 'bv-cl-console',     label: 'No console errors in production mode',                              checked: false, category: 'qa'      },
-  { id: 'bv-cl-rollback',    label: 'Rollback plan documented',                                          checked: false, category: 'qa'      },
-]
-
-export const useDeploymentChecklistStore = create((set, get) => ({
-  items: persist.get(STORAGE_KEYS.BV_DEPLOY_CHECKLIST, CHECKLIST_DEFAULTS),
-
-  toggleItem: (id) => {
-    const items = get().items.map(i => i.id === id ? { ...i, checked: !i.checked } : i)
-    persist.set(STORAGE_KEYS.BV_DEPLOY_CHECKLIST, items)
-    set({ items })
-  },
-  resetAll: () => {
-    const items = CHECKLIST_DEFAULTS.map(i => ({ ...i, checked: false }))
-    persist.set(STORAGE_KEYS.BV_DEPLOY_CHECKLIST, items)
-    set({ items })
-  },
-  getProgress: () => {
-    const { items } = get()
-    return { done: items.filter(i => i.checked).length, total: items.length }
-  },
-}))
-
 // ─── Big V Run 7 SSOT — AI Advisory Store ────────────────────
 // Stores results from the local-first 4P3X Intelligent AI™ advisory agents.
 // No external AI API is called here — all logic is deterministic local rules.
@@ -1179,8 +1030,6 @@ export default {
   useAuditStore,
   useSyncStatusStore,
   useAiAdvisoryStore,
-  useBackendConfigStore,
-  useDeploymentChecklistStore,
   useAIStore,
   useDriverStore,
   useNavStore,
