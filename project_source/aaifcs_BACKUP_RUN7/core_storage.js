@@ -59,11 +59,6 @@ export const STORAGE_KEYS = {
   BV_AUDIT_EVENTS:    'bigv:auditEvents',       // auditEvent[]
   BV_SYNC_STATUS:     'bigv:syncStatus',        // { lastSyncAt, pendingCount, mode }
 
-  // Big V Run 7 — 4P3X Intelligent AI™ Advisory Layer
-  BV_AI_ADVISORY:     'bigv:aiAdvisory',        // aiAdvisory state object
-  BV_AI_FINDINGS:     'bigv:aiFindings',        // aiFindings[]
-  BV_AI_AGENT_RUNS:   'bigv:aiAgentRuns',       // agentRun[]
-
   // AI
   AI_PROVIDER:        'apex:ai:provider',
   AI_MODEL:           'apex:ai:model',
@@ -717,53 +712,6 @@ export const useSyncStatusStore = create((set, get) => ({
   setSyncing: (v) => set({ isSyncing: v }),
 }))
 
-// ─── Big V Run 7 SSOT — AI Advisory Store ────────────────────
-// Stores results from the local-first 4P3X Intelligent AI™ advisory agents.
-// No external AI API is called here — all logic is deterministic local rules.
-// ─────────────────────────────────────────────────────────────
-
-export const useAiAdvisoryStore = create((set, get) => ({
-  // ── Advisory snapshot ────────────────────────────────────────
-  advisory: persist.get(STORAGE_KEYS.BV_AI_ADVISORY, null),
-
-  // ── Findings list ─────────────────────────────────────────────
-  findings: persist.get(STORAGE_KEYS.BV_AI_FINDINGS, []),
-
-  // ── Agent run log ─────────────────────────────────────────────
-  agentRuns: persist.get(STORAGE_KEYS.BV_AI_AGENT_RUNS, []),
-
-  // ── Mutations ─────────────────────────────────────────────────
-  setAdvisory: (advisory) => {
-    const updated = { ...advisory, lastUpdatedAt: new Date().toISOString() }
-    persist.set(STORAGE_KEYS.BV_AI_ADVISORY, updated)
-    set({ advisory: updated })
-  },
-
-  setFindings: (findings) => {
-    persist.set(STORAGE_KEYS.BV_AI_FINDINGS, findings)
-    set({ findings })
-  },
-
-  resolveFinding: (findingId, status = 'acknowledged') => {
-    const findings = get().findings.map(f =>
-      f.findingId === findingId ? { ...f, resolvedStatus: status, resolvedAt: new Date().toISOString() } : f
-    )
-    persist.set(STORAGE_KEYS.BV_AI_FINDINGS, findings)
-    set({ findings })
-  },
-
-  addAgentRun: (run) => {
-    const agentRuns = [run, ...get().agentRuns].slice(0, 100) // cap at 100
-    persist.set(STORAGE_KEYS.BV_AI_AGENT_RUNS, agentRuns)
-    set({ agentRuns })
-  },
-
-  clearFindings: () => {
-    persist.set(STORAGE_KEYS.BV_AI_FINDINGS, [])
-    set({ findings: [] })
-  },
-}))
-
 // ─── Big V Vehicle Store (Run 2 SSOT) ────────────────────────
 // Single source of truth for all saved vehicle profiles.
 // Persisted to localStorage via bigv:vehicles / bigv:activeVehicleId.
@@ -1029,7 +977,6 @@ export default {
   useSyncQueueStore,
   useAuditStore,
   useSyncStatusStore,
-  useAiAdvisoryStore,
   useAIStore,
   useDriverStore,
   useNavStore,

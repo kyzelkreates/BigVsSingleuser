@@ -28,7 +28,6 @@ import { useState, useEffect, useRef, useCallback, Suspense, lazy, memo } from '
 import Icon from './components_ui_Icon'
 import { useVehicleStore, useRouteStore, useNavStore, useMapStore, useAssignmentStore, useTripSessionStore } from './core_storage'
 import BvAssignmentInbox from './modules_driver_BvAssignmentInbox'
-import BvAiAdvisory from './modules_driver_BvAiAdvisory'
 import {
   startTripSession,
   updateTripStatus,
@@ -730,9 +729,6 @@ function HomeScreen({ routePlan, vehicle, session, gpsState, warnings, isOnline,
           </div>
         )}
       </div>
-
-      {/* 4P3X AI Advisory */}
-      <BvAiAdvisory gpsState={gpsState} isOnline={isOnline} />
 
       {/* Vehicle */}
       <div>

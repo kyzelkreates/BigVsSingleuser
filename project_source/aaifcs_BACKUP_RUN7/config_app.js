@@ -14,7 +14,7 @@ export const APP_CONFIG = {
   name:        "Big V's Best Routes™",
   shortName:   'Big V Routes',
   version:     '1.0.0',
-  buildStage:  'Run 7 — 4P3X Intelligent AI™ Safety + Legal Compliance Advisory Layer',
+  buildStage:  'Run 6 — Dashboard Sync · Assignments · Trip Sessions · Reports',
   tagline:     'Vehicle-aware route planning for safer, smarter, more legally aware journeys.',
 
   branding: {

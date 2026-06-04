@@ -17,7 +17,6 @@ import { getVehicleTemplate, calculateVehicleReadiness, getMissingCriticalFields
 import { getRouteReadinessLabel, getRiskLevelStyle, RISK_LEVELS } from './services_routes_routeService'
 const RouteMapPreview = lazy(() => import('./modules_navigation_RouteMap'))
 import BvOperations from './modules_dashboard_BvOperations'
-import BvAiOverview from './modules_dashboard_BvAiOverview'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1093,7 +1092,7 @@ function DriverAppSummaryCard({ drivers }) {
       {/* Run 5 placeholder */}
       <div className="mt-3 p-2.5 bg-slate-900/40 border border-slate-800/50 rounded-lg">
         <p className="text-2xs text-slate-600 leading-relaxed">
-          <span className="text-violet-400/70 font-medium">Run 7</span> adds 4P3X Intelligent AI™ advisory agents for route safety, vehicle suitability, and compliance evidence review.
+          <span className="text-violet-400/70 font-medium">Run 6</span> adds route assignments, trip sessions, and driver reports with local-first sync.
           GPS current location, polyline following, and driver acknowledgement. Route prepared for future
           Driver PWA navigation.
         </p>
@@ -1699,7 +1698,7 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 7 · 4P3X Intelligent AI™ Advisory Layer</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 6 · Dashboard Sync · Assignments · Reports</div>
             </div>
           </div>
         </div>
@@ -1901,14 +1900,6 @@ export default function Dashboard() {
             </div>
           )
         })()}
-
-        {/* ── Run 7: 4P3X AI Oversight Center ────────────────────────── */}
-        <div>
-          <div className="text-2xs text-slate-600 tracking-widest uppercase font-semibold mb-3">
-            4P3X Intelligent AI™ Safety &amp; Legal Advisory Layer
-          </div>
-          <BvAiOverview />
-        </div>
 
         {/* ── Run 6: BV Operations Panel ─────────────────────────────── */}
         <div>
