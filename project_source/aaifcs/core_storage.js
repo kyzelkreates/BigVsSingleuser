@@ -43,6 +43,11 @@ export const STORAGE_KEYS = {
   MAP_ZOOM:           'apex:map:zoom',
   MAP_LAYER:          'apex:map:layer',
 
+  // Big V map mode (Run 4)
+  BV_MAP_MODE:        'bigv:mapMode',           // '2d' | '3d'
+  BV_GPS_STATUS:      'bigv:gpsStatus',         // 'unknown'|'ready'|'denied'|'unavailable'
+  BV_LAST_POSITION:   'bigv:lastKnownPosition', // {lat, lng, accuracy, timestamp}
+
   // AI
   AI_PROVIDER:        'apex:ai:provider',
   AI_MODEL:           'apex:ai:model',
@@ -232,7 +237,27 @@ export const useMapStore = create((set) => ({
   setMarkers: (markers) => set({ markers }),
   addMarker: (m) => set(s => ({ markers: [...s.markers, m] })),
   setRoutes: (routes) => set({ routes }),
-  setGeofences: (geofences) => set({ geofences })
+  setGeofences: (geofences) => set({ geofences }),
+
+  // ── Run 4: Big V Map Mode + GPS ──────────────────────────
+  mapMode:       persist.get(STORAGE_KEYS.BV_MAP_MODE, '2d'),    // '2d' | '3d'
+  gpsStatus:     persist.get(STORAGE_KEYS.BV_GPS_STATUS, 'unknown'),
+  lastPosition:  persist.get(STORAGE_KEYS.BV_LAST_POSITION, null),
+  mapFallback:   null,   // reason string if 3D fell back to 2D
+
+  setMapMode: (mode) => {
+    persist.set(STORAGE_KEYS.BV_MAP_MODE, mode)
+    set({ mapMode: mode, mapFallback: null })
+  },
+  setMapFallback: (reason) => set({ mapMode: '2d', mapFallback: reason }),
+  setGpsStatus: (status) => {
+    persist.set(STORAGE_KEYS.BV_GPS_STATUS, status)
+    set({ gpsStatus: status })
+  },
+  setLastPosition: (pos) => {
+    if (pos) persist.set(STORAGE_KEYS.BV_LAST_POSITION, pos)
+    set({ lastPosition: pos })
+  },
 }))
 
 

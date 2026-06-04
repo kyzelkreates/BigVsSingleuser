@@ -151,6 +151,7 @@ export default defineConfig({
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-charts':   ['recharts'],
           'vendor-leaflet':  ['leaflet', 'react-leaflet'],
+          'vendor-maplibre': ['maplibre-gl'],
         },
       },
     },
@@ -158,6 +159,6 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: ['leaflet', 'react-leaflet', 'recharts', 'zustand', '@supabase/supabase-js'],
+    include: ['leaflet', 'react-leaflet', 'maplibre-gl', 'recharts', 'zustand', '@supabase/supabase-js'],
   },
 })

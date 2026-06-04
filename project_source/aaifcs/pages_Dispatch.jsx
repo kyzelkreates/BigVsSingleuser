@@ -35,6 +35,9 @@ import {
   validateRoutePlanInput,
 } from './services_routes_routeService'
 import { ROUTES } from './config_routes'
+import { lazy, Suspense } from 'react'
+
+const RouteMap = lazy(() => import('./modules_navigation_RouteMap'))
 
 // ─── Small shared components ──────────────────────────────────
 
@@ -739,26 +742,51 @@ export default function RoutePlanner() {
           </div>
         )}
 
-        {/* Run 4 placeholder */}
-        {routePlans.length > 0 && (
-          <div className="mt-6 p-3 bg-cyan-500/5 border border-cyan-500/15 rounded-xl">
-            <div className="flex items-start gap-2">
-              <Icon name="Map" size={13} className="text-cyan-400 flex-shrink-0 mt-0.5" />
-              <p className="text-2xs text-slate-500 leading-relaxed">
-                <span className="text-cyan-400 font-medium">Run 4</span> will connect OpenStreetMap tiles
-                for 2D map rendering and MapLibre for 3D/tilted rendering. Route plans created here will
-                display on the map and receive live routing via OSM-compatible APIs.
-              </p>
-            </div>
+        {/* ── Run 4: Route Map ─────────────────────────────── */}
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="Map" size={13} className="text-cyan-400" />
+            <span className="text-xs font-semibold text-slate-400">Route Map</span>
+            {activeRoute && (
+              <span className="text-2xs text-slate-500 ml-auto truncate">
+                {activeRoute.name || `${activeRoute.origin?.label} → ${activeRoute.destination?.label}`}
+              </span>
+            )}
           </div>
-        )}
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64 bg-[#050810] border border-slate-800/60 rounded-xl">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-7 h-7 border-2 border-[#b8860b]/30 border-t-[#b8860b] rounded-full animate-spin" />
+                <span className="text-xs text-slate-600 font-mono">LOADING MAP</span>
+              </div>
+            </div>
+          }>
+            <RouteMap
+              routePlan={activeRoute || (filtered.length > 0 ? filtered[0] : null)}
+              height="380px"
+              showDisclaimer={false}
+              demoMode={false}
+            />
+          </Suspense>
+        </div>
+
+        {/* Run 5 placeholder */}
+        <div className="mt-4 p-3 bg-violet-500/5 border border-violet-500/15 rounded-xl">
+          <div className="flex items-start gap-2">
+            <Icon name="Smartphone" size={13} className="text-violet-400 flex-shrink-0 mt-0.5" />
+            <p className="text-2xs text-slate-500 leading-relaxed">
+              <span className="text-violet-400 font-medium">Run 5</span> will connect the map to the Driver PWA
+              with start/pause/resume/complete controls, driver acknowledgement, and real-time route following.
+            </p>
+          </div>
+        </div>
 
         {/* Safety advisory */}
-        <div className="mt-4 p-3 bg-[#0a0700] border border-[#b8860b]/15 rounded-xl">
+        <div className="mt-3 p-3 bg-[#0a0700] border border-[#b8860b]/15 rounded-xl">
           <p className="text-2xs text-slate-600 leading-relaxed">
-            ⚠ Advisory only: route plans are planning records only in Run 3. Map rendering, road restriction
-            checks, and live polyline validation are added in later runs. Always verify live road signs,
-            restrictions, and vehicle suitability before travel.
+            ⚠ Advisory only: map data may be incomplete or out of date. Always verify live road signs,
+            restrictions, and vehicle suitability before travel. Big V's Best Routes™ is advisory only
+            and does not guarantee legal route suitability.
           </p>
         </div>
       </div>

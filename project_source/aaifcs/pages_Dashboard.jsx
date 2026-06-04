@@ -15,6 +15,7 @@ import TelemetryValue from './components_ui_TelemetryValue'
 import { useFleetStore, useDriverStore, useAppStore, useVehicleStore, useRouteStore } from './core_storage'
 import { getVehicleTemplate, calculateVehicleReadiness, getMissingCriticalFields, getReadinessLabel } from './services_vehicles_vehicleService'
 import { getRouteReadinessLabel, getRiskLevelStyle, RISK_LEVELS } from './services_routes_routeService'
+const RouteMapPreview = lazy(() => import('./modules_navigation_RouteMap'))
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1634,6 +1635,40 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Run 4: Active Route Map Preview ────────────────────────── */}
+        {bvActiveRoute && (
+          <div className="border border-[#b8860b]/20 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-[#0a0700] border-b border-[#b8860b]/20">
+              <div className="flex items-center gap-2">
+                <Icon name="Navigation" size={13} className="text-[#d4a017]" />
+                <span className="text-xs font-semibold text-[#d4a017]">Active Route</span>
+                <span className="text-2xs text-slate-500 truncate max-w-[200px]">
+                  {bvActiveRoute.name || `${bvActiveRoute.origin?.label} → ${bvActiveRoute.destination?.label}`}
+                </span>
+              </div>
+              <button
+                onClick={() => navigate(ROUTES.DISPATCH)}
+                className="text-2xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+              >
+                Open Planner <Icon name="ArrowRight" size={10} />
+              </button>
+            </div>
+            <Suspense fallback={
+              <div className="h-48 flex items-center justify-center bg-[#050810]">
+                <div className="w-6 h-6 border-2 border-[#b8860b]/30 border-t-[#b8860b] rounded-full animate-spin" />
+              </div>
+            }>
+              <RouteMapPreview
+                routePlan={bvActiveRoute}
+                height="220px"
+                showControls={true}
+                showDisclaimer={false}
+                demoMode={false}
+              />
+            </Suspense>
+          </div>
+        )}
+
         {/* Driver App — slim summary card */}
         <DriverAppSummaryCard drivers={drivers} />
 
@@ -1662,7 +1697,7 @@ export default function Dashboard() {
             <div className="flex-shrink-0 text-right hidden sm:block">
               <div className="text-2xs text-slate-600">Created by</div>
               <div className="text-xs text-[#b8860b]/80 font-medium">Kyzel Kreates™</div>
-              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 3 · Route Planner Dashboard</div>
+              <div className="text-2xs text-slate-700 mt-1 font-mono">Run 4 · OSM 2D + MapLibre 3D Map Layer</div>
             </div>
           </div>
         </div>
@@ -1829,17 +1864,20 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Map Mode — Run 4 */}
-                <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-3.5 flex flex-col gap-2">
+                {/* Map Mode — Run 4 LIVE */}
+                <div
+                  className="bg-cyan-500/5 border border-cyan-500/25 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer hover:border-cyan-500/40 transition-all"
+                  onClick={() => navigate('/navigation')}
+                >
                   <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center">
-                      <Icon name="Map" size={14} className="text-cyan-400/40" />
+                    <div className="w-7 h-7 rounded-lg bg-cyan-500/8 border border-cyan-500/20 flex items-center justify-center">
+                      <Icon name="Map" size={14} className="text-cyan-400" />
                     </div>
-                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-slate-600 bg-slate-900/60 border-slate-800/60">Run 4</span>
+                    <span className="text-2xs font-mono px-1.5 py-0.5 rounded border text-emerald-400 bg-emerald-500/8 border-emerald-500/20">Active</span>
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-cyan-400/40">Map Mode</div>
-                    <div className="text-2xs text-slate-600 mt-0.5">OSM 2D + MapLibre 3D rendering</div>
+                    <div className="text-xs font-semibold text-cyan-400">Map Mode</div>
+                    <div className="text-2xs text-slate-600 mt-0.5">2D OSM · 3D MapLibre GL</div>
                   </div>
                 </div>
 

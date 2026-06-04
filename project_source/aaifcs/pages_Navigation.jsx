@@ -20,7 +20,7 @@ import Badge from './components_ui_Badge'
 import StatusDot from './components_ui_StatusDot'
 import TelemetryValue from './components_ui_TelemetryValue'
 import MapControls from './modules_navigation_MapControls'
-import { useMapStore, useFleetStore } from './core_storage'
+import { useMapStore, useFleetStore, useRouteStore } from './core_storage'
 import { mapService } from './services_maps_mapService'
 import { fleetService } from './services_fleet_fleetService'
 import { dispatchService, JOB_PRIORITY } from './services_dispatch_dispatchService'
@@ -30,7 +30,8 @@ import {
 } from './services_sync_liveSync'
 import { getDrivers, getVehicles } from './services_backend_backendService'
 
-const ApexMap = lazy(() => import('./modules_navigation_ApexMap'))
+const ApexMap   = lazy(() => import('./modules_navigation_ApexMap'))
+const RouteMap  = lazy(() => import('./modules_navigation_RouteMap'))
 
 // ─── Loading Spinner ──────────────────────────────────────────
 function MapLoader() {
@@ -645,6 +646,11 @@ export default function Navigation() {
     }
   }, [])
 
+  // ── Run 4: BV active route for map overlay ──────────────
+  const bvRoutePlans  = useRouteStore(s => s.routePlans)
+  const bvActiveRtId  = useRouteStore(s => s.activeRouteId)
+  const bvActiveRoute = bvRoutePlans.find(r => r.id === bvActiveRtId) || null
+
   return (
     <div className="fixed inset-0 z-30 bg-[#050810] overflow-hidden">
       {/* Exit button */}
@@ -686,6 +692,37 @@ export default function Navigation() {
 
         {/* Map Controls */}
         <MapControls mapRef={mapRef} isFullscreen={true} onFullscreen={null} />
+
+        {/* ── Run 4: BV Active Route Preview ──────────────── */}
+        {bvActiveRoute && (
+          <div className="absolute bottom-16 left-4 z-[1000] w-72 max-w-[calc(100vw-2rem)]">
+            <div className="bg-[#09090a]/95 border border-[#b8860b]/30 rounded-xl overflow-hidden backdrop-blur-sm shadow-2xl">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-800/60">
+                <Icon name="Navigation" size={12} className="text-[#d4a017]" />
+                <span className="text-2xs font-semibold text-[#d4a017] flex-1 truncate">
+                  {bvActiveRoute.name || `${bvActiveRoute.origin?.label} → ${bvActiveRoute.destination?.label}`}
+                </span>
+                <span className="text-2xs text-slate-600 font-mono">{bvActiveRoute.readinessScore ?? 0}%</span>
+              </div>
+              <Suspense fallback={
+                <div className="h-40 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-[#b8860b]/30 border-t-[#b8860b] rounded-full animate-spin" />
+                </div>
+              }>
+                <RouteMap
+                  routePlan={bvActiveRoute}
+                  height="180px"
+                  showControls={false}
+                  showDisclaimer={false}
+                  demoMode={false}
+                />
+              </Suspense>
+              <div className="px-3 py-1.5 text-2xs text-slate-600">
+                ⚠ Advisory only — not GPS navigation
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Vehicle detail panel */}
         {selectedVehicle && (
