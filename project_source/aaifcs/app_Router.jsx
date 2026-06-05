@@ -40,15 +40,11 @@ import AIPage      from './pages_AI'
 // Helper — read setup flag without importing full service
 const setupDone = () => localStorage.getItem('apex:setup_complete') === 'true'
 
-// Root redirects: first-run → setup, otherwise → dashboard
-const RootRedirect = () =>
-  setupDone()
-    ? <Navigate to="/dashboard" replace />
-    : <Navigate to="/auth/setup" replace />
+// ROOT REDIRECT — single-user mode: always go to dashboard
+const RootRedirect = () => <Navigate to="/dashboard" replace />
 
-// Login redirect: if setup not done, go to setup first
-const LoginOrSetup = ({ element }) =>
-  !setupDone() ? <Navigate to="/auth/setup" replace /> : element
+// AUTH BYPASSED — LoginOrSetup passthrough (single-user mode)
+const LoginOrSetup = ({ element }) => element
 
 export const router = createHashRouter([
 
