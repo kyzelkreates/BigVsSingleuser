@@ -171,7 +171,7 @@ export const aiRouter = {
       apex_predict:     'You are Apex Predict, a predictive analytics AI for fleet management. Identify trends, forecast maintenance needs, and surface actionable insights.',
       apex_vision:      'You are Apex Vision, a visual AI for fleet monitoring. Analyse dashcam feeds, detect incidents, and provide objective event descriptions.',
     }
-    const system = systemPrompts[module] || 'You are a 4P3X Intelligent AI™ assistant for Big V's Best Routes™.'
+    const system = systemPrompts[module] || "You are a 4P3X Intelligent AI™ assistant for Big V's Best Routes™."
     const messages = [
       { role: 'system',  content: system },
       ...(context.history || []),

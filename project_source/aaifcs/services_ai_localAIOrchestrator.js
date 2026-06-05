@@ -219,7 +219,7 @@ class LocalAIOrchestrator {
       fatigue_assessment: 'You are a driver fatigue monitor. Apply EU 4.5h rule. Prioritise driver safety.',
       dispatch_optimise:  'You are a dispatch optimiser. Suggest efficient job batching and routing.',
     }
-    return prompts[module] || 'You are a 4P3X Intelligent AI™ route planning and safety assistant for Big V's Best Routes™. Be concise, safety-aware, and helpful.'
+    return prompts[module] || "You are a 4P3X Intelligent AI™ route planning and safety assistant for Big V's Best Routes™. Be concise, safety-aware, and helpful."
   }
 
   _tierAllowed(maxTier, tier) {

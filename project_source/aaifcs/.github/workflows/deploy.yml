@@ -1,3 +1,32 @@
+# ============================================================
+# Big V's Best Routes™ — GitHub Actions: Build & Deploy → Vercel
+# Powered by 4P3X Intelligent AI™ | Created by Kyzel Kreates™
+#
+# Trigger: every push to main, or manual dispatch
+# Stack:   Vite 5 + React 18 + Tailwind + Zustand + Leaflet + MapLibre
+# Host:    Vercel (prebuilt deploy via Vercel CLI)
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   VERCEL_TOKEN       — from Vercel account settings
+#   VERCEL_ORG_ID      — from .vercel/project.json after first `vercel link`
+#   VERCEL_PROJECT_ID  — from .vercel/project.json after first `vercel link`
+#
+# Optional env secrets (only add if you use these services):
+#   VITE_SUPABASE_URL          — Supabase project URL (public)
+#   VITE_SUPABASE_ANON_KEY     — Supabase anon/public key ONLY
+#   VITE_GRAPHHOPPER_API_KEY   — GraphHopper routing API key
+#   VITE_MAPBOX_TOKEN          — Mapbox token (optional — OSM is free default)
+#   VITE_OPENROUTER_API_KEY    — OpenRouter key (client-safe only)
+#   VITE_DEEPSEEK_API_KEY      — DeepSeek key (client-safe only)
+#   VITE_MISTRAL_API_KEY       — Mistral key (client-safe only)
+#   VITE_ENABLE_DEMO_MODE      — "true" or "false"
+#
+# 4P3X API Config Guard™:
+#   NEVER add: SUPABASE_SERVICE_ROLE_KEY · OPENAI_API_KEY
+#   STRIPE_SECRET_KEY · DATABASE_URL · JWT_SECRET · PRIVATE_KEY
+#   WEBHOOK_SECRET · any backend-only secret
+# ============================================================
+
 name: Build & Deploy → Vercel
 
 on:
@@ -6,54 +35,72 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Deploy to Vercel
+  build-and-deploy:
+    name: Vite Build + Vercel Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      # ── 1. Source ──────────────────────────────────────────────
-      - name: Checkout
+      # ── 1. Checkout ──────────────────────────────────────────
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      # ── 2. Node ───────────────────────────────────────────────
-      - name: Setup Node 20
+      # ── 2. Node.js 20 ────────────────────────────────────────
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
 
-      # ── 3. Dependencies ───────────────────────────────────────
+      # ── 3. Install dependencies ───────────────────────────────
       - name: Install dependencies
         run: npm ci
 
-      # ── 4. Build ──────────────────────────────────────────────
-      - name: Build (Vite)
+      # ── 4. Vite build ─────────────────────────────────────────
+      # All VITE_ vars are frontend-safe public config only.
+      # Backend-only secrets must never appear here.
+      - name: Vite build
         run: npm run build
         env:
-          VITE_SUPABASE_URL:       ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY:  ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_OPENAI_KEY:         ${{ secrets.VITE_OPENAI_KEY }}
-          VITE_OPENROUTER_KEY:     ${{ secrets.VITE_OPENROUTER_KEY }}
-          VITE_GROQ_KEY:           ${{ secrets.VITE_GROQ_KEY }}
-          VITE_DEEPSEEK_KEY:       ${{ secrets.VITE_DEEPSEEK_KEY }}
-          VITE_MISTRAL_KEY:        ${{ secrets.VITE_MISTRAL_KEY }}
-          VITE_ANTHROPIC_KEY:      ${{ secrets.VITE_ANTHROPIC_KEY }}
-          VITE_GEMINI_KEY:         ${{ secrets.VITE_GEMINI_KEY }}
-          VITE_GRAPHHOPPER_KEY:    ${{ secrets.VITE_GRAPHHOPPER_KEY }}
-          VITE_GOOGLE_MAPS_KEY:    ${{ secrets.VITE_GOOGLE_MAPS_KEY }}
+          # ── Demo/Live mode ──────────────────────────────────
+          VITE_ENABLE_DEMO_MODE: ${{ secrets.VITE_ENABLE_DEMO_MODE || 'true' }}
 
-      # ── 5. Vercel CLI deploy ───────────────────────────────────
+          # ── Supabase (public anon key only — NOT service_role) ──
+          VITE_SUPABASE_URL:         ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY:    ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+          # ── Map providers (public keys only) ─────────────────
+          VITE_MAP_PROVIDER:         ${{ secrets.VITE_MAP_PROVIDER || 'osm' }}
+          VITE_GRAPHHOPPER_API_KEY:  ${{ secrets.VITE_GRAPHHOPPER_API_KEY }}
+          VITE_MAPBOX_TOKEN:         ${{ secrets.VITE_MAPBOX_TOKEN }}
+
+          # ── Optional AI providers (client-safe keys only) ────
+          VITE_OPENROUTER_API_KEY:   ${{ secrets.VITE_OPENROUTER_API_KEY }}
+          VITE_DEEPSEEK_API_KEY:     ${{ secrets.VITE_DEEPSEEK_API_KEY }}
+          VITE_MISTRAL_API_KEY:      ${{ secrets.VITE_MISTRAL_API_KEY }}
+
+          # ── Node config ──────────────────────────────────────
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      # ── 5. Confirm build output ───────────────────────────────
+      - name: Verify dist output
+        run: |
+          echo "Build output:"
+          ls -lah dist/
+          echo "Index.html present:"
+          test -f dist/index.html && echo "✅ dist/index.html exists" || (echo "❌ MISSING dist/index.html" && exit 1)
+
+      # ── 6. Deploy to Vercel ───────────────────────────────────
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Pull Vercel project settings
+      - name: Pull Vercel environment & project settings
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Deploy to Vercel (production)
+      - name: Deploy prebuilt dist to Vercel (production)
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}

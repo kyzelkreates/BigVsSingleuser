@@ -826,7 +826,7 @@ export const useBackendConfigStore = create((set, get) => ({
 
 // ── Deployment Checklist Store ─────────────────────────────
 const CHECKLIST_DEFAULTS = [
-  { id: 'bv-cl-brand',       label: 'Branding correct — Big V's Best Routes™',                         checked: false, category: 'product' },
+  { id: 'bv-cl-brand',       label: "Branding correct — Big V\'s Best Routes™",                         checked: false, category: 'product' },
   { id: 'bv-cl-demo-off',    label: 'Demo mode can be switched off',                                     checked: false, category: 'mode'    },
   { id: 'bv-cl-demo-iso',    label: 'Demo data does not mix with live data',                             checked: false, category: 'mode'    },
   { id: 'bv-cl-backend',     label: 'Backend provider selected',                                         checked: false, category: 'backend' },
