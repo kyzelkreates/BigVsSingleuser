@@ -19,6 +19,7 @@ const RouteMapPreview = lazy(() => import('./modules_navigation_RouteMap'))
 import BvOperations from './modules_dashboard_BvOperations'
 import BvAiOverview from './modules_dashboard_BvAiOverview'
 import BvAboutPanel from './modules_dashboard_BvAboutPanel'
+import BvModeBar   from './modules_status_BvModeBar'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
 import { safetyService } from './services_safety_safetyService'
@@ -1434,6 +1435,14 @@ export default function Dashboard() {
             <LiveClock />
           </div>
         </div>
+      </div>
+
+      {/* ── BvModeBar™ — Demo/Live/Backend/Sync status ── */}
+      <div className="px-3 sm:px-6 py-2 flex-shrink-0">
+        <BvModeBar
+          variant="dashboard"
+          onOpenDeployment={() => navigate('/deployment')}
+        />
       </div>
 
       <div className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-5">

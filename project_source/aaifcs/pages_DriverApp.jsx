@@ -80,7 +80,8 @@ import ExportCenter      from './modules_safety_ui_ExportCenter'
 import { startSafetySync, stopSafetySync } from './services_safety_syncService'
 
 // ── Run 5: BV Safe Navigation Module ─────────────────────────
-import BvRouteNav from './modules_driver_BvRouteNav'
+import BvRouteNav  from './modules_driver_BvRouteNav'
+import BvModeBar   from './modules_status_BvModeBar'
 
 // ── Fix default Leaflet marker icons ─────────────────────────
 delete L.Icon.Default.prototype._getIconUrl
@@ -1919,6 +1920,13 @@ function DriverAppMain({ profile, onLogout }) {
           <button onClick={() => setActiveAlert(null)} className="text-slate-500 hover:text-white">
             <Icon name="X" size={12} />
           </button>
+        </div>
+      )}
+
+      {/* ── BvModeBar™ — Demo/Live/Backend status (driver) ─── */}
+      {!(isFullscreen && tab === 'map') && (
+        <div className="flex-shrink-0">
+          <BvModeBar variant="driver" />
         </div>
       )}
 

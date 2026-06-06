@@ -124,7 +124,7 @@ function GuardedInput({ label, value, onChange, placeholder, hint, required = fa
 
 // ─── DEMO / LIVE MODE PANEL ───────────────────────────────────
 function DemoLivePanel() {
-  const { config, setDemoMode } = useBackendConfigStore()
+  const { config, setDemoMode, isBackendConfigured, isLiveSyncActive } = useBackendConfigStore()
   const demo    = config.demoMode
   const provider= config.activeProvider
   const isBackendCfg = provider !== 'local'
@@ -179,6 +179,48 @@ function DemoLivePanel() {
             ⚠ Live Mode must not mix demo data with real records. Demo data must not populate the live dashboard. If switching from demo to live, ensure demo records are cleared or isolated first.
           </div>
         )}
+
+        {/* ── Live sync activation gate ── */}
+        {!demo && (
+          <div className="p-3 bg-[#0a0700] border border-[#b8860b]/20 rounded-xl space-y-3">
+            <div className="text-xs font-bold text-[#d4a017]">Live Sync Activation Gate</div>
+            <p className="text-2xs text-slate-600 leading-relaxed">
+              Turning Demo Mode OFF does not automatically create a live cloud product. It switches
+              the system into live-ready mode. To activate live cloud sync, configure a backend
+              provider, save the settings, test the connection, and validate the sync mapping.
+            </p>
+            <div className="space-y-1.5">
+              {[
+                { label: 'Demo Mode is OFF',                       ok: !config.demoMode },
+                { label: 'Non-local backend provider selected',    ok: config.activeProvider !== 'local' },
+                { label: 'Provider public config saved',           ok: config.activeProvider !== 'local' && config.providers[config.activeProvider]?.status !== 'notConfigured' },
+                { label: 'Connection test passed (testPassed)',    ok: config.activeProvider !== 'local' && config.providers[config.activeProvider]?.status === 'testPassed' },
+              ].map(({ label, ok }) => (
+                <div key={label} className="flex items-center gap-2 text-2xs">
+                  <Icon name={ok ? 'CheckCircle' : 'Circle'} size={11}
+                    className={ok ? 'text-emerald-400' : 'text-slate-700'} />
+                  <span className={ok ? 'text-slate-300' : 'text-slate-600'}>{label}</span>
+                  {ok && <span className="text-emerald-600 font-mono ml-auto">✓</span>}
+                </div>
+              ))}
+            </div>
+            <div className={`px-3 py-2 rounded-lg border text-2xs font-semibold text-center ${
+              isLiveSyncActive()
+                ? 'bg-emerald-500/8 border-emerald-500/20 text-emerald-300'
+                : 'bg-slate-900/40 border-slate-800/40 text-slate-500'
+            }`}>
+              {isLiveSyncActive()
+                ? '⚡ Live sync is ACTIVE'
+                : 'Live sync is NOT active — data is saved locally and queued'
+              }
+            </div>
+          </div>
+        )}
+
+        {/* ── Local fallback notice ── */}
+        <div className="p-2.5 bg-slate-900/30 border border-slate-800/30 rounded-lg text-2xs text-slate-600 leading-relaxed">
+          If no backend is configured, Big V's Best Routes™ remains local-first and stores updates on this device/browser.
+        </div>
 
         {/* Local data snapshot */}
         <LocalDataSummary />

@@ -793,6 +793,62 @@ export const useBackendConfigStore = create((set, get) => ({
     return providers[p]?.status === 'testPassed' || providers[p]?.status === 'configured'
   },
 
+  // ── Live Sync Activation Gate ─────────────────────────────
+  // Returns true ONLY when ALL 5 conditions are satisfied:
+  //   1. Demo Mode is OFF
+  //   2. A non-local backend provider is selected
+  //   3. Required public config fields are saved (url/key present)
+  //   4. Connection test has passed (status === 'testPassed')
+  //   5. No backend-only secrets detected (structural check)
+  isLiveSyncActive: () => {
+    const { demoMode, activeProvider, providers } = get().config
+    if (demoMode) return false
+    if (!activeProvider || activeProvider === 'local') return false
+    const p = providers[activeProvider]
+    if (!p) return false
+    if (p.status !== 'testPassed') return false
+    // Condition 3 — required fields present per provider
+    const hasRequiredFields = {
+      supabase: !!(p.url && p.anonKey),
+      firebase: !!(p.projectId && p.apiKey),
+      aws:      !!(p.apiBaseUrl),
+      rest:     !!(p.apiBaseUrl),
+    }[activeProvider] ?? false
+    if (!hasRequiredFields) return false
+    return true
+  },
+
+  // ── Sync pending count (from SyncQueue via localStorage) ──
+  getSyncPendingCount: () => {
+    try {
+      const raw = localStorage.getItem('bigv:syncQueue')
+      const queue = raw ? JSON.parse(raw) : []
+      return Array.isArray(queue) ? queue.filter(i => i.status === 'pending').length : 0
+    } catch { return 0 }
+  },
+
+  // ── Last local save timestamp ─────────────────────────────
+  getLastLocalSave: () => {
+    const keys = [
+      'bigv:vehicles','bigv:routes','bigv:assignments',
+      'bigv:tripSessions','bigv:driverReports','bigv:auditEvents',
+    ]
+    try {
+      let latest = null
+      for (const k of keys) {
+        const raw = localStorage.getItem(k)
+        if (!raw) continue
+        const arr = JSON.parse(raw)
+        if (!Array.isArray(arr)) continue
+        for (const item of arr) {
+          const t = item.updatedAt || item.createdAt
+          if (t && (!latest || t > latest)) latest = t
+        }
+      }
+      return latest
+    } catch { return null }
+  },
+
   // ── Mutations ─────────────────────────────────────────────
   setDemoMode: (on) => {
     const config = { ...get().config, demoMode: on }

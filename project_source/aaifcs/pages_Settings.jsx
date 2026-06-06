@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import Icon from './components_ui_Icon'
 import Badge from './components_ui_Badge'
 import { useState, useEffect, useCallback } from 'react'
-import { useAppStore, useAuthStore, useAIStore, useMapStore } from './core_storage'
+import { useAppStore, useAuthStore, useAIStore, useMapStore, useBackendConfigStore, useSyncQueueStore } from './core_storage'
 import { tenantRegistry } from './services_federation_tenantRegistry'
 import {
   ensurePairingCode, refreshPairingCode, getPairingStatus, getRegisteredIdentity,
@@ -165,13 +165,128 @@ function MapProvidersPanel() {
 }
 
 function DemoLivePanel() {
+  const navigate = useNavigate()
+  const { config, setDemoMode, isBackendConfigured, isLiveSyncActive, getSyncPendingCount, getLastLocalSave } = useBackendConfigStore()
+  const syncPending = useSyncQueueStore(s => s.queue.filter(i => i.status === 'pending').length)
+  const demo       = config.demoMode
+  const provider   = config.activeProvider
+  const backendCfg = isBackendConfigured()
+  const liveSyncOn = isLiveSyncActive()
+
+  const providerLabel = { local:'Local Only', supabase:'Supabase', firebase:'Firebase', aws:'AWS/Custom', rest:'REST/Custom' }[provider] || provider
+
   return (
     <div className="space-y-4">
       <SectionHead label="Demo / Live Mode" />
-      <PlaceholderInfoBox tag="Run 7" color="border-yellow-600/25" bg="border-yellow-600/25 text-yellow-500 bg-yellow-600/8">
-        Run 7 will add demo/live switching. Demo mode will use local/demo data. Live mode will
-        support backend-ready sync with your configured Supabase, Firebase, or custom REST backend.
-      </PlaceholderInfoBox>
+
+      {/* ── Mode toggle ── */}
+      <div className="flex gap-3">
+        <button onClick={() => setDemoMode(true)}
+          className={`flex-1 py-3 rounded-xl border text-sm font-bold transition-all ${
+            demo
+              ? 'border-violet-500/40 bg-violet-500/10 text-violet-300'
+              : 'border-slate-800/50 bg-slate-900/30 text-slate-600 hover:border-slate-700/50'
+          }`}>
+          <Icon name="FlaskConical" size={14} className={`inline mr-1.5 ${demo ? 'text-violet-400' : 'text-slate-700'}`} />
+          Demo Mode
+        </button>
+        <button onClick={() => setDemoMode(false)}
+          className={`flex-1 py-3 rounded-xl border text-sm font-bold transition-all ${
+            !demo
+              ? 'border-cyan-500/40 bg-cyan-500/8 text-cyan-300'
+              : 'border-slate-800/50 bg-slate-900/30 text-slate-600 hover:border-slate-700/50'
+          }`}>
+          <Icon name="Zap" size={14} className={`inline mr-1.5 ${!demo ? 'text-cyan-400' : 'text-slate-700'}`} />
+          Live Mode
+        </button>
+      </div>
+
+      {/* ── Status message ── */}
+      <div className={`p-3 rounded-xl border text-2xs leading-relaxed ${
+        demo
+          ? 'bg-violet-500/6 border-violet-500/20 text-violet-300'
+          : liveSyncOn
+            ? 'bg-emerald-500/6 border-emerald-500/20 text-emerald-300'
+            : 'bg-amber-950/20 border-amber-700/30 text-amber-400'
+      }`}>
+        {demo
+          ? '⚗ Demo Mode is on. Demo sync is local simulation only. No real backend calls are made. Turn on Live Mode and configure a backend to run as a real product.'
+          : liveSyncOn
+            ? `⚡ Live sync is active via ${providerLabel}. Data changes are queued for backend sync.`
+            : '⚡ Demo Mode is OFF. Configure and test a backend provider to activate live cloud sync. Until then, data is saved locally and queued.'
+        }
+      </div>
+
+      {/* ── Status summary pills ── */}
+      <div className="flex flex-wrap gap-2 text-2xs">
+        <span className={`px-2.5 py-1 rounded-full border font-semibold ${
+          demo ? 'bg-violet-500/10 border-violet-500/20 text-violet-300' : 'bg-slate-900/40 border-slate-800/40 text-slate-600'
+        }`}>
+          Demo: {demo ? 'ON' : 'OFF'}
+        </span>
+        <span className={`px-2.5 py-1 rounded-full border font-semibold ${
+          liveSyncOn ? 'bg-emerald-500/8 border-emerald-500/20 text-emerald-300'
+          : backendCfg ? 'bg-cyan-500/6 border-cyan-500/15 text-cyan-400'
+          : 'bg-slate-900/40 border-slate-800/40 text-slate-600'
+        }`}>
+          Backend: {liveSyncOn ? `${providerLabel} ✓` : backendCfg ? `${providerLabel} (not validated)` : 'Local Only'}
+        </span>
+        <span className={`px-2.5 py-1 rounded-full border font-semibold ${
+          liveSyncOn ? 'bg-emerald-500/8 border-emerald-500/20 text-emerald-300' : 'bg-slate-900/40 border-slate-800/40 text-slate-600'
+        }`}>
+          Live Sync: {liveSyncOn ? 'Active' : 'Not Active'}
+        </span>
+        {syncPending > 0 && (
+          <span className="px-2.5 py-1 rounded-full border bg-amber-500/8 border-amber-600/20 text-amber-300 font-semibold">
+            {syncPending} pending
+          </span>
+        )}
+      </div>
+
+      {/* ── Live sync activation requirements (when demo is off + sync not active) ── */}
+      {!demo && !liveSyncOn && (
+        <div className="p-3 bg-[#0a0700] border border-[#b8860b]/20 rounded-xl space-y-2">
+          <div className="text-2xs font-semibold text-[#d4a017]">Live Sync Activation Requirements</div>
+          <p className="text-2xs text-slate-600 leading-relaxed">
+            Turning Demo Mode OFF does not automatically create a live cloud product. It switches the system
+            into live-ready mode. To activate live cloud sync, configure a backend provider, save the settings,
+            test the connection, and validate the sync mapping.
+          </p>
+          <div className="space-y-1.5 mt-2">
+            {[
+              { label: 'Demo Mode is OFF',                    ok: !demo },
+              { label: 'Backend provider selected (non-local)', ok: provider !== 'local' },
+              { label: 'Provider config saved',                ok: backendCfg || (provider !== 'local' && config.providers[provider]?.status !== 'notConfigured') },
+              { label: 'Connection test passed',               ok: provider !== 'local' && config.providers[provider]?.status === 'testPassed' },
+            ].map(({ label, ok }) => (
+              <div key={label} className="flex items-center gap-2 text-2xs">
+                <Icon name={ok ? 'CheckCircle' : 'Circle'} size={11}
+                  className={ok ? 'text-emerald-400' : 'text-slate-700'} />
+                <span className={ok ? 'text-slate-400' : 'text-slate-600'}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Data isolation reminder ── */}
+      {!demo && (
+        <div className="p-2.5 bg-amber-950/15 border border-amber-700/20 rounded-lg text-2xs text-amber-400/80 leading-relaxed">
+          ⚠ Live Mode must not mix demo data with real records. If switching from demo to live, ensure demo records are cleared or isolated first.
+        </div>
+      )}
+
+      {/* ── Local fallback notice ── */}
+      <div className="p-2.5 bg-slate-900/30 border border-slate-800/30 rounded-lg text-2xs text-slate-600 leading-relaxed">
+        If no backend is configured, Big V's Best Routes™ remains local-first and stores updates on this device/browser.
+      </div>
+
+      {/* ── Open Deployment Centre ── */}
+      <button onClick={() => navigate('/deployment')}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#b8860b]/70 hover:bg-[#b8860b] text-black text-sm font-bold transition-all">
+        <Icon name="Server" size={14} />
+        Open Backend &amp; Deployment Centre →
+      </button>
     </div>
   )
 }
