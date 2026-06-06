@@ -213,7 +213,8 @@ export default function InvestorSafety() {
           {/* CTAs */}
           <div className="flex flex-wrap justify-center gap-3 mb-6">
             <CTAButton label="Open Route Planning Dashboard" icon="layers"     variant="primary" onClick={() => go(ROUTES.DASHBOARD)} />
-            <CTAButton label="Open Navigation PWA"           icon="smartphone" variant="green"   onClick={() => go('/driver-app')} />
+            <CTAButton label="Navigation PWA Demo"   icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+            <CTAButton label="Open Navigation PWA"    icon="smartphone" variant="secondary" onClick={() => go('/driver-app')} />
             <CTAButton label="Demo / Live Mode Settings"     icon="server"     variant="secondary" onClick={() => go(ROUTES.DEPLOYMENT)} />
           </div>
 
@@ -725,7 +726,8 @@ export default function InvestorSafety() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           {[
             { label: 'Route Planning Dashboard', icon: 'layers',     variant: 'primary',   route: ROUTES.DASHBOARD,  desc: 'Open the main control dashboard' },
-            { label: 'Navigation PWA',           icon: 'smartphone', variant: 'green',     route: '/driver-app',     desc: 'Open or install the Navigation PWA' },
+            { label: 'Navigation PWA Demo',     icon: 'map',        variant: 'green',     route: ROUTES.DRIVER_APP_DEMO, desc: 'Demo route: Torquay → Edinburgh' },
+            { label: 'Open Navigation PWA',      icon: 'smartphone', variant: 'secondary', route: '/driver-app',     desc: 'Open the real Navigation PWA' },
             { label: 'Vehicle Profiles',         icon: 'truck',      variant: 'secondary', route: ROUTES.FLEET,      desc: 'Manage and review vehicle profiles' },
             { label: 'Demo / Live Settings',     icon: 'server',     variant: 'ghost',     route: ROUTES.DEPLOYMENT, desc: 'Configure demo or live mode' },
           ].map(({ label, icon, variant, route, desc }) => (

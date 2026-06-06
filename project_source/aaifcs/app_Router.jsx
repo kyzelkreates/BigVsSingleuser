@@ -26,6 +26,9 @@ import Landing         from './pages_Landing'
 // Investor / Safety / Bridge Strike Impact Page (Run 14)
 import InvestorSafety  from './pages_InvestorSafety'
 
+// Driver Navigation PWA — Demo Mode (Run 14 Fix — no pairing code wall)
+import DriverAppDemo   from './pages_DriverAppDemo'
+
 // App Pages
 import Dashboard   from './pages_Dashboard'
 import Fleet       from './pages_Fleet'
@@ -47,8 +50,9 @@ import AIPage      from './pages_AI'
 // Helper — read setup flag without importing full service
 const setupDone = () => localStorage.getItem('apex:setup_complete') === 'true'
 
-// ROOT REDIRECT — single-user mode: always go to dashboard
-const RootRedirect = () => <Navigate to="/dashboard" replace />
+// ROOT REDIRECT — single-user mode: go to landing page (homepage)
+// Dashboard is accessible via shortcut from the landing page.
+const RootRedirect = () => <Navigate to="/landing" replace />
 
 // AUTH BYPASSED — LoginOrSetup passthrough (single-user mode)
 const LoginOrSetup = ({ element }) => element
@@ -62,6 +66,11 @@ export const router = createHashRouter([
   // ── Investor / Safety / Bridge Strike page — public, no shell ─
   // Route: /#/investor-safety — Run 14
   { path: '/investor-safety', element: <InvestorSafety /> },
+
+  // ── Driver Navigation PWA — Demo Mode — public, no shell ───
+  // Route: /#/driver-app-demo — Run 14 Fix
+  // No pairing code required. Loads Torquay → Edinburgh demo route.
+  { path: '/driver-app-demo', element: <DriverAppDemo /> },
 
   // ── First-run Setup (public, before any account exists) ───
   { path: '/auth/setup',         element: <Setup /> },

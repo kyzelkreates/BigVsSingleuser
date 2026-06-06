@@ -13,7 +13,8 @@ export const ROUTES = {
   // ── Core ──────────────────────────────────────────────────
   ROOT:       '/',
   LANDING:          '/landing',         // Run 13 — Project explainer homepage
-  INVESTOR_SAFETY:  '/investor-safety',   // Run 14 — Investor, Safety & Bridge Strike Impact
+  INVESTOR_SAFETY:    '/investor-safety',     // Run 14 — Investor, Safety & Bridge Strike Impact
+  DRIVER_APP_DEMO:    '/driver-app-demo',     // Run 14 Fix — Demo Navigation PWA (no pairing code)
   DASHBOARD:  '/dashboard',
 
   // ── Vehicles (was Fleet) — internal path kept ─────────────

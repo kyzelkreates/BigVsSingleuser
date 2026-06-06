@@ -169,10 +169,10 @@ export default function Landing() {
 
       {/* CTA Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-8">
-        <CTAButton label="Open Control Dashboard" icon="layers" variant="primary"    onClick={() => go(ROUTES.DASHBOARD)} />
-        <CTAButton label="Open Navigation PWA"         icon="smartphone" variant="green" onClick={() => go('/driver-app')} />
-        <CTAButton label="Route Planner"           icon="route" variant="secondary"  onClick={() => go(ROUTES.DISPATCH)} />
-        <CTAButton label="Backend / Live Mode"     icon="server" variant="ghost"     onClick={() => go(ROUTES.DEPLOYMENT)} />
+        <CTAButton label="Open Route Planner Dashboard" icon="layers"     variant="primary"   onClick={() => go(ROUTES.DASHBOARD)} />
+        <CTAButton label="Navigation PWA Demo"            icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+        <CTAButton label="Torquay → Edinburgh Demo"       icon="route"      variant="secondary" onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+        <CTAButton label="Backend / Live Mode"            icon="server"     variant="ghost"     onClick={() => go(ROUTES.DEPLOYMENT)} />
       </div>
 
       {/* PWA install hint */}
@@ -323,8 +323,9 @@ export default function Landing() {
             Offline live actions may be saved locally only where supported, and require reconnection to sync. Demo Mode works fully without a backend.
           </p>
           <div className="flex flex-wrap gap-3">
-            <CTAButton label="Open Navigation PWA" icon="smartphone" variant="green"  onClick={() => go('/driver-app')} />
-            <CTAButton label="Navigation PWA Setup" icon="zap"       variant="secondary" onClick={() => go(ROUTES.DRIVER_SETUP)} />
+            <CTAButton label="Navigation PWA Demo"   icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+            <CTAButton label="Open Navigation PWA"    icon="smartphone" variant="secondary" onClick={() => go('/driver-app')} />
+            <CTAButton label="Navigation PWA Setup"   icon="zap"        variant="ghost"     onClick={() => go(ROUTES.DRIVER_SETUP)} />
           </div>
           <div className="mt-4">
             <PWAInstallGuide />
@@ -570,7 +571,7 @@ export default function Landing() {
   // ── SECTION 11 — QUICK LAUNCHPAD ──────────────────────────────────────────
   const launchItems = [
     { label: 'Control Dashboard',        route: ROUTES.DASHBOARD,    icon: 'layers',     variant: 'primary',   desc: 'Open the main operator dashboard' },
-    { label: 'Navigation PWA',          route: '/driver-app',       icon: 'smartphone', variant: 'green',     desc: 'Open the mobile Navigation PWA' },
+    { label: 'Navigation PWA Demo',      route: ROUTES.DRIVER_APP_DEMO, icon: 'map',    variant: 'green',     desc: 'Demo: Torquay → Edinburgh route, no pairing code' },
     { label: 'Route Planner',            route: ROUTES.DISPATCH,     icon: 'route',      variant: 'secondary', desc: 'Plan and manage routes' },
     { label: 'Vehicle Profiles',         route: ROUTES.FLEET,        icon: 'truck',      variant: 'secondary', desc: 'Manage your vehicles' },
     { label: 'Navigation PWA Setup',     route: ROUTES.DRIVER_SETUP, icon: 'zap',        variant: 'secondary', desc: 'Set up and pair the Navigation PWA' },
@@ -680,7 +681,7 @@ export default function Landing() {
           <p className="text-slate-600 text-xs">© Kyzel Kreates™ · Big V&apos;s Best Routes™ · 4P3X Intelligent AI™ · 4P3X Verse™</p>
           <div className="flex gap-4 flex-wrap justify-center">
             <button onClick={() => go(ROUTES.DASHBOARD)}    className="text-xs text-slate-500 hover:text-[#d4a017] transition-colors">Dashboard</button>
-            <button onClick={() => go('/driver-app')}        className="text-xs text-slate-500 hover:text-[#34d399] transition-colors">Navigation PWA</button>
+            <button onClick={() => go(ROUTES.DRIVER_APP_DEMO)} className="text-xs text-slate-500 hover:text-[#34d399] transition-colors">Navigation Demo</button>
             <button onClick={() => go(ROUTES.SAFETY)}        className="text-xs text-slate-500 hover:text-white transition-colors">Safety AI</button>
             <button onClick={() => go(ROUTES.DEPLOYMENT)}    className="text-xs text-slate-500 hover:text-white transition-colors">Backend Settings</button>
           </div>
@@ -700,8 +701,8 @@ export default function Landing() {
             Big V&apos;s Best Routes™
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
-            <CTAButton label="Dashboard"  icon="layers"     variant="secondary" small onClick={() => go(ROUTES.DASHBOARD)} />
-            <CTAButton label="Navigation PWA" icon="smartphone" variant="green"     small onClick={() => go('/driver-app')} />
+            <CTAButton label="Dashboard"     icon="layers" variant="secondary" small onClick={() => go(ROUTES.DASHBOARD)} />
+            <CTAButton label="Demo Route"     icon="map"    variant="green"     small onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
           </div>
         </div>
       </nav>

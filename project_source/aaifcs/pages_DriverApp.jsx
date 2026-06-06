@@ -2681,18 +2681,37 @@ function DriverAppMain({ profile, onLogout }) {
 //  ROOT — Auth gate
 // ══════════════════════════════════════════════════════════════
 export default function DriverApp() {
+  // ── Demo mode bypass ─────────────────────────────────────────────────────
+  // If demo mode is active (set by activateDemoMode() from the landing page
+  // or homepage "Navigation PWA Demo" button), skip both SetupScreen AND
+  // LoginScreen. The demo profile has demo_mode:true and is pre-written to
+  // STORAGE_CREDS by activateDemoMode().
+  //
+  // Demo mode check: localStorage 'apex:demo:mode_active' === 'true'
+  // This does NOT break live mode — the flag is only set by the demo flow.
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [profile,  setProfile]  = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_CREDS) || 'null') } catch { return null }
   })
-  const [unlocked, setUnlocked] = useState(false)
+
+  // Auto-unlock if demo mode profile — no PIN gate for demo
+  const isDemoProfile = profile?.demo_mode === true
+  const [unlocked, setUnlocked] = useState(isDemoProfile)
 
   const reset = () => {
+    // Also clear demo mode flags on reset
+    try {
+      localStorage.removeItem('apex:demo:mode_active')
+      localStorage.removeItem('apex:demo:active_route')
+    } catch {}
     localStorage.removeItem(STORAGE_CREDS)
     setProfile(null)
     setUnlocked(false)
   }
 
   if (!profile)  return <SetupScreen onReady={p => { setProfile(p); setUnlocked(true) }} />
-  if (!unlocked) return <LoginScreen profile={profile} onLogin={() => setUnlocked(true)} onReset={reset} />
-  return <DriverAppMain profile={profile} onLogout={() => setUnlocked(false)} />
+  // Demo profiles skip the PIN login screen — pairing code was never required
+  if (!unlocked && !isDemoProfile) return <LoginScreen profile={profile} onLogin={() => setUnlocked(true)} onReset={reset} />
+  return <DriverAppMain profile={profile} onLogout={() => { setUnlocked(false) }} />
 }
