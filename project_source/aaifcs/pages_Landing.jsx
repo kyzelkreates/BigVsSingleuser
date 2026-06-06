@@ -575,10 +575,51 @@ export default function Landing() {
     { label: 'Vehicle Profiles',         route: ROUTES.FLEET,        icon: 'truck',      variant: 'secondary', desc: 'Manage your vehicles' },
     { label: 'Navigation PWA Setup',     route: ROUTES.DRIVER_SETUP, icon: 'zap',        variant: 'secondary', desc: 'Set up and pair the Navigation PWA' },
     { label: 'Route Safety AI',          route: ROUTES.SAFETY,       icon: 'shield',     variant: 'secondary', desc: 'Safety monitoring and alerts' },
+    { label: 'Investor & Safety Page',    route: ROUTES.INVESTOR_SAFETY, icon: 'star',    variant: 'secondary', desc: 'Bridge strike facts, investor & grant readiness' },
     { label: 'Legal Awareness',          route: ROUTES.COMPLIANCE,   icon: 'check',      variant: 'secondary', desc: 'Route compliance advisory' },
     { label: '4P3X AI Command',          route: ROUTES.AI,           icon: 'brain',      variant: 'purple',    desc: 'AI intelligence and advisory panel' },
     { label: 'Backend / Live Mode',      route: ROUTES.DEPLOYMENT,   icon: 'server',     variant: 'ghost',     desc: 'Supabase and deployment settings' },
   ]
+
+  // ── BRIDGE STRIKE / INVESTOR SHORTCUT CARD (Run 14) ──────────────────────
+  const BridgeStrikeCard = () => (
+    <Section id="investor-safety-link" className="bg-[#0a0a0c]">
+      <div className="max-w-3xl mx-auto rounded-2xl border border-[#d4a017]/25 bg-[#d4a017]/5 p-7 sm:p-10 text-center">
+        <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#d4a017] border border-[#d4a017]/30 rounded-full px-4 py-1.5 mb-5">
+          <Icon name="shield" className="w-3.5 h-3.5" />
+          Investor · Safety · Bridge Strike Impact · Grant Readiness
+        </div>
+        <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3 leading-tight">
+          Investor, Safety &amp; Bridge Strike Impact
+        </h2>
+        <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6 max-w-xl mx-auto">
+          Why Big V&apos;s Best Routes™ was built for safer, smarter, vehicle-aware route planning.
+          Includes Network Rail bridge strike data, safety &amp; legal positioning, modular architecture overview, and investor/grant readiness context.
+        </p>
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 mb-7 max-w-2xl mx-auto">
+          {[
+            { value: '1,666', label: 'Bridge strikes', sub: 'Network Rail 2024/25' },
+            { value: '£13k',  label: 'Avg cost each',  sub: 'Network Rail data'    },
+            { value: '150k+', label: 'Delay minutes',  sub: '2023/24 report'       },
+            { value: '~£20m', label: 'Annual impact',  sub: '2023/24 total'        },
+          ].map(({ value, label, sub }) => (
+            <div key={label} className="rounded-xl border border-[#d4a017]/15 bg-[#d4a017]/5 p-3 text-center">
+              <p className="font-display font-bold text-xl text-[#d4a017]">{value}</p>
+              <p className="text-white text-xs font-semibold mt-0.5">{label}</p>
+              <p className="text-slate-600 text-[10px] mt-0.5">{sub}</p>
+            </div>
+          ))}
+        </div>
+        <CTAButton
+          label="View Safety & Investor Page"
+          icon="shield"
+          variant="primary"
+          onClick={() => go(ROUTES.INVESTOR_SAFETY)}
+        />
+      </div>
+    </Section>
+  )
+
   const Launchpad = () => (
     <Section id="launchpad">
       <Heading title="Quick Access — Demo Launchpad" subtitle="Jump directly to any section of the platform." gold />
@@ -676,6 +717,7 @@ export default function Landing() {
       <ModularBase />
       <Refactors />
       <InvestorValue />
+      <BridgeStrikeCard />
       <Launchpad />
       <Footer />
     </div>
