@@ -25,6 +25,10 @@ import {
   checkProviderHealth, checkSyncReadiness,
   prepareSyncRun, checkPwaReadiness, getLocalDataSnapshot,
 } from './services_deployment_bvDeploymentService'
+import {
+  canEnableLiveMode, isSupabaseConfigured,
+  testSupabaseConnection as bvTestConnection,
+} from './services_supabase_bvSupabaseAdapter'
 
 // ─── Helpers ─────────────────────────────────────────────────
 const fmtTime = (iso) => {
@@ -549,7 +553,7 @@ function SyncReadinessPanel() {
     setSyncing(true)
     setSyncResult(null)
     await new Promise(r => setTimeout(r, 600))
-    setSyncResult(prepareSyncRun())
+    setSyncResult(await prepareSyncRun())
     setSyncing(false)
   }, [])
 

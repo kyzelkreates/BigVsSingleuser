@@ -30,6 +30,12 @@ import {
   useAuditStore, useAiAdvisoryStore, useBackendConfigStore,
 } from './core_storage'
 import { isSupabaseReady, testSupabaseConnection } from './services_supabase_supabaseClient'
+import {
+  canEnableLiveMode, isSupabaseConfigured,
+  getBackendConfig, saveBackendConfig, clearBackendConfig,
+  runFullLiveSync,
+  BV_TABLES, BV_ADAPTER_ERRORS,
+} from './services_supabase_bvSupabaseAdapter'
 
 // ─── 4P3X API Config Guard™ ───────────────────────────────────
 // Pattern list of backend-only secret indicators.
@@ -210,7 +216,7 @@ export function checkSyncReadiness() {
  * Does NOT fake cloud sync.
  * Does NOT call backend unless real connector exists and test passed.
  */
-export function prepareSyncRun() {
+export async function prepareSyncRun() {
   const readiness    = checkSyncReadiness()
   const backendCfg   = useBackendConfigStore.getState()
   const backendOk    = backendCfg.isBackendConfigured()
@@ -249,10 +255,16 @@ export function prepareSyncRun() {
     resultMessage = `Backend provider "${provider}" is configured but not validated. Sync is queued locally. Connect and test the backend to enable real sync.`
     resultStatus  = 'waitingForBackend'
   } else {
-    // Real backend is configured and tested — mark queue items ready
-    // Actual data transfer is not done here without a real API connector
-    resultMessage = `Backend configured (${provider}). Sync preparation complete. Real data sync connector is backend-ready but must be implemented in the server layer.`
-    resultStatus  = 'backendReady'
+    // Real backend is configured and tested — delegate to live adapter
+    // runFullLiveSync handles the actual Supabase upsert operations
+    try {
+      const syncResult = await runFullLiveSync()
+      resultMessage = syncResult.resultMessage
+      resultStatus  = syncResult.success ? 'synced' : 'syncPartialFail'
+    } catch (e) {
+      resultMessage = `Sync error: ${e?.message || 'unknown error'}. Data saved locally and queued.`
+      resultStatus  = 'syncFailed'
+    }
   }
 
   // Audit event
@@ -363,3 +375,6 @@ export function getLocalDataSnapshot() {
     at:          new Date().toISOString(),
   }
 }
+
+// ─── Re-export from adapter for convenience ───────────────────
+export { canEnableLiveMode, isSupabaseConfigured, getBackendConfig, saveBackendConfig, clearBackendConfig, runFullLiveSync, BV_TABLES, BV_ADAPTER_ERRORS }

@@ -211,34 +211,25 @@ export async function testSupabaseConnection(url, anonKey) {
     console.debug('[AP3X:Supabase] REST probe failed, trying SDK query:', fetchErr.message)
   }
 
-  // Probe 2: SDK query against 'tasks' table (our primary table)
-  try {
-    const { error } = await testClient
-      .from('tasks')
-      .select('id')
-      .limit(1)
-
-    if (!error || IGNORABLE_ERROR_CODES.has(error.code) || IGNORABLE_ERROR_CODES.has(String(error.status))) {
-      console.info('[AP3X:Supabase] ✓ SDK tasks query succeeded (or ignorable error)')
-      return { ok: true }
-    }
-
-    // Probe 3: fallback to 'drivers' table
-    const { error: e2 } = await testClient
-      .from('drivers')
-      .select('id')
-      .limit(1)
-
-    if (!e2 || IGNORABLE_ERROR_CODES.has(e2.code) || IGNORABLE_ERROR_CODES.has(String(e2.status))) {
-      console.info('[AP3X:Supabase] ✓ SDK drivers query succeeded (or ignorable error)')
-      return { ok: true }
-    }
-
-    console.warn('[AP3X:Supabase] Query test failed:', error?.message)
-    return { ok: false, error: error?.message || 'Query failed' }
-  } catch (e) {
-    return { ok: false, error: e.message || 'Connection failed' }
+  // Probe 2: SDK query against BV tables (preferred for BV project)
+  // Fallback to legacy tables if BV tables not yet created.
+  const PROBE_TABLES = ['bv_vehicles', 'bv_routes', 'bv_route_assignments', 'tasks', 'drivers']
+  for (const tableName of PROBE_TABLES) {
+    try {
+      const { error } = await testClient.from(tableName).select('id').limit(1)
+      if (!error || IGNORABLE_ERROR_CODES.has(error.code) || IGNORABLE_ERROR_CODES.has(String(error.status))) {
+        console.info('[AP3X:Supabase] ✓ SDK query succeeded on table:', tableName)
+        return { ok: true }
+      }
+      // Non-ignorable error on a BV table means server reachable but table missing — still connected
+      if (error.code === '42P01') {
+        console.info('[AP3X:Supabase] ✓ Server reachable — BV table', tableName, 'not yet created. Run SQL setup.')
+        return { ok: true }
+      }
+    } catch {}
   }
+  console.warn('[AP3X:Supabase] All probe queries failed — check URL and anon key.')
+  return { ok: false, error: 'All connection probes failed. Check your Supabase URL and anon key.' }
 }
 
 // ─── Auto-init on app startup ─────────────────────────────────
