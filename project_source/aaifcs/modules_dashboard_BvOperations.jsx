@@ -574,7 +574,9 @@ function TripSessionDetail({ session, vehicles, routePlans, onClose }) {
 }
 
 function TripSessionsPanel({ vehicles, routePlans }) {
-  const { sessions }  = useTripSessionStore()
+  const { sessions: localSessions } = useTripSessionStore()
+  const { isLive, sessions: liveSessions, isLoading: liveTripLoading, error: liveTripError } = useLiveTripSessions()
+  const sessions = isLive ? liveSessions : localSessions
   const [detail, setDetail] = useState(null)
   const sorted = [...sessions].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
 
