@@ -1,0 +1,948 @@
+-- ================================================================
+-- Big V's Best Routes™ — COMPLETE SUPABASE SQL SCHEMA
+-- All 6 layers — run in order in Supabase SQL Editor
+--
+-- Product:   Big V's Best Routes™
+-- Powered:   4P3X Intelligent AI™
+-- Created:   Kyzel Kreates™
+-- Repo:      github.com/kyzelkreates/4p3xaibvs
+--
+-- LAYERS:
+--   Layer 1 — Base schema (profiles, drivers, vehicles, tasks,
+--              job_assignments, driver_locations)
+--   Layer 2 — Views & helpers (active_drivers, push_subscriptions,
+--              task_status_counts)
+--   Layer 3 — Contract tables (fleet_nodes, dashboard_events, settings)
+--   Layer 4 — Job execution control layer
+--   Layer 5 — Driver safety layer
+--   Layer 6 — Federation & pairing layer
+--
+-- RULES:
+--   • Run each layer in sequence (1 → 6)
+--   • All statements use IF NOT EXISTS — safe to re-run
+--   • RLS enabled on all tables — anon key used for all client ops
+--   • No service role key required in frontend code
+--   • Row-level security policies defined per table
+-- ================================================================
+
+
+-- ================================================================
+-- LAYER 1 — BASE SCHEMA
+-- ================================================================
+-- ============================================================
+-- AP3X Fleet Control OS — BASE SCHEMA  (SQL 1 of 2)
+-- Run this FIRST in your Supabase SQL Editor.
+--
+-- CONTRACT (LOCKED):
+--   Tables:   profiles · tasks · drivers · vehicles
+--             job_assignments · driver_locations
+--   Realtime: tasks · job_assignments · driver_locations
+--   Roles:    profiles.role = 'dispatcher' | 'driver'
+--
+-- Task lifecycle (strict state machine):
+--   pending → assigned → accepted → in_progress → completed → cancelled
+-- ============================================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ─── profiles ─────────────────────────────────────────────────
+-- Supabase user profiles. Links auth.users to AP3X roles.
+-- role = 'dispatcher' (Fleet Control OS) | 'driver' (Driver PWA)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id          UUID PRIMARY KEY,           -- matches auth.users.id
+  full_name   TEXT,
+  email       TEXT,
+  role        TEXT NOT NULL DEFAULT 'driver'
+                CHECK (role IN ('dispatcher', 'driver', 'admin')),
+  avatar_url  TEXT,
+  phone       TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── drivers ──────────────────────────────────────────────────
+-- Fleet driver records (linked to profiles via id when using Supabase auth,
+-- or standalone records for local-auth builds).
+CREATE TABLE IF NOT EXISTS public.drivers (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name         TEXT NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'offline'
+                 CHECK (status IN ('online','offline','driving','on_break','idle')),
+  online       BOOLEAN NOT NULL DEFAULT false,
+  current_task UUID,   -- FK to tasks added after tasks table is created
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── vehicles ─────────────────────────────────────────────────
+-- Fleet vehicles. Joined to tasks for routing context.
+CREATE TABLE IF NOT EXISTS public.vehicles (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  reg_number       TEXT NOT NULL,
+  make             TEXT,
+  model            TEXT,
+  type             TEXT DEFAULT 'van',
+  status           TEXT NOT NULL DEFAULT 'available'
+                     CHECK (status IN ('available','in_use','maintenance','retired')),
+  height_m         DOUBLE PRECISION,
+  width_m          DOUBLE PRECISION,
+  length_m         DOUBLE PRECISION,
+  gross_weight_t   DOUBLE PRECISION,
+  axle_weight_t    DOUBLE PRECISION,
+  num_axles        INTEGER,
+  fuel_type        TEXT,
+  euro_standard    TEXT,
+  hazmat           BOOLEAN DEFAULT false,
+  max_speed_kmh    INTEGER,
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── tasks ────────────────────────────────────────────────────
+-- All fleet jobs. This is the central lifecycle record.
+-- status MUST follow: pending → assigned → accepted → in_progress → completed → cancelled
+CREATE TABLE IF NOT EXISTS public.tasks (
+  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title                 TEXT NOT NULL,
+  description           TEXT,
+  status                TEXT NOT NULL DEFAULT 'pending'
+                          CHECK (status IN ('pending','assigned','accepted','in_progress','completed','cancelled')),
+  priority              TEXT NOT NULL DEFAULT 'normal'
+                          CHECK (priority IN ('low','normal','high','urgent')),
+  -- Assignment
+  assigned_driver       UUID REFERENCES public.drivers(id) ON DELETE SET NULL,
+  assigned_driver_name  TEXT,
+  assigned_at           TIMESTAMPTZ,
+  -- Vehicle
+  vehicle_id            UUID REFERENCES public.vehicles(id) ON DELETE SET NULL,
+  vehicle_reg           TEXT,
+  -- Route
+  pickup_address        TEXT,
+  dropoff_address       TEXT,
+  stops                 JSONB,      -- [{idx,address,name,contact,ref,geocoded}]
+  waypoints             JSONB,
+  route_summary         JSONB,      -- {distance_m, duration_s, provider}
+  -- Lifecycle timestamps
+  accepted_at           TIMESTAMPTZ,
+  started_at            TIMESTAMPTZ,
+  completed_at          TIMESTAMPTZ,
+  cancelled_at          TIMESTAMPTZ,
+  cancel_reason         TEXT,
+  completion_notes      TEXT,
+  -- Audit
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add FK now that tasks exists
+ALTER TABLE public.drivers
+  ADD COLUMN IF NOT EXISTS current_task UUID REFERENCES public.tasks(id) ON DELETE SET NULL;
+
+-- ─── job_assignments ──────────────────────────────────────────
+-- Audit record for every task assignment event.
+-- Dispatcher creates tasks, then inserts here to assign to a driver.
+-- Realtime on this table notifies Driver PWA of new assignments.
+CREATE TABLE IF NOT EXISTS public.job_assignments (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  task_id     UUID NOT NULL REFERENCES public.tasks(id)   ON DELETE CASCADE,
+  driver_id   UUID NOT NULL REFERENCES public.drivers(id) ON DELETE CASCADE,
+  vehicle_id  UUID          REFERENCES public.vehicles(id) ON DELETE SET NULL,
+  driver_name TEXT,
+  vehicle_reg TEXT,
+  assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  status      TEXT NOT NULL DEFAULT 'assigned'
+                CHECK (status IN ('assigned','accepted','rejected','completed','cancelled'))
+);
+
+-- ─── driver_locations ─────────────────────────────────────────
+-- Real-time GPS per driver. Upserted by Driver PWA every 5 seconds.
+-- Fleet Control OS subscribes via Supabase Realtime for live map.
+CREATE TABLE IF NOT EXISTS public.driver_locations (
+  driver_id   UUID PRIMARY KEY REFERENCES public.drivers(id) ON DELETE CASCADE,
+  lat         DOUBLE PRECISION NOT NULL DEFAULT 0,
+  lng         DOUBLE PRECISION NOT NULL DEFAULT 0,
+  speed       DOUBLE PRECISION NOT NULL DEFAULT 0,
+  heading     DOUBLE PRECISION NOT NULL DEFAULT 0,
+  accuracy    DOUBLE PRECISION,
+  status      TEXT NOT NULL DEFAULT 'offline'
+                CHECK (status IN ('offline','online','en_route','idle','on_break')),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── Indexes ──────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_driver   ON public.tasks(assigned_driver);
+CREATE INDEX IF NOT EXISTS idx_tasks_status            ON public.tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_created_at        ON public.tasks(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_driver_status     ON public.tasks(assigned_driver, status)
+  WHERE status NOT IN ('completed','cancelled');
+CREATE INDEX IF NOT EXISTS idx_drivers_status          ON public.drivers(status);
+CREATE INDEX IF NOT EXISTS idx_job_assignments_task    ON public.job_assignments(task_id);
+CREATE INDEX IF NOT EXISTS idx_job_assignments_driver  ON public.job_assignments(driver_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_role           ON public.profiles(role);
+
+-- ─── updated_at trigger ───────────────────────────────────────
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_tasks_updated_at            ON public.tasks;
+DROP TRIGGER IF EXISTS set_drivers_updated_at          ON public.drivers;
+DROP TRIGGER IF EXISTS set_vehicles_updated_at         ON public.vehicles;
+DROP TRIGGER IF EXISTS set_driver_locations_updated_at ON public.driver_locations;
+DROP TRIGGER IF EXISTS set_profiles_updated_at         ON public.profiles;
+
+CREATE TRIGGER set_tasks_updated_at
+  BEFORE UPDATE ON public.tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER set_drivers_updated_at
+  BEFORE UPDATE ON public.drivers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER set_vehicles_updated_at
+  BEFORE UPDATE ON public.vehicles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER set_driver_locations_updated_at
+  BEFORE UPDATE ON public.driver_locations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER set_profiles_updated_at
+  BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ─── Row Level Security ───────────────────────────────────────
+ALTER TABLE public.profiles         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.drivers          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicles         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tasks            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.job_assignments  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.driver_locations ENABLE ROW LEVEL SECURITY;
+
+-- Public anon access (AP3X uses the anon key for all requests)
+CREATE POLICY "Public read profiles"          ON public.profiles         FOR SELECT USING (true);
+CREATE POLICY "Public write profiles"         ON public.profiles         FOR ALL    USING (true);
+CREATE POLICY "Public read drivers"           ON public.drivers          FOR SELECT USING (true);
+CREATE POLICY "Public write drivers"          ON public.drivers          FOR ALL    USING (true);
+CREATE POLICY "Public read vehicles"          ON public.vehicles         FOR SELECT USING (true);
+CREATE POLICY "Public write vehicles"         ON public.vehicles         FOR ALL    USING (true);
+CREATE POLICY "Public read tasks"             ON public.tasks            FOR SELECT USING (true);
+CREATE POLICY "Public write tasks"            ON public.tasks            FOR ALL    USING (true);
+CREATE POLICY "Public read job_assignments"   ON public.job_assignments  FOR SELECT USING (true);
+CREATE POLICY "Public write job_assignments"  ON public.job_assignments  FOR ALL    USING (true);
+CREATE POLICY "Public read driver_locations"  ON public.driver_locations FOR SELECT USING (true);
+CREATE POLICY "Public write driver_locations" ON public.driver_locations FOR ALL    USING (true);
+
+-- ─── Realtime publications ────────────────────────────────────
+-- Subscribe ONLY to: tasks · job_assignments · driver_locations (contract rule)
+ALTER PUBLICATION supabase_realtime ADD TABLE public.tasks;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.job_assignments;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.driver_locations;
+-- Also enable for drivers (used by fleet status panel)
+ALTER PUBLICATION supabase_realtime ADD TABLE public.drivers;
+
+-- ================================================================
+-- LAYER 2 — VIEWS & HELPERS
+-- ================================================================
+-- ============================================================
+-- AP3X Fleet Control OS — VIEWS & HELPERS  (SQL 2 of 2)
+-- Run AFTER sql_1_original_schema.txt
+--
+-- What this adds:
+--   1. active_drivers view  — fleet map + dashboard joined query
+--   2. push_subscriptions   — Web Push endpoints for driver notifications
+--   3. Grants               — ensure anon can read the view
+-- ============================================================
+
+-- ─── 1. active_drivers view ───────────────────────────────────
+-- Single query gives fleet Control OS everything it needs:
+--   driver identity + online status + live GPS + current task
+-- Dispatcher dashboard and Navigation map read this view.
+CREATE OR REPLACE VIEW public.active_drivers AS
+SELECT
+  d.id,
+  d.name,
+  d.status                      AS driver_status,
+  d.online,
+  d.current_task,
+  d.updated_at                  AS driver_updated_at,
+  -- Latest GPS
+  dl.lat,
+  dl.lng,
+  dl.speed,
+  dl.heading,
+  dl.accuracy,
+  dl.status                     AS location_status,
+  dl.updated_at                 AS location_updated_at,
+  -- Current task details
+  t.id                          AS task_id,
+  t.title                       AS task_title,
+  t.status                      AS task_status,
+  t.priority                    AS task_priority,
+  t.assigned_at,
+  t.pickup_address,
+  t.dropoff_address,
+  t.stops,
+  -- Vehicle
+  v.id                          AS vehicle_id,
+  v.reg_number                  AS vehicle_reg,
+  v.make                        AS vehicle_make,
+  v.type                        AS vehicle_type
+FROM   public.drivers       d
+LEFT JOIN public.driver_locations dl ON dl.driver_id = d.id
+LEFT JOIN public.tasks            t  ON t.id = d.current_task
+LEFT JOIN public.vehicles         v  ON v.id = t.vehicle_id;
+
+GRANT SELECT ON public.active_drivers TO anon, authenticated;
+
+-- ─── 2. push_subscriptions ────────────────────────────────────
+-- Stores Web Push API subscriptions per driver device.
+-- Backend reads these to send push notifications for new job assignments.
+-- One driver can have multiple devices (multiple rows).
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  driver_id   UUID NOT NULL REFERENCES public.drivers(id) ON DELETE CASCADE,
+  endpoint    TEXT NOT NULL UNIQUE,     -- Push service URL (unique per device)
+  p256dh      TEXT NOT NULL,            -- Browser public key
+  auth        TEXT NOT NULL,            -- Auth secret
+  device_name TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subs_driver ON public.push_subscriptions(driver_id);
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read push_subscriptions"  ON public.push_subscriptions FOR SELECT USING (true);
+CREATE POLICY "Public write push_subscriptions" ON public.push_subscriptions FOR ALL    USING (true);
+
+-- ─── 3. Migration: rename old fleet_nodes → handled by app ───
+-- If you have an existing fleet_nodes table from an earlier schema,
+-- vehicles now replaces it. The app reads from 'vehicles' only.
+-- You can migrate data with:
+--   INSERT INTO public.vehicles (id, reg_number, make, updated_at)
+--   SELECT id, node_name, 'Unknown', last_seen FROM public.fleet_nodes
+--   ON CONFLICT (id) DO NOTHING;
+-- Then drop fleet_nodes when ready.
+
+-- ─── 4. Helper: dispatcher task summary ───────────────────────
+-- Fast count query for the Dispatch page status tabs.
+CREATE OR REPLACE VIEW public.task_status_counts AS
+SELECT
+  status,
+  priority,
+  COUNT(*) AS count
+FROM public.tasks
+GROUP BY status, priority;
+
+GRANT SELECT ON public.task_status_counts TO anon, authenticated;
+
+-- ================================================================
+-- LAYER 3 — CONTRACT TABLES
+-- ================================================================
+-- ================================================================
+-- AP3X Zero Drift — Contract Tables (sql_3_contract_tables.txt)
+-- Run AFTER sql_1_original_schema.txt and sql_2_pwa_sync_additions.txt
+-- ================================================================
+-- Tables: fleet_nodes · dashboard_events · settings
+-- Realtime: fleet_nodes (subscribe in dispatchService + fleetService)
+-- ================================================================
+
+-- ─── Prerequisite extension ────────────────────────────────────
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ─── Shared updated_at trigger function (idempotent) ───────────
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ─────────────────────────────────────────────────────────────────
+-- fleet_nodes
+-- Live vehicle node state. Updated by Driver PWA telemetry pushes.
+-- Fleet Control OS subscribes via Supabase Realtime for map updates.
+-- Separate from `vehicles` (config) — this is the live telemetry layer.
+-- ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.fleet_nodes (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  node_name   TEXT NOT NULL,
+  driver_id   UUID REFERENCES public.drivers(id)  ON DELETE SET NULL,
+  vehicle_id  UUID REFERENCES public.vehicles(id) ON DELETE SET NULL,
+  lat         DOUBLE PRECISION NOT NULL DEFAULT 0,
+  lng         DOUBLE PRECISION NOT NULL DEFAULT 0,
+  speed       DOUBLE PRECISION NOT NULL DEFAULT 0,
+  heading     DOUBLE PRECISION NOT NULL DEFAULT 0,
+  fuel        DOUBLE PRECISION,
+  status      TEXT NOT NULL DEFAULT 'offline'
+                CHECK (status IN ('offline','online','en_route','idle','on_break')),
+  telemetry   JSONB,
+  online      BOOLEAN NOT NULL DEFAULT false,
+  last_seen   TIMESTAMPTZ,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_fleet_nodes_driver_id  ON public.fleet_nodes(driver_id);
+CREATE INDEX IF NOT EXISTS idx_fleet_nodes_vehicle_id ON public.fleet_nodes(vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_fleet_nodes_online     ON public.fleet_nodes(online);
+
+DROP TRIGGER IF EXISTS set_fleet_nodes_updated_at ON public.fleet_nodes;
+CREATE TRIGGER set_fleet_nodes_updated_at
+  BEFORE UPDATE ON public.fleet_nodes
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.fleet_nodes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read fleet_nodes"  ON public.fleet_nodes;
+DROP POLICY IF EXISTS "Public write fleet_nodes" ON public.fleet_nodes;
+CREATE POLICY "Public read fleet_nodes"  ON public.fleet_nodes FOR SELECT USING (true);
+CREATE POLICY "Public write fleet_nodes" ON public.fleet_nodes FOR ALL    USING (true);
+
+-- Enable Realtime (contract: subscribe to fleet_nodes)
+ALTER PUBLICATION supabase_realtime ADD TABLE public.fleet_nodes;
+
+
+-- ─────────────────────────────────────────────────────────────────
+-- dashboard_events
+-- Dispatcher audit log. Written by logDashboardEvent() in backendService.
+-- Types: task_created | task_assigned | task_completed | task_cancelled
+-- ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.dashboard_events (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type       TEXT NOT NULL,
+  payload    JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_dashboard_events_type       ON public.dashboard_events(type);
+CREATE INDEX IF NOT EXISTS idx_dashboard_events_created_at ON public.dashboard_events(created_at DESC);
+
+ALTER TABLE public.dashboard_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read dashboard_events"  ON public.dashboard_events;
+DROP POLICY IF EXISTS "Public write dashboard_events" ON public.dashboard_events;
+CREATE POLICY "Public read dashboard_events"  ON public.dashboard_events FOR SELECT USING (true);
+CREATE POLICY "Public write dashboard_events" ON public.dashboard_events FOR ALL    USING (true);
+
+
+-- ─────────────────────────────────────────────────────────────────
+-- settings
+-- Fleet-wide operator settings. Key-value. Written via setSetting().
+-- ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.settings (
+  key        TEXT PRIMARY KEY,
+  value      JSONB,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TRIGGER IF EXISTS set_settings_updated_at ON public.settings;
+CREATE TRIGGER set_settings_updated_at
+  BEFORE UPDATE ON public.settings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read settings"  ON public.settings;
+DROP POLICY IF EXISTS "Public write settings" ON public.settings;
+CREATE POLICY "Public read settings"  ON public.settings FOR SELECT USING (true);
+CREATE POLICY "Public write settings" ON public.settings FOR ALL    USING (true);
+
+
+-- ─────────────────────────────────────────────────────────────────
+-- VERIFICATION QUERIES (run these to confirm setup)
+-- ─────────────────────────────────────────────────────────────────
+-- SELECT table_name FROM information_schema.tables
+--   WHERE table_schema = 'public'
+--   AND table_name IN ('fleet_nodes','dashboard_events','settings');
+--
+-- SELECT schemaname, tablename FROM pg_publication_tables
+--   WHERE pubname = 'supabase_realtime';
+
+-- ================================================================
+-- LAYER 4 — JOB EXECUTION CONTROL LAYER
+-- ================================================================
+-- ============================================================
+-- AP3X JOB EXECUTION CONTROL LAYER — Schema Additions
+-- sql_4_job_execution_layer.sql
+--
+-- ADDITIVE ONLY. Does NOT modify any existing tables.
+-- Run AFTER sql_1, sql_2, sql_3.
+-- ============================================================
+
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================
+-- 1. job_execution_state
+--    One row per job per driver. Tracks the driver's decision
+--    (accept/reject) and live execution phase.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS job_execution_state (
+  id             UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  job_id         UUID        NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  driver_id      TEXT        NOT NULL,
+  tenant_id      TEXT,
+  status         TEXT        NOT NULL DEFAULT 'pending'
+                             CHECK (status IN (
+                               'pending','accepted','rejected',
+                               'in_progress','paused','completed','cancelled'
+                             )),
+  accepted_at    TIMESTAMPTZ,
+  rejected_at    TIMESTAMPTZ,
+  started_at     TIMESTAMPTZ,
+  paused_at      TIMESTAMPTZ,
+  completed_at   TIMESTAMPTZ,
+  rejection_reason TEXT,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_jes_job_id    ON job_execution_state(job_id);
+CREATE INDEX IF NOT EXISTS idx_jes_driver_id ON job_execution_state(driver_id);
+CREATE INDEX IF NOT EXISTS idx_jes_status    ON job_execution_state(status);
+
+-- Auto-update updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_jes_updated_at ON job_execution_state;
+CREATE TRIGGER trg_jes_updated_at
+  BEFORE UPDATE ON job_execution_state
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+
+-- ============================================================
+-- 2. job_stops
+--    Ordered stop list for a job. Locked on acceptance.
+--    sequence_index enforces stop order (1-based).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS job_stops (
+  id                  UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  job_id              UUID        NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  stop_index          SMALLINT    NOT NULL,           -- 1-based, locked on job acceptance
+  stop_type           TEXT        NOT NULL DEFAULT 'dropoff'
+                                  CHECK (stop_type IN (
+                                    'pickup','dropoff','depot','inspection','waypoint'
+                                  )),
+  label               TEXT,                           -- human label e.g. "Pickup – Warehouse A"
+  address             TEXT,                           -- raw address string (geocoded on accept)
+  location_lat        DOUBLE PRECISION,
+  location_lng        DOUBLE PRECISION,
+  geofence_radius_m   INT         DEFAULT 150,        -- arrival detection radius
+  status              TEXT        NOT NULL DEFAULT 'pending'
+                                  CHECK (status IN (
+                                    'pending','en_route','arrived',
+                                    'validated','skipped','failed'
+                                  )),
+  arrived_at          TIMESTAMPTZ,
+  validated_at        TIMESTAMPTZ,
+  skipped_at          TIMESTAMPTZ,
+  skip_reason         TEXT,
+  skip_approved_by    TEXT,                           -- dispatcher ID if dispatcher approved skip
+  time_window_start   TIMESTAMPTZ,
+  time_window_end     TIMESTAMPTZ,
+  notes               TEXT,
+  proof_url           TEXT,                           -- photo/signature URL (future)
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (job_id, stop_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_js_job_id     ON job_stops(job_id);
+CREATE INDEX IF NOT EXISTS idx_js_status     ON job_stops(status);
+CREATE INDEX IF NOT EXISTS idx_js_stop_type  ON job_stops(stop_type);
+
+DROP TRIGGER IF EXISTS trg_js_updated_at ON job_stops;
+CREATE TRIGGER trg_js_updated_at
+  BEFORE UPDATE ON job_stops
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+
+-- ============================================================
+-- 3. job_events_log
+--    Immutable append-only audit trail.
+--    Every critical driver action is written here.
+--    This is the grant-readiness / compliance backbone.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS job_events_log (
+  id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  job_id       UUID        NOT NULL,                  -- NOT FK — keeps log even if task deleted
+  driver_id    TEXT        NOT NULL,
+  tenant_id    TEXT,
+  event_type   TEXT        NOT NULL
+               CHECK (event_type IN (
+                 'JOB_RECEIVED',
+                 'JOB_ACCEPTED',
+                 'JOB_REJECTED',
+                 'JOB_STARTED',
+                 'JOB_PAUSED',
+                 'JOB_RESUMED',
+                 'JOB_COMPLETED',
+                 'JOB_CANCELLED',
+                 'STOP_EN_ROUTE',
+                 'STOP_ARRIVED',
+                 'STOP_VALIDATED',
+                 'STOP_SKIPPED',
+                 'STOP_FAILED',
+                 'ROUTE_DEVIATION',
+                 'ROUTE_INTERRUPTED',
+                 'EMERGENCY_STOP',
+                 'GEOFENCE_ENTERED',
+                 'GEOFENCE_EXITED'
+               )),
+  stop_id      UUID,                                  -- populated for STOP_* events
+  stop_index   SMALLINT,
+  payload      JSONB       NOT NULL DEFAULT '{}',     -- full context snapshot
+  driver_lat   DOUBLE PRECISION,                      -- GPS at time of event
+  driver_lng   DOUBLE PRECISION,
+  device_ts    TIMESTAMPTZ,                           -- device clock (may differ from server)
+  ts           TIMESTAMPTZ NOT NULL DEFAULT NOW()     -- server clock — authoritative
+);
+
+-- Immutable — no UPDATE trigger needed
+CREATE INDEX IF NOT EXISTS idx_jel_job_id     ON job_events_log(job_id);
+CREATE INDEX IF NOT EXISTS idx_jel_driver_id  ON job_events_log(driver_id);
+CREATE INDEX IF NOT EXISTS idx_jel_event_type ON job_events_log(event_type);
+CREATE INDEX IF NOT EXISTS idx_jel_ts         ON job_events_log(ts DESC);
+
+
+-- ============================================================
+-- 4. route_interruption_log
+--    Separate table for controlled mid-job interruptions.
+--    Dispatcher approval tracking included.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS route_interruption_log (
+  id                UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  job_id            UUID        NOT NULL,
+  driver_id         TEXT        NOT NULL,
+  tenant_id         TEXT,
+  interruption_type TEXT        NOT NULL
+                    CHECK (interruption_type IN (
+                      'route_override',
+                      'job_pause',
+                      'emergency_stop',
+                      'stop_reorder',
+                      'stop_skip_request',
+                      'job_cancel_request'
+                    )),
+  reason            TEXT        NOT NULL,
+  driver_lat        DOUBLE PRECISION,
+  driver_lng        DOUBLE PRECISION,
+  speed_at_event    REAL,
+  approved_by       TEXT,                             -- dispatcher profile_id, null = self-approved
+  approval_ts       TIMESTAMPTZ,
+  resolution        TEXT
+                    CHECK (resolution IN (
+                      'approved','denied','auto_approved','pending'
+                    )) DEFAULT 'pending',
+  resolved_at       TIMESTAMPTZ,
+  ts                TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ril_job_id    ON route_interruption_log(job_id);
+CREATE INDEX IF NOT EXISTS idx_ril_driver_id ON route_interruption_log(driver_id);
+CREATE INDEX IF NOT EXISTS idx_ril_type      ON route_interruption_log(interruption_type);
+
+
+-- ============================================================
+-- RLS POLICIES
+-- Enable RLS so drivers only see their own execution rows.
+-- Control OS (service_role) sees everything.
+-- ============================================================
+
+ALTER TABLE job_execution_state  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job_stops            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job_events_log       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE route_interruption_log ENABLE ROW LEVEL SECURITY;
+
+-- Drivers: read own rows only (job_execution_state)
+DROP POLICY IF EXISTS "driver_own_execution" ON job_execution_state;
+CREATE POLICY "driver_own_execution" ON job_execution_state
+  FOR ALL USING (auth.uid()::TEXT = driver_id);
+
+-- Dispatchers / admins: read all (based on profiles.role)
+DROP POLICY IF EXISTS "dispatcher_all_execution" ON job_execution_state;
+CREATE POLICY "dispatcher_all_execution" ON job_execution_state
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE id = auth.uid()
+      AND role IN ('dispatcher','admin')
+    )
+  );
+
+-- job_stops: read if driver owns the job
+DROP POLICY IF EXISTS "driver_job_stops" ON job_stops;
+CREATE POLICY "driver_job_stops" ON job_stops
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM job_execution_state jes
+      WHERE jes.job_id = job_stops.job_id
+      AND jes.driver_id = auth.uid()::TEXT
+    )
+  );
+
+-- Dispatcher read all stops
+DROP POLICY IF EXISTS "dispatcher_all_stops" ON job_stops;
+CREATE POLICY "dispatcher_all_stops" ON job_stops
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE id = auth.uid()
+      AND role IN ('dispatcher','admin')
+    )
+  );
+
+-- job_events_log + route_interruption_log: driver writes own, dispatcher reads all
+DROP POLICY IF EXISTS "driver_own_events" ON job_events_log;
+CREATE POLICY "driver_own_events" ON job_events_log
+  FOR ALL USING (auth.uid()::TEXT = driver_id);
+
+DROP POLICY IF EXISTS "dispatcher_all_events" ON job_events_log;
+CREATE POLICY "dispatcher_all_events" ON job_events_log
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('dispatcher','admin'))
+  );
+
+DROP POLICY IF EXISTS "driver_own_interruptions" ON route_interruption_log;
+CREATE POLICY "driver_own_interruptions" ON route_interruption_log
+  FOR ALL USING (auth.uid()::TEXT = driver_id);
+
+DROP POLICY IF EXISTS "dispatcher_all_interruptions" ON route_interruption_log;
+CREATE POLICY "dispatcher_all_interruptions" ON route_interruption_log
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('dispatcher','admin'))
+  );
+
+
+-- ============================================================
+-- REALTIME — enable publications for live streaming
+-- ============================================================
+-- Run this block if you need Realtime subscriptions on these tables:
+-- ALTER PUBLICATION supabase_realtime ADD TABLE job_execution_state;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE job_stops;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE job_events_log;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE route_interruption_log;
+-- (Uncomment above lines to enable — requires supabase_realtime publication to exist)
+
+-- ============================================================
+-- Done.
+-- ============================================================
+
+-- ================================================================
+-- LAYER 5 — DRIVER SAFETY LAYER
+-- ================================================================
+-- ============================================================
+-- AP3X Driver Safety Layer — SQL Schema (Additive Only)
+-- DO NOT MODIFY existing Fleet OS tables.
+-- Only creates NEW driver-safety-specific tables.
+-- ============================================================
+
+-- ─── 1. safety_incidents ─────────────────────────────────────
+-- Stores every safety event: hazards, harsh events, fatigue alerts.
+CREATE TABLE IF NOT EXISTS safety_incidents (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id    UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  task_id      UUID REFERENCES tasks(id)   ON DELETE SET NULL,
+  type         TEXT NOT NULL,          -- 'hazard' | 'harsh_brake' | 'harsh_accel' | 'fatigue_alert' | 'collision' | 'speeding'
+  subtype      TEXT,                   -- e.g. 'pothole', 'debris', 'flooding'
+  notes        TEXT,
+  lat          DOUBLE PRECISION,
+  lng          DOUBLE PRECISION,
+  speed_kmh    NUMERIC(6,2),
+  severity     TEXT DEFAULT 'medium',  -- 'low' | 'medium' | 'high' | 'critical'
+  source       TEXT DEFAULT 'manual',  -- 'manual' | 'ai' | 'telemetry'
+  ai_flags     JSONB,
+  reported_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE safety_incidents ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Drivers own their incidents"
+  ON safety_incidents FOR ALL
+  USING (auth.uid() = driver_id);
+
+CREATE POLICY "Dispatchers read all incidents"
+  ON safety_incidents FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+        AND profiles.role IN ('admin', 'dispatcher')
+    )
+  );
+
+CREATE INDEX IF NOT EXISTS idx_safety_incidents_driver  ON safety_incidents(driver_id);
+CREATE INDEX IF NOT EXISTS idx_safety_incidents_task    ON safety_incidents(task_id);
+CREATE INDEX IF NOT EXISTS idx_safety_incidents_time    ON safety_incidents(reported_at DESC);
+
+
+-- ─── 2. driver_route_memory ──────────────────────────────────
+-- Local route snapshots synced from IndexedDB when online.
+CREATE TABLE IF NOT EXISTS driver_route_memory (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  task_id         UUID REFERENCES tasks(id)    ON DELETE SET NULL,
+  route_geometry  JSONB,              -- array of {lat, lng} waypoints
+  stops           JSONB,              -- stop list
+  deviations      JSONB,              -- deviation events
+  risk_flags      JSONB,              -- AI-detected risk zones
+  completion_pct  NUMERIC(5,2) DEFAULT 0,
+  started_at      TIMESTAMPTZ,
+  completed_at    TIMESTAMPTZ,
+  synced_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE driver_route_memory ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Drivers own their route memory"
+  ON driver_route_memory FOR ALL
+  USING (auth.uid() = driver_id);
+
+CREATE POLICY "Dispatchers read route memory"
+  ON driver_route_memory FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+        AND profiles.role IN ('admin', 'dispatcher')
+    )
+  );
+
+CREATE INDEX IF NOT EXISTS idx_route_memory_driver ON driver_route_memory(driver_id);
+CREATE INDEX IF NOT EXISTS idx_route_memory_task   ON driver_route_memory(task_id);
+
+
+-- ─── 3. driver_dashcam_events ────────────────────────────────
+-- Metadata-only log of dashcam clip captures (no video stored in DB).
+CREATE TABLE IF NOT EXISTS driver_dashcam_events (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  task_id         UUID REFERENCES tasks(id)    ON DELETE SET NULL,
+  trigger         TEXT NOT NULL,      -- 'manual' | 'harsh_brake' | 'collision' | 'ai_hazard' | 'deviation'
+  lat             DOUBLE PRECISION,
+  lng             DOUBLE PRECISION,
+  speed_kmh       NUMERIC(6,2),
+  heading         NUMERIC(5,1),
+  duration_secs   INT,
+  clip_local_key  TEXT,               -- IndexedDB key for local clip — NOT a cloud URL
+  ai_flags        JSONB,
+  telemetry_snap  JSONB,              -- speed, heading, accel at time of capture
+  captured_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE driver_dashcam_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Drivers own their dashcam events"
+  ON driver_dashcam_events FOR ALL
+  USING (auth.uid() = driver_id);
+
+CREATE POLICY "Dispatchers read dashcam events"
+  ON driver_dashcam_events FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+        AND profiles.role IN ('admin', 'dispatcher')
+    )
+  );
+
+CREATE INDEX IF NOT EXISTS idx_dashcam_driver  ON driver_dashcam_events(driver_id);
+CREATE INDEX IF NOT EXISTS idx_dashcam_task    ON driver_dashcam_events(task_id);
+CREATE INDEX IF NOT EXISTS idx_dashcam_time    ON driver_dashcam_events(captured_at DESC);
+
+
+-- ─── 4. driver_safety_exports ────────────────────────────────
+-- Audit log of every export action a driver performed.
+CREATE TABLE IF NOT EXISTS driver_safety_exports (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id    UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  task_id      UUID REFERENCES tasks(id)    ON DELETE SET NULL,
+  export_type  TEXT NOT NULL,         -- 'incidents_csv' | 'route_csv' | 'full_json'
+  record_count INT  DEFAULT 0,
+  exported_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE driver_safety_exports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Drivers own their export log"
+  ON driver_safety_exports FOR ALL
+  USING (auth.uid() = driver_id);
+
+CREATE INDEX IF NOT EXISTS idx_safety_exports_driver ON driver_safety_exports(driver_id);
+
+-- ================================================================
+-- LAYER 6 — FEDERATION & PAIRING LAYER
+-- ================================================================
+-- ============================================================
+-- AP3X — Federation Layer Schema (Run 6)
+-- Adds pairing_codes table + extends fleet_nodes for federation
+-- Safe to run multiple times (IF NOT EXISTS / idempotent)
+-- ============================================================
+
+-- ─── pairing_codes ────────────────────────────────────────────
+-- Stores active, pending, and expired pairing codes.
+-- Fleet Control OS upserts here; realtime notifies Driver PWA.
+CREATE TABLE IF NOT EXISTS public.pairing_codes (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  code        TEXT NOT NULL UNIQUE,              -- APEX-XXXXXXXX-XXXX-FC
+  status      TEXT NOT NULL DEFAULT 'pending',   -- pending | accepted | expired | failed | revoked
+  tenant_id   TEXT,                              -- populated on registration
+  fleet_id    TEXT,                              -- populated on registration
+  attempts    INTEGER NOT NULL DEFAULT 0,        -- validation attempt count
+  max_attempts INTEGER NOT NULL DEFAULT 5,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  accepted_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  metadata    JSONB                              -- fingerprint, company, version
+);
+
+-- ─── Extend fleet_nodes for federation identity ───────────────
+ALTER TABLE public.fleet_nodes
+  ADD COLUMN IF NOT EXISTS tenant_id        TEXT,
+  ADD COLUMN IF NOT EXISTS fleet_entity_id  TEXT,
+  ADD COLUMN IF NOT EXISTS pairing_token    TEXT,
+  ADD COLUMN IF NOT EXISTS pairing_status   TEXT DEFAULT 'unregistered',
+  ADD COLUMN IF NOT EXISTS company_name     TEXT,
+  ADD COLUMN IF NOT EXISTS connected_since  TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS version          TEXT DEFAULT '1.0';
+
+-- ─── Indexes ─────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_pairing_codes_code       ON public.pairing_codes(code);
+CREATE INDEX IF NOT EXISTS idx_pairing_codes_status     ON public.pairing_codes(status);
+CREATE INDEX IF NOT EXISTS idx_pairing_codes_expires_at ON public.pairing_codes(expires_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fleet_nodes_tenant_id    ON public.fleet_nodes(tenant_id);
+
+-- ─── RLS ──────────────────────────────────────────────────────
+ALTER TABLE public.pairing_codes ENABLE ROW LEVEL SECURITY;
+
+-- Fleet OS can read/write its own pairing codes (public open for MVP)
+CREATE POLICY IF NOT EXISTS "Public read pairing_codes"
+  ON public.pairing_codes FOR SELECT USING (true);
+
+CREATE POLICY IF NOT EXISTS "Public write pairing_codes"
+  ON public.pairing_codes FOR ALL USING (true);
+
+-- ─── Realtime ─────────────────────────────────────────────────
+-- fleet_nodes and dashboard_events already added in schema v1
+-- Add pairing_codes to realtime publication
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'pairing_codes'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.pairing_codes;
+  END IF;
+END $$;
+
+-- ─── Auto-expire function ─────────────────────────────────────
+-- Marks codes as expired when their expires_at passes
+CREATE OR REPLACE FUNCTION expire_pairing_codes()
+RETURNS void AS $$
+BEGIN
+  UPDATE public.pairing_codes
+  SET status = 'expired'
+  WHERE status = 'pending'
+    AND expires_at < NOW();
+END;
+$$ LANGUAGE plpgsql;

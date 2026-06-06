@@ -1,413 +1,515 @@
 # Big V's Best Routes™
 
-> **Single-User · Multi-Vehicle · Safe & Legal Route Planner**
-> Powered by **4P3X Intelligent AI™** | Created by **Kyzel Kreates™** | Part of the **4P3X Verse**
+**Single User · Multi-Vehicle · Safe & Legal Route Planner**
+
+> Powered by **4P3X Intelligent AI™** — Created by **Kyzel Kreates™** — Part of the **4P3X Verse™**
 
 ---
 
-## What Is This?
+## What Is It?
 
-**Big V's Best Routes™** is a single-user, multi-vehicle route planning PWA built for one owner/operator managing multiple different vehicles. It combines vehicle-aware route planning, advisory safety and legal checks, a Control Dashboard, an installable Navigation PWA, demo/live modes, and a Supabase-backed sync layer — all in a dark, mobile-first UI that installs as a native-style app on any device.
+Big V's Best Routes™ is a vehicle-aware route planning platform built for single users who operate multiple vehicles — van drivers, motorhome owners, recovery drivers, trailer operators, and small delivery operators.
 
-The platform is advisory by design. It does not replace the driver's professional judgement, road signage, or legal obligations. It makes planning safer, smarter, and more legally aware.
+Standard sat nav plans routes for cars. It doesn't know your vehicle is 3.1m tall, weighs 3.5 tonnes, or is 7.2m long. It sends you under bridges, down narrow lanes, and across weight-restricted roads.
+
+Big V's Best Routes™ builds the route around the vehicle — checking height clearances, weight limits, width suitability, and road type before you set off. The **4P3X Intelligent AI™** advisory layer adds compliance scoring, risk warnings, and route confidence scoring on top.
 
 ---
 
-## Product Suite
+## Live URLs
 
-| Product | Purpose |
+| Surface | URL |
 |---|---|
-| **Route Planner Dashboard** | Fleet operator HQ — plan routes, manage vehicles, assign jobs, monitor live sessions |
-| **Navigation PWA** | Mobile-first navigation interface — open routes, GPS navigation, safety checklists, submit reports |
-| **4P3X Intelligent AI™ Advisory** | AI-powered safety and legal compliance advisory layer — not a compliance guarantee |
-| **Live Mode (Supabase)** | Real Supabase backend — live CRUD, RLS, realtime subscriptions, auth |
-| **Demo Mode** | Zero-backend simulation — full product experience without any backend setup |
+| **Live App** | [bigvssingleuser.vercel.app](https://bigvssingleuser.vercel.app) |
+| **Homepage** | `/#/landing` |
+| **Route Planner Dashboard** | `/#/dashboard` |
+| **Navigation PWA Demo** | `/#/driver-app-demo` |
+| **Navigation PWA (Live)** | `/#/driver-app` |
+| **Safety & Investor Page** | `/#/investor-safety` |
+| **Backend & Live Mode** | `/#/deployment` |
 
 ---
 
-## Key Features
+## GitHub Repos
 
-### Route Planning & Fleet Management
-- Multi-vehicle fleet manager with vehicle profiles (type, weight, height, hazmat, PCN zones)
-- Route planner with OSM 2D map + MapLibre GL JS 3D terrain rendering
-- GraphHopper-powered route calculation with vehicle-aware constraint filtering
-- Route scoring engine — safety, efficiency, compliance, driver history
-- Route memory — learns preferred routes over time
-
-### Navigation PWA
-- Full mobile PWA — installs on Android and iOS as a standalone app
-- GPS-assisted navigation with live position tracking
-- Pre-trip safety checklist (mandatory acknowledgement gate before departure)
-- Legal acknowledgement gate — operator/driver responsibility confirmed per trip
-- Real-time job assignment inbox — receive, accept, start, complete
-- Driver reports — incident logging, hazard flags, post-trip submission
-- Offline-first — static assets cached by Workbox SW, queue-ready for live sync on reconnect
-
-### 4P3X Intelligent AI™ Advisory Layer
-- Multi-provider AI routing: OpenRouter, DeepSeek, Mistral, Anthropic, Gemini, Groq, Ollama (local)
-- AI command panel — natural language route queries and safety analysis
-- Safety engine — route hazard scoring, restriction detection, PCN zone flagging
-- Compliance engine — vehicle-route legal suitability checks
-- Efficiency engine — fuel, distance, and time optimisation
-- Prediction engine — historical route performance modelling
-- Driver learning — adapts to individual driver behaviour patterns
-- Fleet learning — fleet-wide optimisation over time
-- All advisory — no guarantee of legal compliance or route safety
-
-### Live Mode (Supabase Backend)
-- Full Supabase Auth integration — email/password, session management, token refresh
-- 7 RLS-protected Supabase tables — all scoped to `auth.uid() = user_id`
-- Live CRUD for vehicles, routes, assignments, trip sessions, driver reports, compliance checks, sync logs
-- Realtime subscriptions — Dashboard updates live when Navigation PWA submits status changes
-- Source mode isolation — `source_mode = 'live'` filter keeps live and demo data strictly separate
-- VITE_ env var support — Navigation PWA auto-connects to Supabase on any device from build-time config
-- Connection test — honest pass/fail/invalid-config feedback before Live Mode activation
-- Masked anon key display — first 8 chars + `••••` in all UI panels
-
-### Dashboard Operations
-- Route Assignments panel — create, cancel, delete, live sync overlay
-- Trip Sessions panel — live session monitoring, status history, driver report linking
-- Driver Reports panel — review, flag, filter, export
-- Live Status panel — connection state, auth state, realtime channel count, sync queue
-- BV Mode Bar — global Demo/Live mode indicator visible across all pages
-- Sync Summary — pending queue count, last sync timestamp
-
-### Security & Architecture
-- 4P3X API Config Guard™ — no backend-only secrets in frontend, ever
-- Row-Level Security on all 7 Supabase tables — enforced at database level
-- 0 anonymous write policies — all mutations require authenticated session
-- No `service_role` key in frontend — anon key only
-- Local auth service for Demo Mode — no Supabase dependency
-- All API keys entered at runtime via Settings → stored in localStorage — never hardcoded
+| Repo | Purpose |
+|---|---|
+| [kyzelkreates/4p3xaibvs](https://github.com/kyzelkreates/4p3xaibvs) | Primary — full source + SQL + spec |
+| [kyzelkreates/BigVsSingleuser](https://github.com/kyzelkreates/BigVsSingleuser) | Vercel-connected deploy repo |
+| [kyzelkreates/bv1user](https://github.com/kyzelkreates/bv1user) | Mirror |
 
 ---
 
-## Tech Stack
+## Build Run History
+
+| Run | Description | Output |
+|---|---|---|
+| Run 1 | Rebrand + Single-User App Shell Refactor | `BigVsBestRoutes_Run1.zip` |
+| Run 2 | Multi-Vehicle Manager + Vehicle Profile SSOT Layer | `BigVsBestRoutes_Run2.zip` |
+| Run 3 | Route Planner Dashboard + Route Records + Vehicle-Aware Planning Logic Shell | `BigVsBestRoutes_Run3.zip` |
+| Run 4 | OSM 2D + MapLibre 3D Map Layer | `BigVsBestRoutes_Run4.zip` |
+| Run 5 | Driver PWA GPS + Safe Navigation Workflow | `BigVsBestRoutes_Run5.zip` |
+| Run 6 | Dashboard Sync · Route Assignments · Trip Sessions · Driver Reports | `BigVsBestRoutes_Run6.zip` |
+| Run 7 | 4P3X Intelligent AI™ Safety + Legal Compliance Advisory Layer | `BigVsBestRoutes_Run7.zip` |
+| Run 8 | Backend-Ready Live Mode + Deployment Centre | `BigVsBestRoutes_Run8.zip` |
+| Run 9 | Production Hardening, Investor Demo Pack, Supabase SQL Export | `BigVsBestRoutes_Run9_Final.zip` |
+| Run 10 | Real Supabase connector, backend config, connection testing, RLS-ready schema | — |
+| Run 11 | Live Mode: Supabase Auth/session, live CRUD, dashboard/PWA live data flow, realtime subscriptions | `BigVsBestRoutes_Run11.zip` |
+| Run 12 | Live Mode hardening + end-to-end validation (50 gates) | `BigVsBestRoutes_Run12.zip` |
+| Run 13 | Production Readiness — build validation, PWA icons, deployment docs, 60 gates | `BigVsBestRoutes_Run13.zip` |
+| Run 14 | Investor/Safety page, homepage rebuild, Navigation PWA demo, bridge strike data | — |
+
+---
+
+## Architecture Overview
+
+### Tech Stack
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React 18, Vite, Tailwind CSS v3 |
-| **PWA** | vite-plugin-pwa, Workbox (autoUpdate), Web App Manifest |
-| **Routing** | React Router v6 (Hash Router — Vercel compatible) |
-| **Maps** | MapLibre GL JS (3D), OSM tiles, OSRM routing |
-| **Route Calculation** | GraphHopper API (optional key) |
-| **State Management** | Zustand — SSOT via `core_storage.js` |
-| **Backend / Auth** | Supabase (PostgreSQL, Auth, Realtime) |
-| **AI Providers** | OpenRouter, DeepSeek, Mistral, Anthropic, Gemini, Groq, Ollama |
-| **Deployment** | Vercel (static + PWA) |
-| **Database** | Supabase PostgreSQL with full RLS |
+| **Frontend** | React 18, Vite 5, Tailwind CSS 3 |
+| **State** | Zustand (SSOT via `core_storage.js`) |
+| **Routing** | React Router DOM v6 (hash router) |
+| **Maps** | Leaflet / react-leaflet (2D), MapLibre GL (3D) |
+| **Routing Engine** | GraphHopper, OSRM, Google Maps (configurable) |
+| **AI Layer** | OpenAI, Groq, DeepSeek, OpenRouter (multi-provider) |
+| **Backend** | Supabase (primary), Firebase, AWS, REST (configurable) |
+| **PWA** | vite-plugin-pwa, Workbox (offline-capable, installable) |
+| **Deployment** | Vercel (auto-deploy from GitHub) |
 
----
-
-## Architecture
+### Application Layers
 
 ```
-BigVsSingleuser/
-├── main.jsx                          ← App entry point
-├── app_App.jsx                       ← Root app shell
-├── app_Router.jsx                    ← Hash router + route definitions
-├── core_storage.js                   ← SSOT — all Zustand stores
-├── config_app.js                     ← App identity, branding, feature flags
-├── config_routes.js                  ← Route definitions SSOT
+Big V's Best Routes™
 │
-├── pages_Dashboard.jsx               ← Fleet operator dashboard
-├── pages_DriverApp.jsx               ← Navigation PWA shell
-├── pages_Fleet.jsx                   ← Fleet management
-├── pages_Vehicles.jsx                ← Vehicle profiles
-├── pages_Drivers.jsx                 ← Driver management
-├── pages_Navigation.jsx              ← Route map and navigation
-├── pages_Dispatch.jsx                ← Job dispatch centre
-├── pages_Safety.jsx                  ← Safety module
-├── pages_Compliance.jsx              ← Compliance checks
-├── pages_Analytics.jsx               ← Fleet analytics
-├── pages_Settings.jsx                ← Backend config, API keys, mode toggle
-├── pages_AI.jsx                      ← 4P3X AI command panel
-├── pages_Incidents.jsx               ← Incident log
-├── pages_Messaging.jsx               ← Driver messaging
+├── Homepage / Landing         /#/landing
+├── Route Planner Dashboard    /#/dashboard
+├── Vehicle Profiles           /#/fleet
+├── Route Planning             /#/dispatch
 │
-├── modules_dashboard_BvOperations.jsx    ← Live assignments/sessions/reports panels
-├── modules_live_LiveStatusPanel.jsx      ← Supabase connection + auth status
-├── modules_status_BvModeBar.jsx          ← Global Demo/Live mode indicator
-├── modules_driver_BvRouteNav.jsx         ← Driver navigation module
-├── modules_driver_BvAssignmentInbox.jsx  ← Driver job inbox
+├── Navigation PWA (live)      /#/driver-app
+│   ├── SetupScreen (pairing code gate)
+│   ├── LoginScreen (PIN gate)
+│   └── DriverAppMain
+│       ├── Map tab (Leaflet / Google Maps)
+│       ├── Safety tab
+│       ├── Jobs tab
+│       └── AI Chat tab
 │
-├── services_supabase_supabaseClient.js   ← Supabase client + config
-├── services_supabase_bvLiveService.js    ← 17 live CRUD functions
-├── services_supabase_bvRealtimeService.js← Realtime subscriptions
-├── services_supabase_bvSupabaseAdapter.js← Table/column mapping
-├── services_supabase_authService.js      ← Local demo auth
+├── Navigation PWA Demo        /#/driver-app-demo
+│   ├── No pairing code required
+│   ├── Torquay → Edinburgh demo route
+│   ├── Route & Warnings tab
+│   ├── Map View tab (OSM polyline)
+│   ├── Pre-Trip Checklist tab
+│   └── AI Advisory tab
 │
-├── hooks_useLiveData.js              ← React hooks for live Supabase data
-├── hooks_useAuth.js                  ← Auth state hook
+├── Navigation PWA Setup       /#/driver-setup
+│   ├── Pairing code generator (APXS- tokens)
+│   ├── QR / NFC / WhatsApp / email share
+│   └── Driver telemetry feed
 │
-├── intel_safetyEngine.js             ← Safety scoring
-├── intel_routeScoring.js             ← Route scoring
-├── intel_efficiencyEngine.js         ← Efficiency analysis
-├── intel_complianceEngine.js         ← Compliance checks
-├── intel_predictionEngine.js         ← Performance prediction
-│
-├── services_ai_aiRouter.js           ← Multi-provider AI routing
-├── services_ai_aiConfig.js           ← AI provider config
-├── services_ai_aiModelRegistry.js    ← Model registry
-│
-├── services_maps_mapProviders.js     ← Map provider adapters
-├── services_maps_runtimeKeys.js      ← Runtime API key store
-├── services_routing_localRoutingEngine.js ← Local OSRM routing
-│
-├── public/
-│   ├── icons/
-│   │   ├── icon-192x192.png         ← PWA icon (replace with branded artwork)
-│   │   └── icon-512x512.png         ← PWA icon (replace with branded artwork)
-│   └── sw-job-sync.js               ← Background sync service worker
-│
-├── supabase/
-│   ├── big-vs-best-routes-run10.sql            ← Core schema
-│   ├── big-vs-best-routes-run11-live-mode.sql  ← Live Mode columns + realtime
-│   ├── big-vs-best-routes-run12-live-hardening.sql ← Run 12 hardening patch (latest)
-│   ├── big-vs-best-routes-run10.txt            ← Plain text copy (Run 10)
-│   ├── big-vs-best-routes-run11.txt            ← Plain text copy (Run 11)
-│   └── big-vs-best-routes-run12.txt            ← Plain text copy (Run 12, latest)
-│
-├── docs/
-│   ├── SUPABASE_LIVE_SETUP_GUIDE.md
-│   ├── VERCEL_DEPLOYMENT_GUIDE.md
-│   ├── GITHUB_HANDOFF_CHECKLIST.md
-│   ├── RUN_12_LIVE_MODE_VALIDATION_REPORT.md
-│   ├── RUN_13_FINAL_PRODUCTION_READINESS_REPORT.md
-│   ├── technical-handover-big-vs-best-routes.md
-│   └── investor-demo-pack-big-vs-best-routes.md
-│
-├── index.html
-├── vite.config.js                    ← Vite + VitePWA config
-├── vercel.json                       ← Vercel SPA routing + security headers
-├── tailwind.config.js
-├── package.json
-└── .env.example                      ← Safe public env vars template
+├── Safety & AI                /#/safety
+├── Legal Awareness            /#/compliance
+├── 4P3X AI Command            /#/ai
+├── Journey Analytics          /#/analytics
+├── Incidents                  /#/incidents
+├── Backend & Live Mode        /#/deployment
+├── Safety & Investor Page     /#/investor-safety
+└── Settings                   /#/settings
 ```
 
 ---
 
-## Build Runs
+## Core Files
 
-This project was built in structured, non-destructive runs. Each run had a specific scope, validation gates, and a final zip output.
-
-| Run | Scope | Status |
-|---|---|---|
-| Run 1 | Rebrand + Single-User App Shell | ✅ Complete |
-| Run 2 | Multi-Vehicle Manager + Vehicle Profile SSOT | ✅ Complete |
-| Run 3 | Route Planner Dashboard + Route Records | ✅ Complete |
-| Run 4 | OSM 2D + MapLibre 3D Map Layer | ✅ Complete |
-| Run 5 | Navigation PWA GPS + Safe Navigation Workflow | ✅ Complete |
-| Run 6 | Dashboard Sync · Assignments · Trip Sessions · Driver Reports | ✅ Complete |
-| Run 7 | 4P3X Intelligent AI™ Safety + Legal Compliance Advisory | ✅ Complete |
-| Run 8 | Backend-Ready Live Mode + Deployment Centre | ✅ Complete |
-| Run 9 | Production Hardening + Investor Demo Pack + SQL Export | ✅ Complete |
-| Run 10 | Real Supabase Connector + RLS-Ready Schema | ✅ Complete |
-| Run 11 | Live Mode — Auth, Live CRUD, Realtime, Dashboard/PWA Sync | ✅ Complete |
-| Run 12 | Live Mode Hardening + End-to-End Validation (50 gates) | ✅ Complete |
-| Run 13 | Final Production Readiness + Deployment Validation (60 gates) | ✅ **FINAL** |
-
----
-
-## Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Run local dev server
-npm run dev
-
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-Requires **Node 20+** and **npm 9+**.
-
----
-
-## Demo Mode (No Backend Required)
-
-Demo Mode is the default. The full product experience runs entirely in the browser using localStorage — no Supabase account, no API keys, no configuration needed.
-
-1. Run `npm run dev` or open the deployed URL.
-2. Complete the first-run setup (create admin + driver accounts — stored locally).
-3. Explore the Dashboard, create routes and vehicles, assign jobs, open the Navigation PWA.
-4. All data persists in localStorage between sessions.
-
----
-
-## Live Mode (Supabase Backend)
-
-Full setup: see [`docs/SUPABASE_LIVE_SETUP_GUIDE.md`](docs/SUPABASE_LIVE_SETUP_GUIDE.md)
-
-### Quick steps:
-1. Create a Supabase project at [supabase.com](https://supabase.com).
-2. In the Supabase SQL Editor, run the SQL files in order:
-   - `supabase/big-vs-best-routes-run10.sql`
-   - `supabase/big-vs-best-routes-run11-live-mode.sql`
-   - `supabase/big-vs-best-routes-run12-live-hardening.sql`
-3. Copy `.env.example` → `.env` and fill in:
-   ```env
-   VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   ```
-4. Open the app → **Settings → Backend Configuration** → enter URL + anon key → **Test Connection**.
-5. Go to **Settings → Demo / Live Mode** → switch to **Live Mode**.
-6. Sign in via the **Live Mode panel** on the Dashboard.
-
-> **Never use the `service_role` key in the frontend.** The anon key is designed for browser-side use and is protected by Row-Level Security.
-
----
-
-## Deployment (Vercel)
-
-Full guide: see [`docs/VERCEL_DEPLOYMENT_GUIDE.md`](docs/VERCEL_DEPLOYMENT_GUIDE.md)
-
-```bash
-# Deploy via Vercel CLI
-npm install -g vercel
-vercel --prod
-```
-
-Or connect your GitHub repo to [vercel.com](https://vercel.com) for automatic deployments on push.
-
-**Required Vercel environment variables (for Live Mode):**
-
-| Variable | Value |
+### State (SSOT)
+| File | Purpose |
 |---|---|
-| `VITE_SUPABASE_URL` | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Your anon/public key |
+| `core_storage.js` | Single Source of Truth — all Zustand stores (vehicles, drivers, routes, nav sessions, backend config) |
 
-Demo Mode works without any environment variables.
+### Pages
+| File | Route | Description |
+|---|---|---|
+| `pages_Landing.jsx` | `/#/landing` | Full homepage — 11 sections, all shortcuts |
+| `pages_Dashboard.jsx` | `/#/dashboard` | Main route planner control centre |
+| `pages_DriverApp.jsx` | `/#/driver-app` | Full Navigation PWA (live, pairing required) |
+| `pages_DriverAppDemo.jsx` | `/#/driver-app-demo` | Demo Navigation PWA (no pairing code) |
+| `pages_DriverSetup.jsx` | `/#/driver-setup` | PWA pairing code generator + driver management |
+| `pages_Fleet.jsx` | `/#/fleet` | Saved vehicles list |
+| `pages_Vehicles.jsx` | `/#/vehicles` | Vehicle profile management |
+| `pages_Dispatch.jsx` | `/#/dispatch` | Route planning |
+| `pages_Safety.jsx` | `/#/safety` | Safety AI dashboard |
+| `pages_Compliance.jsx` | `/#/compliance` | Legal awareness / compliance |
+| `pages_AI.jsx` | `/#/ai` | 4P3X AI Command panel |
+| `pages_Analytics.jsx` | `/#/analytics` | Journey analytics |
+| `pages_InvestorSafety.jsx` | `/#/investor-safety` | Investor & bridge strike impact page |
+| `pages_Deployment.jsx` | `/#/deployment` | Backend config + live mode |
+
+### Services
+| Layer | Files | Purpose |
+|---|---|---|
+| **AI** | `services_ai_aiRouter.js`, `services_ai_aiProviderManager.js`, `services_ai_aiModelRegistry.js`, `services_ai_aiConfig.js`, `services_ai_aiFallbackSystem.js`, `services_ai_aiUsageTracker.js`, `services_ai_bvAdvisoryEngine.js`, `services_ai_localAIOrchestrator.js` | Multi-provider AI routing — OpenAI / Groq / DeepSeek / OpenRouter |
+| **Maps** | `services_maps_mapService.js`, `services_maps_mapProviders.js`, `services_maps_routeGeometry.js`, `services_maps_runtimeKeys.js` | Map provider abstraction — OSM / GraphHopper / Google Maps |
+| **Routing** | `services_routing_localRoutingEngine.js`, `services_routing_routeCache.js` | Vehicle-aware local routing engine |
+| **Supabase** | `services_supabase_supabaseClient.js`, `services_supabase_authService.js`, `services_supabase_bvLiveService.js`, `services_supabase_bvRealtimeService.js`, `services_supabase_bvSupabaseAdapter.js` | Supabase live backend integration |
+| **Sync** | `services_sync_liveSync.js`, `services_sync_driverSyncService.js`, `services_sync_bvSyncService.js`, `services_sync_syncVerificationService.js` | Demo/live sync + driver pairing |
+| **Safety** | `services_safety_safetyService.js`, `services_safety_offlineVault.js`, `services_safety_routeMemory.js`, `services_safety_visionAI.js`, `services_safety_syncService.js` | Safety incident tracking + offline vault |
+| **Fleet** | `services_fleet_fleetService.js`, `services_vehicles_vehicleService.js` | Vehicle management |
+| **Execution** | `services_execution_jobExecutionService.js`, `services_pwa_jobSyncService.js` | Job execution control layer |
+| **Federation** | `services_federation_pairingEngine.js`, `services_federation_tenantRegistry.js`, `services_federation_telemetryQueue.js`, `services_federation_syncPayload.js` | APXS pairing code engine |
+| **Demo** | `services_demo_demoRoute.js` | SSOT demo route data (Torquay → Edinburgh) |
+
+### Intelligence (Intel) Engines
+| File | Purpose |
+|---|---|
+| `intel_safetyEngine.js` | Vehicle height / weight / width hazard scoring |
+| `intel_complianceEngine.js` | Legal suitability scoring engine |
+| `intel_routeScoring.js` | Route confidence + composite safety score |
+| `intel_aiOrchestrator.js` | AI provider orchestration |
+| `intel_predictionEngine.js` | Predictive routing & hazard prediction |
+| `intel_efficiencyEngine.js` | Route efficiency scoring |
+| `intel_graphhopperAdapter.js` | GraphHopper API adapter |
+| `intel_routeMemory.js` | Route history & memory |
+| `intel_driverLearning.js` | Driver behaviour learning |
+| `intel_fleetLearning.js` | Fleet-level pattern learning |
 
 ---
 
-## Supabase Schema
+## Demo Mode vs Live Mode
 
-All SQL is in `supabase/`. Plain text copies are in `supabase/*.txt` for easy copy-paste into Supabase SQL Editor.
+### Demo Mode (default)
+- No backend configuration required
+- Navigation PWA opens without a pairing code
+- All safety advisory panels fully functional
+- Torquay → Edinburgh demo route preloaded
+- Safe for investor demos and presentations
 
-### Tables (all RLS-enabled)
+### Live Mode
+- Requires backend provider configuration (Supabase / Firebase / AWS / REST)
+- Navigation PWA requires APXS- pairing code from dashboard
+- Full sync: routes, jobs, telemetry, driver reports
+- Row-level security (RLS) enforced on all Supabase tables
+- Switch between demo and live at any time via `/#/deployment`
 
-| Table | Purpose | RLS | Realtime |
-|---|---|---|---|
-| `bv_vehicles` | Vehicle fleet profiles | ✅ | ✅ |
-| `bv_routes` | Planned routes | ✅ | ✅ |
-| `bv_route_assignments` | Job assignments to drivers | ✅ | ✅ |
-| `bv_trip_sessions` | Active/completed trip records | ✅ | ✅ |
-| `bv_driver_reports` | Driver incident/post-trip reports | ✅ | ✅ |
-| `bv_compliance_checks` | Vehicle-route legal checks | ✅ | ✅ |
-| `bv_sync_logs` | Sync event audit log | ✅ | — |
+### Demo/Live SSOT
+The `isLiveSyncActive` gate in `core_storage.js` enforces 5 conditions before activating live sync:
+1. Demo Mode is OFF
+2. A non-local backend provider is selected
+3. The provider has passed a connection test (`testPassed`)
+4. The provider has a valid URL/key configured
+5. Local fallback is not the only active option
 
-**30 RLS policies. 0 anonymous write policies. All records scoped to `auth.uid() = user_id`.**
+---
+
+## Supabase SQL Schema
+
+All SQL is in the `/sql/` directory and as a combined file.
+
+| File | Layer | Tables / Objects Created |
+|---|---|---|
+| `sql_1_original_schema.txt` | **Layer 1 — Base Schema** | `profiles`, `drivers`, `vehicles`, `tasks`, `job_assignments`, `driver_locations`, indexes, triggers, RLS |
+| `sql_2_pwa_sync_additions.txt` | **Layer 2 — Views & Helpers** | `active_drivers` view, `push_subscriptions`, `task_status_counts` view |
+| `sql_3_contract_tables.txt` | **Layer 3 — Contract Tables** | `fleet_nodes`, `dashboard_events`, `settings`, Realtime publications |
+| `sql_4_job_execution_layer.sql` | **Layer 4 — Job Execution** | `job_execution_state`, `job_stop_progress`, `job_interruptions`, `offline_event_queue` |
+| `sql_5_driver_safety_layer.sql` | **Layer 5 — Driver Safety** | `safety_incidents`, `route_replay_events`, `driver_safety_scores` |
+| `sql_6_federation_layer.sql` | **Layer 6 — Federation** | `pairing_codes`, extends `fleet_nodes` for federation identity |
+| `sql_COMPLETE_ALL_LAYERS.txt` | **All 6 Layers Combined** | Full schema in one file — run this if starting fresh |
+
+### Running the Schema
+
+**Option A — Full combined (recommended for new projects):**
+1. Open Supabase SQL Editor
+2. Paste the contents of `sql_COMPLETE_ALL_LAYERS.txt`
+3. Run
+
+**Option B — Layer by layer:**
+1. Run `sql_1_original_schema.txt`
+2. Run `sql_2_pwa_sync_additions.txt`
+3. Run `sql_3_contract_tables.txt`
+4. Run `sql_4_job_execution_layer.sql`
+5. Run `sql_5_driver_safety_layer.sql`
+6. Run `sql_6_federation_layer.sql`
+
+All statements use `IF NOT EXISTS` — safe to re-run.
+
+---
+
+## Database Tables Reference
+
+### Core Tables (Layer 1)
+
+| Table | Purpose |
+|---|---|
+| `profiles` | Supabase auth user profiles — links `auth.users` to app roles |
+| `drivers` | Driver records — status, online flag, current task |
+| `vehicles` | Vehicle configuration — height, weight, width, length, type |
+| `tasks` | Route jobs — full lifecycle state machine |
+| `job_assignments` | Audit record for every task assignment event |
+| `driver_locations` | Real-time GPS per driver — upserted every 5 seconds |
+
+### Task Lifecycle State Machine
+```
+pending → assigned → accepted → in_progress → completed
+                                              ↘ cancelled
+```
+
+### Views (Layer 2)
+
+| View | Purpose |
+|---|---|
+| `active_drivers` | Joined query: driver + GPS + current task + vehicle |
+| `task_status_counts` | Fast count by status/priority for dashboard tabs |
+
+### Contract Tables (Layer 3)
+
+| Table | Purpose |
+|---|---|
+| `fleet_nodes` | Live vehicle telemetry layer (separate from `vehicles` config) |
+| `dashboard_events` | Dispatcher audit log — task lifecycle events |
+| `settings` | Fleet-wide key-value operator settings |
+
+### Execution & Safety Tables (Layers 4–5)
+
+| Table | Purpose |
+|---|---|
+| `job_execution_state` | Per-job per-driver execution tracking |
+| `job_stop_progress` | Progress through each stop in a multi-stop job |
+| `job_interruptions` | Interruption events during job execution |
+| `offline_event_queue` | Queued events when driver is offline |
+| `safety_incidents` | Safety events — hazards, harsh braking, fatigue alerts |
+| `route_replay_events` | Full route replay telemetry store |
+| `driver_safety_scores` | Aggregated driver safety scoring |
+
+### Federation Tables (Layer 6)
+
+| Table | Purpose |
+|---|---|
+| `pairing_codes` | APXS- pairing code store — dashboard generates, PWA validates |
 
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env`. All variables are frontend-safe `VITE_*` public keys.
+Copy `.env.example` and fill in your values:
 
 ```env
-# Required for Live Mode
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+# Map provider API keys (optional — free tier fallback available)
+VITE_GRAPHHOPPER_API_KEY=your_graphhopper_key
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_key
 
-# App mode
-VITE_DEMO_MODE_DEFAULT=true
+# Supabase (public/client-safe values only — NEVER service role key)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
 
-# Map providers (optional)
-VITE_MAP_PROVIDER=osm
-VITE_GRAPHHOPPER_API_KEY=
-VITE_MAPBOX_TOKEN=
-
-# AI providers (optional — client-safe keys only)
-VITE_OPENROUTER_API_KEY=
-VITE_DEEPSEEK_API_KEY=
-VITE_MISTRAL_API_KEY=
-VITE_ANTHROPIC_API_KEY=
-VITE_GEMINI_API_KEY=
-VITE_OLLAMA_BASE_URL=
+# AI providers (optional — falls back to local logic if not set)
+VITE_OPENAI_API_KEY=your_openai_key
+VITE_OPENROUTER_API_KEY=your_openrouter_key
+VITE_GROQ_API_KEY=your_groq_key
 ```
 
-**Never put `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `JWT_SECRET`, or any backend-only secret here.**
+> ⚠️ **Security rule:** Only public/client-safe keys belong here. Never put a Supabase service role key, JWT secret, or any backend-only secret in a `.env` file accessible to the frontend.
 
 ---
 
-## PWA Install
+## Getting Started (Local Dev)
 
-### Android (Chrome)
-1. Open the deployed URL in Chrome.
-2. Tap the **three-dot menu** → **Install app** or **Add to Home Screen**.
-3. The app installs as a standalone app opening at the Navigation PWA (`/#/driver-app`).
+```bash
+# 1. Clone
+git clone https://github.com/kyzelkreates/4p3xaibvs.git
+cd 4p3xaibvs/project_source/aaifcs
 
-### iOS (Safari)
-1. Open the deployed URL in Safari.
-2. Tap the **Share** button (box with arrow).
-3. Tap **Add to Home Screen**.
-4. Name it **Big V Routes** and tap **Add**.
+# 2. Install
+npm ci
 
-> **Note:** PWA icons are currently solid dark-brand placeholder PNGs. Replace `public/icons/icon-192x192.png` and `public/icons/icon-512x512.png` with properly branded artwork before public launch.
+# 3. Environment (optional — app runs in demo mode without any keys)
+cp .env.example .env
+# Edit .env with your keys if needed
 
----
+# 4. Run
+npm run dev
 
-## Security
+# 5. Build
+npm run build
 
-- **4P3X API Config Guard™** — no backend-only secrets in frontend, ever.
-- Row-Level Security enforced at database level on all 7 tables.
-- All mutations require an active Supabase Auth session (`auth.uid()`).
-- No `service_role` key used in frontend code — confirmed by security scan.
-- API keys entered at runtime via Settings UI, stored in localStorage, never hardcoded.
-- Forbidden tokens (`SERVICE_ROLE_KEY`, `DATABASE_URL`, `JWT_SECRET`, etc.) present only in prohibition comments/documentation — never as actual values.
+# 6. Preview built output
+npm run preview
+```
 
-Security scan result (Run 13): **PASSED — No forbidden secrets in frontend code.**
+App runs at `http://localhost:5173` in demo mode by default. No backend required.
 
 ---
 
-## Advisory & Legal
+## Deployment
 
-> **Big V's Best Routes™ is advisory route-planning support only.**
->
-> The platform does not guarantee legal compliance, route safety, or road restriction clearance.
->
-> The driver/operator remains fully responsible for:
-> - Checking live road signs and active restrictions
-> - Confirming vehicle suitability for the planned route
-> - Applying professional judgement at all times
-> - Complying with all applicable road and transport law
->
-> Route recommendations are based on available map data and AI analysis. Data freshness, third-party map accuracy, and local conditions may affect suitability. Human review and override are always required.
->
-> Backend connectivity does not guarantee legal route safety.
+### Vercel (recommended)
 
----
+1. Connect [github.com/kyzelkreates/4p3xaibvs](https://github.com/kyzelkreates/4p3xaibvs) to Vercel
+2. Set root directory to `project_source/aaifcs`
+3. Build command: `npm run build`
+4. Output directory: `dist`
+5. Add environment variables in Vercel dashboard (optional)
+6. Deploy — Vercel auto-deploys on every push to `main`
 
-## Documentation
+The `vercel.json` in `project_source/aaifcs/` is pre-configured with SPA fallback routing, asset caching, and PWA service worker headers.
 
-| Document | Purpose |
-|---|---|
-| [`docs/SUPABASE_LIVE_SETUP_GUIDE.md`](docs/SUPABASE_LIVE_SETUP_GUIDE.md) | Full Supabase setup — RLS, SQL, auth, realtime, verify queries |
-| [`docs/VERCEL_DEPLOYMENT_GUIDE.md`](docs/VERCEL_DEPLOYMENT_GUIDE.md) | Vercel deployment, env vars, PWA install, common errors |
-| [`docs/GITHUB_HANDOFF_CHECKLIST.md`](docs/GITHUB_HANDOFF_CHECKLIST.md) | Pre-push security scan, files checklist, rollback guidance |
-| [`docs/RUN_12_LIVE_MODE_VALIDATION_REPORT.md`](docs/RUN_12_LIVE_MODE_VALIDATION_REPORT.md) | Live Mode validation — all 50 gates |
-| [`docs/RUN_13_FINAL_PRODUCTION_READINESS_REPORT.md`](docs/RUN_13_FINAL_PRODUCTION_READINESS_REPORT.md) | Final production readiness — all 60 gates |
-| [`docs/technical-handover-big-vs-best-routes.md`](docs/technical-handover-big-vs-best-routes.md) | Full technical handover document |
-| [`docs/investor-demo-pack-big-vs-best-routes.md`](docs/investor-demo-pack-big-vs-best-routes.md) | Investor/stakeholder demo pack |
+### Manual / Other Hosts
+
+```bash
+npm run build
+# Upload contents of dist/ to any static host
+# All routes must fall back to index.html (SPA routing)
+```
 
 ---
 
-## Branding
+## PWA Installation
+
+### Android / Chrome
+Open the app → tap ⋮ menu → **"Add to Home Screen"** or tap the install banner.
+
+### iOS / Safari
+Open the app in Safari → tap **Share (□↑)** → scroll down → **"Add to Home Screen"** → **"Add"**.
+
+Once installed: full-screen, offline-capable, no app store required.
+
+---
+
+## Navigation PWA Pairing
+
+The Navigation PWA requires a pairing code (APXS- token) to connect to the dashboard in **Live Mode**.
+
+1. Open **Route Planner Dashboard** → **Navigation PWA Setup** (`/#/driver-setup`)
+2. Generate a pairing code — copy or share via QR / NFC / WhatsApp / email
+3. On the mobile device, open `/#/driver-app`
+4. Paste the APXS- code → pair → set name and PIN
+5. The PWA is now linked to the dashboard and syncs routes, jobs and telemetry
+
+In **Demo Mode**, no pairing code is required — open `/#/driver-app-demo` directly.
+
+---
+
+## Safety & Legal Advisory
+
+> **Important — read before use:**
+
+Big V's Best Routes™ is **advisory route-planning support software**. It does not:
+- Guarantee legal compliance with any road restriction
+- Guarantee vehicle suitability for any specific route
+- Remove driver or operator legal responsibility
+- Replace professional advice or official guidance
+
+The AI advisory layer (4P3X Intelligent AI™) provides informational scoring and risk flagging based on available data. Data freshness and accuracy vary.
+
+**Always:**
+- Follow road signs and official restrictions
+- Follow police and traffic management instructions
+- Use your own judgement — human override is always correct
+- Check live conditions before and during every journey
+
+---
+
+## Bridge Strike Facts
+
+Referenced on the Safety & Investor page (`/#/investor-safety`):
+
+| Stat | Value | Source |
+|---|---|---|
+| Bridge strikes | 1,666 incidents | Network Rail 2024/25 |
+| Average cost per strike | ~£13,000 | Network Rail estimates |
+| Delay minutes caused | 150,000+ | Network Rail 2023/24 |
+| Estimated annual UK impact | ~£20 million | Industry estimates |
+
+Vehicle-aware route planning is designed to reduce bridge strike risk by surfacing clearance warnings before the driver commits to a route.
+
+---
+
+## 4P3X Verse™ Modular Architecture
+
+Big V's Best Routes™ is part of the **4P3X Verse™** — a modular product architecture where one structured base is refactored into multiple sector-ready products without rebuilding from scratch.
+
+The same dashboard + PWA + AI advisory + demo/live mode + backend config architecture can be adapted into:
+- Safety inspection and evidence reporting tools
+- Delivery management and owner-driver route systems
+- Field-service navigation and job dispatch apps
+- Compliance reporting and advisory platforms
+
+Each variant inherits the core and adapts only what the sector needs.
+
+---
+
+## File Structure
+
+```
+project_source/aaifcs/
+│
+├── index.html                          SPA entry point
+├── main.jsx                            React root mount
+├── app_App.jsx                         Root app component + AuthProvider
+├── app_Router.jsx                      React Router config (hash router)
+├── core_storage.js                     SSOT — all Zustand state stores
+├── config_routes.js                    Route registry
+├── config_app.js                       App config
+│
+├── pages_Landing.jsx                   Homepage (11 sections)
+├── pages_Dashboard.jsx                 Route Planner Dashboard
+├── pages_DriverApp.jsx                 Navigation PWA (live)
+├── pages_DriverAppDemo.jsx             Navigation PWA (demo)
+├── pages_DriverSetup.jsx               PWA pairing + driver management
+├── pages_Fleet.jsx                     Saved vehicles
+├── pages_Vehicles.jsx                  Vehicle profiles
+├── pages_Dispatch.jsx                  Route planning
+├── pages_Safety.jsx                    Safety AI
+├── pages_Compliance.jsx                Legal awareness
+├── pages_AI.jsx                        AI Command panel
+├── pages_Analytics.jsx                 Journey analytics
+├── pages_Deployment.jsx                Backend & live mode config
+├── pages_InvestorSafety.jsx            Safety & investor page
+├── pages_Settings.jsx                  Settings
+├── pages_Incidents.jsx                 Incident management
+├── pages_Navigation.jsx                Live map
+├── pages_AP3X.jsx                      AP3X control panel
+│
+├── services_*/                         All service layer files (50 files)
+├── modules_*/                          All UI module components (28 files)
+├── intel_*/                            Intelligence engine files (10 files)
+├── layouts_*/                          Layout components (AppShell, Sidebar, TopNav)
+├── components_*/                       Shared UI components
+├── hooks_*/                            React hooks
+├── providers_*/                        Context providers
+├── utils_*/                            Utilities
+│
+├── sql_1_original_schema.txt           Layer 1 — Base schema
+├── sql_2_pwa_sync_additions.txt        Layer 2 — Views & helpers
+├── sql_3_contract_tables.txt           Layer 3 — Contract tables
+├── sql_4_job_execution_layer.sql       Layer 4 — Job execution
+├── sql_5_driver_safety_layer.sql       Layer 5 — Driver safety
+├── sql_6_federation_layer.sql          Layer 6 — Federation
+├── sql_COMPLETE_ALL_LAYERS.txt         All 6 layers combined
+├── supabase_schema.sql                 Supabase-specific schema notes
+│
+├── vercel.json                         Vercel deployment config
+├── vite.config.js                      Vite + PWA build config
+├── tailwind.config.js                  Tailwind config
+├── package.json                        Dependencies
+├── .env.example                        Environment variable template
+└── public/
+    └── sw-job-sync.js                  PWA background sync service worker
+```
+
+---
+
+## Credits
 
 - **Product:** Big V's Best Routes™
 - **AI Layer:** 4P3X Intelligent AI™
 - **Creator:** Kyzel Kreates™
-- **Product Line:** 4P3X Verse
-- **Build Stage:** Run 13 — Final Production Readiness + Deployment Validation
-- **Version:** 1.0.0
+- **Architecture:** 4P3X Verse™
+- **Maps:** OpenStreetMap contributors, Leaflet, MapLibre GL
+- **Routing:** GraphHopper, OSRM, Google Maps
+- **Backend:** Supabase
+- **Deployment:** Vercel
 
 ---
 
-*Big V's Best Routes™ · Powered by 4P3X Intelligent AI™ · Created by Kyzel Kreates™*
-*© Kyzel Kreates™ — All rights reserved.*
+*Advisory software only. Not legal advice. Not a guarantee of route safety or compliance. Always follow road signs, official restrictions, and real-world conditions. Driver and operator responsibility is always primary.*
