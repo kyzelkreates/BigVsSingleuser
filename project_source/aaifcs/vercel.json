@@ -5,8 +5,17 @@
   "routes": [
     {
       "src": "/assets/(.*)",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      },
       "dest": "/assets/$1"
+    },
+    {
+      "src": "/icons/(.*)",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/icons/$1"
     },
     {
       "src": "/sw.js",
@@ -18,7 +27,9 @@
     },
     {
       "src": "/sw-job-sync.js",
-      "headers": { "cache-control": "public, max-age=0, must-revalidate" },
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate"
+      },
       "dest": "/sw-job-sync.js"
     },
     {

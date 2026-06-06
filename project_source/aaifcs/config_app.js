@@ -14,7 +14,7 @@ export const APP_CONFIG = {
   name:        "Big V's Best Routes™",
   shortName:   'Big V Routes',
   version:     '1.0.0',
-  buildStage:  'Run 9 — Final Production Hardening + Demo Pack',
+  buildStage:  'Run 13 — Final Production Readiness + Deployment Validation',
   tagline:     'Vehicle-aware route planning for safer, smarter, more legally aware journeys.',
 
   branding: {
