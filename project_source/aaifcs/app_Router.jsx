@@ -21,7 +21,10 @@ import DriverSetup   from './pages_DriverSetup'
 import DriverApp     from './pages_DriverApp'
 
 // Landing Page (Run 13)
-import Landing       from './pages_Landing'
+import Landing         from './pages_Landing'
+
+// Investor / Safety / Bridge Strike Impact Page (Run 14)
+import InvestorSafety  from './pages_InvestorSafety'
 
 // App Pages
 import Dashboard   from './pages_Dashboard'
@@ -55,6 +58,10 @@ export const router = createHashRouter([
   // ── Landing Page — public, no shell ───────────────────────
   // Route: /#/landing — premium homepage / project explainer
   { path: '/landing', element: <Landing /> },
+
+  // ── Investor / Safety / Bridge Strike page — public, no shell ─
+  // Route: /#/investor-safety — Run 14
+  { path: '/investor-safety', element: <InvestorSafety /> },
 
   // ── First-run Setup (public, before any account exists) ───
   { path: '/auth/setup',         element: <Setup /> },

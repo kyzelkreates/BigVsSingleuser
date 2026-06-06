@@ -163,6 +163,9 @@ export default function Landing() {
       <p className="max-w-xl text-slate-400 text-sm sm:text-base leading-relaxed mb-10">
         Big V&apos;s Best Routes™ combines vehicle profiles, route planning, driver workflow, advisory compliance checks, live and demo modes, and an installable Navigation PWA — all in one structured platform.
       </p>
+      <p className="max-w-xl text-[#d4a017]/75 text-xs sm:text-sm leading-relaxed mb-10 font-medium">
+        Built for single users with multiple vehicles who need safer, more suitable route planning than standard sat nav can provide.
+      </p>
 
       {/* CTA Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-8">

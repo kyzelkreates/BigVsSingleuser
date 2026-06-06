@@ -12,7 +12,8 @@
 export const ROUTES = {
   // ── Core ──────────────────────────────────────────────────
   ROOT:       '/',
-  LANDING:    '/landing',   // Run 13 — Project explainer homepage
+  LANDING:          '/landing',         // Run 13 — Project explainer homepage
+  INVESTOR_SAFETY:  '/investor-safety',   // Run 14 — Investor, Safety & Bridge Strike Impact
   DASHBOARD:  '/dashboard',
 
   // ── Vehicles (was Fleet) — internal path kept ─────────────
