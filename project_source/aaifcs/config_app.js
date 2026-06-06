@@ -32,8 +32,8 @@ export const APP_CONFIG = {
       route:  '/dashboard'
     },
     driverPWA: {
-      name:   "Big V's Best Routes™ Driver PWA",
-      short:  'Driver PWA',
+      name:   "Big V's Best Routes™ Navigation PWA",
+      short:  'Navigation PWA',
       route:  '/driver-app'
     }
   },

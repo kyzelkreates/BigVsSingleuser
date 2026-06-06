@@ -1483,7 +1483,7 @@ function FederationPanel() {
           </div>
           {[
             { label: 'Tenant ID',  val: identity.tenantId },
-            { label: 'Fleet ID',   val: identity.fleetId },
+            { label: 'Pairing ID', val: identity.fleetId },
             { label: 'Connected',  val: identity.connectedSince ? new Date(identity.connectedSince).toLocaleString() : '—' },
             { label: 'CC Endpoint',val: identity.commandCenterUrl || '(not set)' },
           ].filter(r => r.val).map(({ label, val }) => (
@@ -1588,7 +1588,7 @@ function FederationPanel() {
             <p className="text-2xs text-slate-600">Enter credentials provided by Apex Command Center manually.</p>
             {[
               { label: 'Tenant ID',    val: manualTenant, set: setManualTenant, ph: 'TENANT-…' },
-              { label: 'Fleet ID',     val: manualFleet,  set: setManualFleet,  ph: 'FE-…' },
+              { label: 'Pairing ID',   val: manualFleet,  set: setManualFleet,  ph: 'FE-…' },
               { label: 'Pairing Token',val: manualToken,  set: setManualToken,  ph: 'Pairing token from Command Center' },
             ].map(({ label, val, set, ph }) => (
               <div key={label} className="space-y-1">

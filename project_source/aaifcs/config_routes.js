@@ -112,7 +112,7 @@ export const NAV_ITEMS = [
   // ── Driver PWA ────────────────────────────────────────────
   {
     id:        'driver-setup',
-    label:     'Driver PWA Setup',
+    label:     'Navigation PWA Setup',
     route:     ROUTES.DRIVER_SETUP,
     icon:      'Smartphone',
     group:     'driverpwa',
@@ -187,7 +187,7 @@ export const NAV_GROUPS = {
   core:         { label: null,                    order: 0 },
   vehicles:     { label: 'Vehicles',              order: 1 },
   planning:     { label: 'Route Planning',        order: 2 },
-  driverpwa:    { label: 'Driver PWA',            order: 3 },
+  driverpwa:    { label: 'Navigation PWA',        order: 3 },
   maps:         { label: 'Maps',                  order: 4 },
   intelligence: { label: 'Safety & Intelligence', order: 5 },
   reporting:    { label: 'Reporting',             order: 6 },

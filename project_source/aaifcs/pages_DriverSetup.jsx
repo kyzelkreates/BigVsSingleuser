@@ -1,7 +1,7 @@
 import React from 'react'
 /**
  * ============================================================
- * Big V's Best Routes™ — Driver PWA Setup
+ * Big V's Best Routes™ — Navigation PWA Setup
  * /pages/DriverSetup.jsx
  *
  * Full standalone page for:
@@ -9,7 +9,7 @@ import React from 'react'
  *      WhatsApp, Email, WiFi Direct, Copy)
  *   2. Live pairing status — which drivers are connected
  *   3. Driver AI telemetry feed (safety scores, fatigue)
- *   4. Fleet ↔ Driver message channel
+ *   4. Dashboard ↔ Navigation PWA message channel
  *   5. Driver AI performance reports
  * ============================================================
  */
@@ -629,7 +629,7 @@ export default function DriverSetup() {
             <Panel title="How AP3X Driver App Works" icon="Info">
               <div className="space-y-3">
                 {[
-                  { icon: 'Lock', color: 'text-emerald-400', title: 'Secure isolation', desc: 'Driver PWA is completely separate from the Route Planner Dashboard — drivers see only navigation and their own data' },
+                  { icon: 'Lock', color: 'text-emerald-400', title: 'Secure isolation', desc: 'Navigation PWA is completely separate from the Route Planner Dashboard — the mobile view shows only navigation and relevant route data' },
                   { icon: 'Gauge', color: 'text-cyan-400', title: 'Live telemetry', desc: 'GPS, speed, heading, and 4P3X safety scores stream to the Route Planner Dashboard in real time' },
                   { icon: 'BrainCircuit', color: 'text-violet-400', title: 'AI Sentinel onboard', desc: 'Fatigue detection, harsh event monitoring, and driving performance AI run locally on the driver device' },
                   { icon: 'MessageSquare', color: 'text-blue-400', title: 'Two-way messaging', desc: 'The operator and driver can message each other directly through the paired channel' },

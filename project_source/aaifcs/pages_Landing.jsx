@@ -108,14 +108,14 @@ function PWAInstallGuide() {
         <div className="mt-3 rounded-lg border border-white/10 bg-black/30 p-4 text-xs text-slate-300 space-y-3">
           <div>
             <p className="text-[#34d399] font-semibold mb-1">📱 Android / Chrome</p>
-            <p>Open the Driver PWA link in Chrome → tap the ⋮ menu → <em>"Add to Home screen"</em> or look for the install banner at the bottom of the screen.</p>
+            <p>Open the Navigation PWA link in Chrome → tap the ⋮ menu → <em>"Add to Home screen"</em> or look for the install banner at the bottom of the screen.</p>
           </div>
           <div>
             <p className="text-[#d4a017] font-semibold mb-1">🍎 iOS / Safari</p>
-            <p>Open the Driver PWA link in Safari → tap the <em>Share button (□↑)</em> → scroll down → tap <em>"Add to Home Screen"</em> → tap <em>"Add"</em>.</p>
+            <p>Open the Navigation PWA link in Safari → tap the <em>Share button (□↑)</em> → scroll down → tap <em>"Add to Home Screen"</em> → tap <em>"Add"</em>.</p>
           </div>
           <p className="text-slate-500 mt-2 leading-relaxed">
-            Once installed, the Driver PWA appears on your home screen and runs in standalone mode — no browser chrome, full screen, ready for use on the move.
+            Once installed, the Navigation PWA appears on your home screen and runs in standalone mode — no browser chrome, full screen, ready for use on the move.
           </p>
         </div>
       )}
@@ -161,13 +161,13 @@ export default function Landing() {
         Route planning built around the <span className="text-white font-semibold">vehicle</span>, the <span className="text-white font-semibold">driver</span>, the <span className="text-white font-semibold">route</span>, and the <span className="text-[#d4a017] font-semibold">safety &amp; legal checks</span> that ordinary navigation tools often miss.
       </p>
       <p className="max-w-xl text-slate-400 text-sm sm:text-base leading-relaxed mb-10">
-        Big V&apos;s Best Routes™ combines vehicle profiles, route planning, driver workflow, advisory compliance checks, live and demo modes, and a Driver PWA — all in one structured platform.
+        Big V&apos;s Best Routes™ combines vehicle profiles, route planning, driver workflow, advisory compliance checks, live and demo modes, and an installable Navigation PWA — all in one structured platform.
       </p>
 
       {/* CTA Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-8">
         <CTAButton label="Open Control Dashboard" icon="layers" variant="primary"    onClick={() => go(ROUTES.DASHBOARD)} />
-        <CTAButton label="Open Driver PWA"         icon="smartphone" variant="green" onClick={() => go('/driver-app')} />
+        <CTAButton label="Open Navigation PWA"         icon="smartphone" variant="green" onClick={() => go('/driver-app')} />
         <CTAButton label="Route Planner"           icon="route" variant="secondary"  onClick={() => go(ROUTES.DISPATCH)} />
         <CTAButton label="Backend / Live Mode"     icon="server" variant="ghost"     onClick={() => go(ROUTES.DEPLOYMENT)} />
       </div>
@@ -226,7 +226,7 @@ export default function Landing() {
   const personas = [
     { icon: 'truck',      label: 'Van & Delivery Drivers',     desc: 'Plan safer routes for specific vehicle sizes, load types, and time-sensitive deliveries.' },
     { icon: 'user',       label: 'Single Operators',           desc: 'Manage multiple vehicles from one dashboard without needing enterprise fleet software.' },
-    { icon: 'star',       label: 'Small Fleet Owners',         desc: 'Assign routes, track trips, and maintain evidence-style records across a small fleet.' },
+    { icon: 'star',       label: 'Multi-Vehicle Operators',         desc: 'Plan routes, track trips, and maintain evidence-style records across multiple vehicles.' },
     { icon: 'check',      label: 'Trade & Mobile Businesses',  desc: 'Plan work routes that factor in vehicle type, access, and daily job assignments.' },
     { icon: 'map',        label: 'Route Planners',             desc: 'Build and review route plans with vehicle-aware safety and compliance advisory checks.' },
     { icon: 'shield',     label: 'Compliance-Conscious Ops',   desc: 'Maintain route evidence, check missing legal-critical data, and track driver acknowledgements.' },
@@ -255,7 +255,7 @@ export default function Landing() {
     'Manage and store multiple vehicle profiles',
     'Plan routes with vehicle-aware advisory checks',
     'Review safety and legal compliance status',
-    'Assign routes to the Driver PWA',
+    'Send selected routes to the Navigation PWA',
     'Monitor route assignments and trip sessions',
     'Review driver reports and trip evidence',
     'View sync and live backend status',
@@ -311,17 +311,17 @@ export default function Landing() {
           ))}
         </div>
         <div className="order-1 lg:order-2">
-          <div className="inline-block text-xs font-semibold text-[#34d399] border border-[#34d399]/30 rounded-full px-3 py-1 mb-4">Driver PWA</div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4">What the Driver PWA Does</h2>
+          <div className="inline-block text-xs font-semibold text-[#34d399] border border-[#34d399]/30 rounded-full px-3 py-1 mb-4">Navigation PWA</div>
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4">What the Navigation PWA Does</h2>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
-            The Driver PWA is the driver-facing mobile experience. It runs as an installable Progressive Web App — no app store required — and gives drivers a clean, focused interface for receiving routes, running trip sessions, and submitting reports.
+            The Navigation PWA is the mobile route experience. It runs as an installable Progressive Web App — no app store required — and gives you a clean, focused mobile interface for opening routes, running trip sessions, and submitting reports.
           </p>
           <p className="text-slate-400 text-sm leading-relaxed mb-6">
             Offline live actions may be saved locally only where supported, and require reconnection to sync. Demo Mode works fully without a backend.
           </p>
           <div className="flex flex-wrap gap-3">
-            <CTAButton label="Open Driver PWA" icon="smartphone" variant="green"  onClick={() => go('/driver-app')} />
-            <CTAButton label="Driver PWA Setup" icon="zap"       variant="secondary" onClick={() => go(ROUTES.DRIVER_SETUP)} />
+            <CTAButton label="Open Navigation PWA" icon="smartphone" variant="green"  onClick={() => go('/driver-app')} />
+            <CTAButton label="Navigation PWA Setup" icon="zap"       variant="secondary" onClick={() => go(ROUTES.DRIVER_SETUP)} />
           </div>
           <div className="mt-4">
             <PWAInstallGuide />
@@ -402,7 +402,7 @@ export default function Landing() {
               'Uses safe sample and local data only',
               'Does not require any backend setup',
               'Lets investors, users, and testers understand the product',
-              'Shows the full dashboard and Driver PWA workflow',
+              'Shows the full dashboard and Navigation PWA workflow',
               'Never sends demo records to Supabase or any backend',
               'Does not start realtime subscriptions',
               'Ideal for exploring, testing, and investor demos',
@@ -458,7 +458,7 @@ export default function Landing() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           {[
-            { label: 'Dashboard + PWA + AI',        desc: 'The Control Dashboard, Driver PWA, and AI advisory layer can all be reused across product variants.' },
+            { label: 'Dashboard + PWA + AI',        desc: 'The Control Dashboard, Navigation PWA, and AI advisory layer can all be reused across product variants.' },
             { label: 'Demo / Live Mode Strategy',    desc: 'Every variant can include a safe Demo Mode for testing and a backend-ready Live Mode for real operation.' },
             { label: 'Backend-Ready by Default',     desc: 'Supabase configuration, RLS, and realtime are built into the base — ready to connect or configure per product.' },
             { label: 'Controlled Refactoring',       desc: 'New products are created by changing the data model, branding, workflows, and roles — not rebuilding from scratch.' },
@@ -567,10 +567,10 @@ export default function Landing() {
   // ── SECTION 11 — QUICK LAUNCHPAD ──────────────────────────────────────────
   const launchItems = [
     { label: 'Control Dashboard',        route: ROUTES.DASHBOARD,    icon: 'layers',     variant: 'primary',   desc: 'Open the main operator dashboard' },
-    { label: 'Driver PWA',               route: '/driver-app',       icon: 'smartphone', variant: 'green',     desc: 'Open the driver mobile app' },
+    { label: 'Navigation PWA',          route: '/driver-app',       icon: 'smartphone', variant: 'green',     desc: 'Open the mobile Navigation PWA' },
     { label: 'Route Planner',            route: ROUTES.DISPATCH,     icon: 'route',      variant: 'secondary', desc: 'Plan and manage routes' },
-    { label: 'Vehicle Profiles',         route: ROUTES.FLEET,        icon: 'truck',      variant: 'secondary', desc: 'Manage your vehicle fleet' },
-    { label: 'Driver PWA Setup',         route: ROUTES.DRIVER_SETUP, icon: 'zap',        variant: 'secondary', desc: 'Configure and assign to drivers' },
+    { label: 'Vehicle Profiles',         route: ROUTES.FLEET,        icon: 'truck',      variant: 'secondary', desc: 'Manage your vehicles' },
+    { label: 'Navigation PWA Setup',     route: ROUTES.DRIVER_SETUP, icon: 'zap',        variant: 'secondary', desc: 'Set up and pair the Navigation PWA' },
     { label: 'Route Safety AI',          route: ROUTES.SAFETY,       icon: 'shield',     variant: 'secondary', desc: 'Safety monitoring and alerts' },
     { label: 'Legal Awareness',          route: ROUTES.COMPLIANCE,   icon: 'check',      variant: 'secondary', desc: 'Route compliance advisory' },
     { label: '4P3X AI Command',          route: ROUTES.AI,           icon: 'brain',      variant: 'purple',    desc: 'AI intelligence and advisory panel' },
@@ -636,7 +636,7 @@ export default function Landing() {
           <p className="text-slate-600 text-xs">© Kyzel Kreates™ · Big V&apos;s Best Routes™ · 4P3X Intelligent AI™ · 4P3X Verse™</p>
           <div className="flex gap-4 flex-wrap justify-center">
             <button onClick={() => go(ROUTES.DASHBOARD)}    className="text-xs text-slate-500 hover:text-[#d4a017] transition-colors">Dashboard</button>
-            <button onClick={() => go('/driver-app')}        className="text-xs text-slate-500 hover:text-[#34d399] transition-colors">Driver PWA</button>
+            <button onClick={() => go('/driver-app')}        className="text-xs text-slate-500 hover:text-[#34d399] transition-colors">Navigation PWA</button>
             <button onClick={() => go(ROUTES.SAFETY)}        className="text-xs text-slate-500 hover:text-white transition-colors">Safety AI</button>
             <button onClick={() => go(ROUTES.DEPLOYMENT)}    className="text-xs text-slate-500 hover:text-white transition-colors">Backend Settings</button>
           </div>
@@ -657,7 +657,7 @@ export default function Landing() {
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
             <CTAButton label="Dashboard"  icon="layers"     variant="secondary" small onClick={() => go(ROUTES.DASHBOARD)} />
-            <CTAButton label="Driver PWA" icon="smartphone" variant="green"     small onClick={() => go('/driver-app')} />
+            <CTAButton label="Navigation PWA" icon="smartphone" variant="green"     small onClick={() => go('/driver-app')} />
           </div>
         </div>
       </nav>

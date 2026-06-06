@@ -2,7 +2,7 @@
 
 ## Status: ✅ COMPLETE — NON-BREAKING ADD-ON
 
-All features are **Driver PWA only**. Fleet Control OS has NOT been modified.
+All features are **Navigation PWA only**. The Control Dashboard has NOT been modified.
 
 ---
 
@@ -28,7 +28,7 @@ aaifcs/
 ## Architecture
 
 ```
-Driver PWA (pages_DriverApp.jsx)
+Navigation PWA (pages_DriverApp.jsx)
   └── Safety Tab (tab === 'safety')
         ├── safetyScreen === 'hub'       → SafetyDashboard (sub-nav)
         ├── safetyScreen === 'dashcam'   → DashcamView
@@ -141,7 +141,7 @@ All tables have:
 
 ## Non-Breaking Guarantee
 
-- ❌ No Fleet Control OS files modified
+- ❌ No Big V's Best Routes™ files modified
 - ❌ No existing dispatch/routing logic changed
 - ❌ No shared state conflicts introduced
 - ❌ No existing navigation structure altered

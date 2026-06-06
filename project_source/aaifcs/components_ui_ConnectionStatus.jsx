@@ -6,7 +6,7 @@
  * Three exports:
  *   ConnectionStatusPill   — compact pill for TopNav header
  *   BackendWarningBanner   — full-width alert for AppShell
- *   DriverConnectionRow    — compact row for Driver PWA
+ *   DriverConnectionRow    — compact row for Navigation PWA
  *
  * On mount: triggers probeConnection() if live mode is configured,
  * so the status reflects reality immediately on page load.
@@ -151,7 +151,7 @@ export function BackendWarningBanner() {
 }
 
 /**
- * Compact status row for the Driver PWA.
+ * Compact status row for the Navigation PWA.
  */
 export function DriverConnectionRow({ className = '' }) {
   const status = useConnectionStatus()

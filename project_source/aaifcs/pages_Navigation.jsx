@@ -83,7 +83,7 @@ function VehiclePanel({ vehicle, onClose, onFocus }) {
   )
 }
 
-// ─── Fleet Sidebar ────────────────────────────────────────────
+// ─── Vehicle Sidebar ────────────────────────────────────────────
 function FleetSidebar({ vehicles, activeId, onSelect, isLoading }) {
   const [search, setSearch] = useState('')
   const filtered = vehicles.filter(v =>
@@ -96,7 +96,7 @@ function FleetSidebar({ vehicles, activeId, onSelect, isLoading }) {
     <div className="absolute top-4 left-4 z-[999] w-60 pointer-events-auto">
       <div className="bg-[#0d1426]/97 border border-slate-700/50 rounded-xl overflow-hidden backdrop-blur-sm shadow-2xl">
         <div className="px-3 py-2.5 border-b border-slate-800/60 flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-200">Live Fleet</span>
+          <span className="text-xs font-semibold text-slate-200">My Vehicles</span>
           <div className="flex items-center gap-1.5">
             {isLoading
               ? <Icon name="Loader2" size={11} className="text-slate-600 animate-spin" />
@@ -115,7 +115,7 @@ function FleetSidebar({ vehicles, activeId, onSelect, isLoading }) {
         <div className="max-h-64 overflow-y-auto scrollbar-none">
           {filtered.length === 0 && (
             <div className="px-3 py-5 text-xs text-slate-700 text-center">
-              {vehicles.length === 0 ? 'No vehicles in fleet' : 'No results'}
+              {vehicles.length === 0 ? 'No vehicles added yet' : 'No results'}
             </div>
           )}
           {filtered.map(v => {
@@ -678,7 +678,7 @@ export default function Navigation() {
           />
         </Suspense>
 
-        {/* Fleet Sidebar */}
+        {/* Vehicle Sidebar */}
         <FleetSidebar vehicles={vehicles} activeId={selectedVehicle?.id}
           onSelect={handleSelectVehicle} isLoading={isLoading} />
 

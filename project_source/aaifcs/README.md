@@ -7,7 +7,7 @@
 
 ## What Is This?
 
-**Big V's Best Routes™** is a full-stack Progressive Web App (PWA) built for a single fleet operator managing multiple vehicles and a driver workforce. It combines intelligent route planning, real-time Driver PWA navigation, vehicle-aware compliance checks, and a live Supabase-backed sync layer — all wrapped in a dark, mobile-first UI that works offline and installs as a native-style app on any device.
+**Big V's Best Routes™** is a single-user, multi-vehicle route planning PWA built for one owner/operator managing multiple different vehicles. It combines vehicle-aware route planning, advisory safety and legal checks, a Control Dashboard, an installable Navigation PWA, demo/live modes, and a Supabase-backed sync layer — all in a dark, mobile-first UI that installs as a native-style app on any device.
 
 The platform is advisory by design. It does not replace the driver's professional judgement, road signage, or legal obligations. It makes planning safer, smarter, and more legally aware.
 
@@ -18,7 +18,7 @@ The platform is advisory by design. It does not replace the driver's professiona
 | Product | Purpose |
 |---|---|
 | **Route Planner Dashboard** | Fleet operator HQ — plan routes, manage vehicles, assign jobs, monitor live sessions |
-| **Driver PWA** | Mobile-first driver interface — receive jobs, GPS navigation, safety checklists, submit reports |
+| **Navigation PWA** | Mobile-first navigation interface — open routes, GPS navigation, safety checklists, submit reports |
 | **4P3X Intelligent AI™ Advisory** | AI-powered safety and legal compliance advisory layer — not a compliance guarantee |
 | **Live Mode (Supabase)** | Real Supabase backend — live CRUD, RLS, realtime subscriptions, auth |
 | **Demo Mode** | Zero-backend simulation — full product experience without any backend setup |
@@ -34,7 +34,7 @@ The platform is advisory by design. It does not replace the driver's professiona
 - Route scoring engine — safety, efficiency, compliance, driver history
 - Route memory — learns preferred routes over time
 
-### Driver PWA
+### Navigation PWA
 - Full mobile PWA — installs on Android and iOS as a standalone app
 - GPS-assisted navigation with live position tracking
 - Pre-trip safety checklist (mandatory acknowledgement gate before departure)
@@ -58,9 +58,9 @@ The platform is advisory by design. It does not replace the driver's professiona
 - Full Supabase Auth integration — email/password, session management, token refresh
 - 7 RLS-protected Supabase tables — all scoped to `auth.uid() = user_id`
 - Live CRUD for vehicles, routes, assignments, trip sessions, driver reports, compliance checks, sync logs
-- Realtime subscriptions — Dashboard updates live when Driver PWA submits status changes
+- Realtime subscriptions — Dashboard updates live when Navigation PWA submits status changes
 - Source mode isolation — `source_mode = 'live'` filter keeps live and demo data strictly separate
-- VITE_ env var support — Driver PWA auto-connects to Supabase on any device from build-time config
+- VITE_ env var support — Navigation PWA auto-connects to Supabase on any device from build-time config
 - Connection test — honest pass/fail/invalid-config feedback before Live Mode activation
 - Masked anon key display — first 8 chars + `••••` in all UI panels
 
@@ -111,7 +111,7 @@ BigVsSingleuser/
 ├── config_routes.js                  ← Route definitions SSOT
 │
 ├── pages_Dashboard.jsx               ← Fleet operator dashboard
-├── pages_DriverApp.jsx               ← Driver PWA shell
+├── pages_DriverApp.jsx               ← Navigation PWA shell
 ├── pages_Fleet.jsx                   ← Fleet management
 ├── pages_Vehicles.jsx                ← Vehicle profiles
 ├── pages_Drivers.jsx                 ← Driver management
@@ -197,7 +197,7 @@ This project was built in structured, non-destructive runs. Each run had a speci
 | Run 2 | Multi-Vehicle Manager + Vehicle Profile SSOT | ✅ Complete |
 | Run 3 | Route Planner Dashboard + Route Records | ✅ Complete |
 | Run 4 | OSM 2D + MapLibre 3D Map Layer | ✅ Complete |
-| Run 5 | Driver PWA GPS + Safe Navigation Workflow | ✅ Complete |
+| Run 5 | Navigation PWA GPS + Safe Navigation Workflow | ✅ Complete |
 | Run 6 | Dashboard Sync · Assignments · Trip Sessions · Driver Reports | ✅ Complete |
 | Run 7 | 4P3X Intelligent AI™ Safety + Legal Compliance Advisory | ✅ Complete |
 | Run 8 | Backend-Ready Live Mode + Deployment Centre | ✅ Complete |
@@ -235,7 +235,7 @@ Demo Mode is the default. The full product experience runs entirely in the brows
 
 1. Run `npm run dev` or open the deployed URL.
 2. Complete the first-run setup (create admin + driver accounts — stored locally).
-3. Explore the Dashboard, create routes and vehicles, assign jobs, open the Driver PWA.
+3. Explore the Dashboard, create routes and vehicles, assign jobs, open the Navigation PWA.
 4. All data persists in localStorage between sessions.
 
 ---
@@ -341,7 +341,7 @@ VITE_OLLAMA_BASE_URL=
 ### Android (Chrome)
 1. Open the deployed URL in Chrome.
 2. Tap the **three-dot menu** → **Install app** or **Add to Home Screen**.
-3. The app installs as a standalone app opening at the Driver PWA (`/#/driver-app`).
+3. The app installs as a standalone app opening at the Navigation PWA (`/#/driver-app`).
 
 ### iOS (Safari)
 1. Open the deployed URL in Safari.

@@ -167,11 +167,11 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Driver PWA shortcut */}
+      {/* Navigation PWA shortcut */}
       <div className="px-3 pb-2">
         <a href="#/driver-setup" className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[#b8860b]/30 bg-[#b8860b]/8 hover:bg-[#b8860b]/15 transition-colors group">
           <Icon name="Smartphone" size={14} className="text-[#d4a017] flex-shrink-0" />
-          <span className="text-xs font-semibold text-[#d4a017] flex-1">Driver PWA Setup</span>
+          <span className="text-xs font-semibold text-[#d4a017] flex-1">Navigation PWA Setup</span>
           <Icon name="ChevronRight" size={11} className="text-[#b8860b]/60 group-hover:text-[#d4a017] transition-colors" />
         </a>
       </div>

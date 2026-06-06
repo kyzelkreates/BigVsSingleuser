@@ -15,7 +15,7 @@ export default defineConfig({
     VitePWA({
       // ── Registration strategy ──────────────────────────────
       // 'autoUpdate' = silently update SW in background,
-      // then reload on next navigation. Best for fleet ops.
+      // then reload on next navigation. Best for single-user route apps.
       registerType: 'autoUpdate',
 
       // ── Include our custom SW alongside the Workbox SW ────
@@ -26,7 +26,7 @@ export default defineConfig({
       manifest: {
         name:             "Big V's Best Routes™",
         short_name:       'Big V Routes',
-        description:      'Safety-first route planning and Driver PWA for single users with multiple vehicles. Advisory route planning, GPS-assisted navigation, and vehicle-aware checks.',
+        description:      'Safety-first route planning with an installable Navigation PWA. Single-user multi-vehicle route planning, GPS-assisted navigation, and vehicle-aware advisory checks.',
         theme_color:      '#0a0f1e',
         background_color: '#0a0f1e',
         display:          'standalone',
@@ -50,10 +50,10 @@ export default defineConfig({
         ],
         shortcuts: [
           {
-            name:       'Driver App',
-            short_name: 'Driver',
+            name:       'Navigation PWA',
+            short_name: 'Nav PWA',
             url:        '/#/driver-app',
-            description: 'Open the Driver PWA',
+            description: 'Open the Navigation PWA',
             icons: [{ src: 'icons/icon-192x192.png', sizes: '192x192' }],
           },
         ],
@@ -114,7 +114,7 @@ export default defineConfig({
           },
         ],
 
-        // Allow scripts to be larger (fleet app is heavy)
+        // Allow scripts to be larger (route planning app is heavy)
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
       },
 

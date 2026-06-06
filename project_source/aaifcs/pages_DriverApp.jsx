@@ -568,7 +568,7 @@ function SetupScreen({ onReady }) {
             <Icon name="Navigation" size={28} className="text-violet-400" />
           </div>
           <div className="text-2xl font-bold text-white tracking-tight">Big V's Best Routes™</div>
-          <div className="text-sm text-slate-500">Apex Intelligent Fleet Navigation</div>
+          <div className="text-sm text-slate-500">Apex Intelligent Route Navigation</div>
         </div>
 
         {step === 'code' ? (
@@ -576,14 +576,14 @@ function SetupScreen({ onReady }) {
             <div className="flex items-start gap-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
               <Icon name="ShieldCheck" size={16} className="text-violet-400 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-slate-400 leading-relaxed">
-                Get your <span className="text-violet-300 font-semibold">fleet sync code</span> from the{' '}
-                <span className="text-violet-400 font-mono">Driver PWA Setup</span> section of the Route Planner Dashboard.
+                Get your <span className="text-violet-300 font-semibold">pairing code</span> from the{' '}
+                <span className="text-violet-400 font-mono">Navigation PWA Setup</span> section of the Route Planner Dashboard.
                 Code format: <span className="font-mono text-violet-400">APEX-XXXXXXXX-XXXX-FC</span>.
                 Syncs jobs, maps &amp; AI access to this device.
               </div>
             </div>
             <div>
-              <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider block mb-1.5">Fleet Sync Code</label>
+              <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider block mb-1.5">Pairing Code</label>
               <input
                 value={code}
                 onChange={e => setCode(e.target.value)}
@@ -617,7 +617,7 @@ function SetupScreen({ onReady }) {
               disabled={!code.trim().toUpperCase().startsWith('APXS-') || code.trim().length < 20 || checking}
               className="w-full bg-violet-500 hover:bg-violet-600 active:bg-violet-700 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-sm transition-colors flex items-center justify-center gap-2">
               <Icon name="Link" size={15} />
-              {checking ? 'Connecting…' : 'Connect to Fleet'}
+              {checking ? 'Connecting…' : 'Pair with Dashboard'}
             </button>
           </div>
         ) : (
@@ -625,7 +625,7 @@ function SetupScreen({ onReady }) {
             <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20 space-y-1.5">
               <div className="flex items-center gap-2">
                 <Icon name="CheckCircle2" size={15} className="text-emerald-400 flex-shrink-0" />
-                <div className="text-xs font-semibold text-emerald-300">Fleet sync code verified ✓</div>
+                <div className="text-xs font-semibold text-emerald-300">Pairing code verified ✓</div>
               </div>
               <div className="text-2xs text-slate-600 font-mono">Vehicle: {paired?.vehicleReg || '—'}</div>
               {paired?.injectedKeys?.length > 0 && (
@@ -634,7 +634,7 @@ function SetupScreen({ onReady }) {
                 </div>
               )}
               {(!paired?.injectedKeys || paired.injectedKeys.length === 0) && (
-                <div className="text-2xs text-amber-700">Maps & AI will use free tiers only — configure API keys in fleet Settings</div>
+                <div className="text-2xs text-amber-700">Maps & AI will use free tiers only — configure API keys in Settings</div>
               )}
             </div>
             <div>
@@ -655,7 +655,7 @@ function SetupScreen({ onReady }) {
             </button>
           </div>
         )}
-        <p className="text-center text-2xs text-slate-700">Big V's Best Routes™ Driver PWA · Secured by 4P3X pairing code · Powered by 4P3X Intelligent AI™</p>
+        <p className="text-center text-2xs text-slate-700">Big V's Best Routes™ Navigation PWA · Secured by 4P3X pairing code · Powered by 4P3X Intelligent AI™</p>
       </div>
     </div>
   )
@@ -2456,7 +2456,7 @@ function DriverAppMain({ profile, onLogout }) {
               <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] flex-shrink-0 animate-pulse" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-2xs font-semibold text-emerald-300">Fleet Synced</div>
+                  <div className="text-2xs font-semibold text-emerald-300">Dashboard Paired</div>
                   <div className="text-2xs text-slate-600 truncate">
                     {sp.api_keys?.length > 0
                       ? `${sp.api_keys.length} API key${sp.api_keys.length > 1 ? 's' : ''} active · maps &amp; AI enabled`
@@ -2493,7 +2493,7 @@ function DriverAppMain({ profile, onLogout }) {
               <div className="flex items-start gap-2">
                 <Icon name="KeyRound" size={14} className="text-violet-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-xs font-semibold text-white">Enter Fleet Sync Code</div>
+                  <div className="text-xs font-semibold text-white">Enter Pairing Code</div>
                   <div className="text-2xs text-slate-500 mt-0.5">
                     Paste your <span className="font-mono text-violet-400">APXS-XXXXXXXX</span> sync code from the Route Planner Dashboard.
                     This syncs jobs, maps and AI provider access.
@@ -2556,11 +2556,11 @@ function DriverAppMain({ profile, onLogout }) {
                 onClick={submitFleetCode}
                 disabled={!fleetLinkCode.trim().toUpperCase().startsWith('APXS-') || fleetLinkCode.trim().length < 20}
                 className="w-full py-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 active:bg-violet-700 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                <Icon name="Link" size={14} /> Connect to Fleet
+                <Icon name="Link" size={14} /> Pair with Dashboard
               </button>
 
               <div className="text-2xs text-slate-700 text-center">
-                Get this code from <span className="text-slate-600">Driver PWA Setup</span> in the Route Planner Dashboard
+                Get this code from <span className="text-slate-600">Navigation PWA Setup</span> in the Route Planner Dashboard
               </div>
             </div>
           )}

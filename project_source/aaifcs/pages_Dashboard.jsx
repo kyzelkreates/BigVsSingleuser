@@ -215,8 +215,8 @@ function EmptyFleet({ navigate }) {
         <Icon name="Truck" size={24} className="text-cyan-500/40" />
       </div>
       <div className="text-center">
-        <div className="text-sm font-semibold text-white mb-1">No fleet data yet</div>
-        <div className="text-2xs text-slate-600 max-w-[200px] mx-auto">Add your vehicles and drivers to start tracking your fleet in real time</div>
+        <div className="text-sm font-semibold text-white mb-1">No route data yet</div>
+        <div className="text-2xs text-slate-600 max-w-[200px] mx-auto">Add your vehicles and routes to start tracking your journeys</div>
       </div>
       <div className="flex gap-2">
         <button onClick={() => navigate(ROUTES.FLEET)}
@@ -573,7 +573,7 @@ function DriverSyncSection({ drivers = [], vehicles = [] }) {
           </div>
           <div>
             <h2 className="text-sm font-bold text-white font-display">Driver Sync</h2>
-            <p className="text-2xs text-slate-500">Fleet ↔ Driver App live bridge</p>
+            <p className="text-2xs text-slate-500">Dashboard ↔ Navigation PWA live bridge</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -749,7 +749,7 @@ function DriverSyncSection({ drivers = [], vehicles = [] }) {
               {[
                 ['1', 'Generate a sync code above and share it with the driver'],
                 ['2', 'Driver opens AP3X Driver App → taps "Enter Sync Code"'],
-                ['3', 'Driver app pairs instantly — location streams to fleet map'],
+                ['3', 'Navigation PWA pairs instantly — location streams to the map'],
                 ['4', 'AI agents (Sentinel + RouteMind) send reports back here'],
                 ['5', 'Send commands, alerts, and dispatch orders from the Commands tab'],
               ].map(([n, txt]) => (
@@ -828,7 +828,7 @@ function DriverSyncSection({ drivers = [], vehicles = [] }) {
                 ))}
 
                 <p className="text-2xs text-slate-600 text-center pt-1">
-                  Live positions also visible on the <button onClick={() => {}} className="text-cyan-400 hover:underline">Fleet Map</button> — go to Navigation
+                  Live positions also visible on the <button onClick={() => {}} className="text-cyan-400 hover:underline">Navigation Map</button> — go to Navigation
                 </p>
               </>
             )}
@@ -1364,7 +1364,7 @@ export default function Dashboard() {
     return () => { u1?.(); u2?.() }
   }, [load])
 
-  // Full data refresh every 30s — balanced cadence for live fleet operations.
+  // Full data refresh every 30s — balanced cadence for live route operations.
   // 15s was too aggressive when Supabase is the backend (doubles request rate).
   useEffect(() => {
     const id = setInterval(load, 30000)
@@ -1465,11 +1465,11 @@ export default function Dashboard() {
         {/* ── Apex Intelligence Strip ──────────────────────────── */}
         {intelKPIs && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {/* Fleet Safety Score */}
+            {/* Route Safety Score */}
             <div className="bg-[#0d1426] border border-slate-800/60 rounded-xl p-3 flex flex-col gap-1">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <Icon name="ShieldCheck" size={11} className="text-emerald-400" />
-                <span className="text-2xs text-slate-500 font-medium">Fleet Safety</span>
+                <span className="text-2xs text-slate-500 font-medium">Route Safety</span>
               </div>
               <div className={`text-xl font-bold font-mono ${intelKPIs.safetyKPIs.fleetSafetyScore >= 80 ? 'text-emerald-400' : intelKPIs.safetyKPIs.fleetSafetyScore >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
                 {intelKPIs.safetyKPIs.fleetSafetyScore}<span className="text-xs text-slate-600 font-normal">/100</span>
@@ -1549,7 +1549,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
             {/* Left: vehicles + drivers */}
             <div className="flex flex-col gap-5">
-              <Section title="Active Fleet" icon="Truck" className="flex-1 min-h-[220px]"
+              <Section title="Active Vehicles" icon="Truck" className="flex-1 min-h-[220px]"
                 action={
                   <button onClick={() => navigate(ROUTES.FLEET)}
                     className="text-2xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
@@ -1562,7 +1562,7 @@ export default function Dashboard() {
                 {vehicles.filter(v => v.status === 'active').length === 0 && (
                   <div className="flex flex-col items-center py-6 text-slate-700 gap-1.5">
                     <Icon name="Truck" size={24} className="opacity-20" />
-                    <span className="text-xs">No active vehicles — set status to Active in Fleet</span>
+                    <span className="text-xs">No active vehicles — set status to Active in Vehicles</span>
                   </div>
                 )}
               </Section>
@@ -1954,7 +1954,7 @@ export default function Dashboard() {
             { label: 'Safety AI',          icon: 'ShieldAlert',    color: 'text-amber-400',   route: ROUTES.SAFETY      },
             { label: 'Compliance AI',      icon: 'ClipboardCheck', color: 'text-emerald-400', route: ROUTES.COMPLIANCE  },
             { label: 'AI Intelligence',    icon: 'Brain',          color: 'text-violet-400',  route: ROUTES.AI          },
-            { label: 'Live Fleet Map',     icon: 'Map',            color: 'text-cyan-400',    route: ROUTES.NAVIGATION  },
+            { label: 'Navigation Map',     icon: 'Map',            color: 'text-cyan-400',    route: ROUTES.NAVIGATION  },
             { label: 'Saved Vehicles',      icon: 'Truck',          color: 'text-slate-400',   route: ROUTES.FLEET       },
           ].map(a => (
             <button key={a.label} onClick={() => navigate(a.route)}
@@ -1966,12 +1966,12 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Fleet health bar */}
+        {/* Route health bar */}
         {!isEmpty && (
           <div className="bg-[#0d1426] border border-slate-800/60 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Icon name="Activity" size={14} className="text-slate-600" />
-              <span className="text-sm font-semibold text-white">Fleet Health</span>
+              <span className="text-sm font-semibold text-white">Route Health</span>
               {avgScore != null && (
                 <div className={`ml-auto flex items-center gap-1.5 text-xs font-mono font-bold px-2.5 py-1 rounded-lg border ${
                   avgScore >= 85 ? 'text-emerald-400 bg-emerald-500/5 border-emerald-500/15' :

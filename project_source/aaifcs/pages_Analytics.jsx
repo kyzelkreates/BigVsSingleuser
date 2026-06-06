@@ -243,7 +243,7 @@ const PERIODS = [
 // ─── Tab nav ──────────────────────────────────────────────────
 const TABS = [
   { key: 'overview',  label: 'Overview',  icon: 'LayoutDashboard' },
-  { key: 'fleet',     label: 'Fleet',     icon: 'Truck'           },
+  { key: 'fleet',     label: 'Vehicles',  icon: 'Truck'           },
   { key: 'drivers',   label: 'Drivers',   icon: 'Users'           },
   { key: 'safety',    label: 'Safety',    icon: 'ShieldCheck'     },
   { key: 'ai',        label: 'AI Reports',icon: 'Cpu'             },
@@ -287,12 +287,12 @@ function OverviewTab({ timeSeries, period, vehicles, drivers, aiReports, alerts 
     <div className="space-y-5">
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-        <KpiCard label="Fleet Size"   value={vehicles.length}        icon="Truck"       color="text-cyan-400"    sparkData={timeSeries} sparkKey="utilisation" sparkColor={C.cyan}    sub={`${drivers.length} drivers`} />
+        <KpiCard label="Vehicles"   value={vehicles.length}        icon="Truck"       color="text-cyan-400"    sparkData={timeSeries} sparkKey="utilisation" sparkColor={C.cyan}    sub={`${drivers.length} trips`} />
         <KpiCard label="Total Trips"  value={totals.trips}           icon="Route"       color="text-violet-400"  sparkData={timeSeries} sparkKey="trips"       sparkColor={C.violet}  sub={`${period}-day period`} />
         <KpiCard label="Distance"     value={`${(totals.distance / 1000).toFixed(1)}K`} unit="km" icon="Gauge"  color="text-emerald-400" sparkData={timeSeries} sparkKey="distance"   sparkColor={C.emerald} />
         <KpiCard label="Incidents"    value={totals.incidents}       icon="AlertTriangle" color={totals.incidents > 5 ? 'text-red-400' : 'text-amber-400'} sparkData={timeSeries} sparkKey="incidents" sparkColor={C.red} />
         <KpiCard label="Avg Speed"    value={avgSpeed}     unit="km/h" icon="Zap"       color="text-blue-400"    sparkData={timeSeries} sparkKey="avg_speed"   sparkColor={C.blue}    sub="when active" />
-        <KpiCard label="Utilisation"  value={`${avgUtil}%`}          icon="Activity"    color="text-cyan-400"    sparkData={timeSeries} sparkKey="utilisation" sparkColor={C.cyan}    sub="avg fleet" />
+        <KpiCard label="Utilisation"  value={`${avgUtil}%`}          icon="Activity"    color="text-cyan-400"    sparkData={timeSeries} sparkKey="utilisation" sparkColor={C.cyan}    sub="route avg" />
       </div>
 
       {/* Daily activity + fleet pie */}
@@ -327,9 +327,9 @@ function OverviewTab({ timeSeries, period, vehicles, drivers, aiReports, alerts 
           </ChartCard>
         </div>
 
-        <ChartCard title="Fleet Status" subtitle="Live vehicle breakdown">
+        <ChartCard title="Vehicle Status" subtitle="Current vehicle breakdown">
           {fleetPie.length === 0
-            ? <EmptyState icon="Truck" message="No vehicles" sub="Add vehicles to see fleet status" />
+            ? <EmptyState icon="Truck" message="No vehicles" sub="Add vehicles to see status breakdown" />
             : <>
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
@@ -408,7 +408,7 @@ function FleetTab({ timeSeries, period, vehicles }) {
   return (
     <div className="space-y-5">
       {/* Vehicle status table */}
-      <ChartCard title="Vehicle Status Summary" subtitle="Current fleet state — live from database">
+      <ChartCard title="Vehicle Status Summary" subtitle="Current vehicle state — live from database">
         {vehicles.length === 0
           ? <EmptyState icon="Truck" message="No vehicles in database" sub="Add vehicles via the Fleet page to see them here" />
           : <div className="overflow-x-auto">
