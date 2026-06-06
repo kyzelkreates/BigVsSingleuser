@@ -1,726 +1,814 @@
 /**
  * ============================================================
- * Big V's Best Routes™ — Premium Landing Page
+ * Big V's Best Routes™ — Homepage / Landing Page
  * Powered by 4P3X Intelligent AI™ | Created by Kyzel Kreates™
  *
- * Run 13 — Homepage / Project Explainer Upgrade
+ * Run 14 — Full Homepage Rebuild
  *
- * CONTENT + UI + NAVIGATION SHORTCUT UPGRADE ONLY.
- * No backend logic. No demo/live logic. No map/GPS logic.
- * No Supabase config. No auth/session logic.
- * Read-only page — all existing systems untouched.
+ * READ-ONLY PAGE — No backend logic. No GPS. No auth.
+ * No Supabase config. No demo/live mode changes.
+ * All existing systems untouched.
  * ============================================================
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ROUTES } from './config_routes'
+import { useNavigate }         from 'react-router-dom'
+import { ROUTES }              from './config_routes'
 
-// ─── Icon helper (inline SVG paths to avoid Lucide import bloat) ──────────────
+// ── Icon helper ───────────────────────────────────────────────
+const ICON_PATHS = {
+  shield:     'M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z',
+  truck:      'M1 3h15v13H1V3zm15 4h4l3 3v6h-7V7zM5.5 17a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm13 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z',
+  smartphone: 'M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM12 19h.01',
+  map:        'M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4zm7-4v16m8-12v16',
+  layers:     'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+  route:      'M3 11l19-9-9 19-2-8-8-2z',
+  zap:        'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  check:      'M20 6L9 17l-5-5',
+  star:       'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+  server:     'M2 2h20v8H2V2zm0 12h20v8H2v-8zm5 4h.01M5 6h.01',
+  alert:      'M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01',
+  info:       'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4v4m0 4h.01',
+  brain:      'M12 5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2m7 4c0 4.42-3.13 8.09-7 8.93C8.13 17.09 5 13.42 5 9V5.65C7.03 4.61 9.46 4 12 4s4.97.61 7 1.65V9z',
+  download:   'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
+  arrow:      'M5 12h14M12 5l7 7-7 7',
+  home:       'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  settings:   'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+}
 function Icon({ name, className = 'w-5 h-5' }) {
-  const icons = {
-    shield:     'M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z',
-    truck:      'M1 3h15v13H1V3zm15 4h4l3 3v6h-7V7zM5.5 17a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm13 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z',
-    smartphone: 'M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM12 19h.01',
-    brain:      'M12 2a4 4 0 0 1 4 4c2.21 0 4 1.79 4 4s-1.79 4-4 4H8a4 4 0 0 1-4-4c0-2.21 1.79-4 4-4a4 4 0 0 1 4-4z',
-    route:      'M3 11l19-9-9 19-2-8-8-2z',
-    layers:     'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
-    zap:        'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
-    check:      'M20 6L9 17l-5-5',
-    arrow:      'M5 12h14M12 5l7 7-7 7',
-    star:       'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
-    user:       'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
-    server:     'M2 2h20v8H2V2zm0 12h20v8H2v-8zm5 4h.01M5 6h.01',
-    download:   'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
-    info:       'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4v4m0 4h.01',
-    map:        'M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4zm7-4v16m8-12v16',
-  }
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}
-      strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d={icons[name] || icons.star} />
+      strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d={ICON_PATHS[name] || ICON_PATHS.star} />
     </svg>
   )
 }
 
-// ─── Reusable card ────────────────────────────────────────────────────────────
-function Card({ children, className = '', gold = false, purple = false }) {
-  const border = gold ? 'border-[#d4a017]/30' : purple ? 'border-[#a78bfa]/25' : 'border-white/8'
-  return (
-    <div className={`rounded-xl border bg-white/3 backdrop-blur-sm p-5 ${border} ${className}`}>
-      {children}
-    </div>
-  )
-}
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-function Section({ id, children, className = '' }) {
-  return (
-    <section id={id} className={`py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ${className}`}>
-      {children}
-    </section>
-  )
-}
-
-// ─── Section heading ──────────────────────────────────────────────────────────
-function Heading({ title, subtitle, gold = false }) {
-  return (
-    <div className="mb-10 text-center">
-      <h2 className={`text-2xl sm:text-3xl font-display font-bold mb-3 ${gold ? 'text-[#d4a017]' : 'text-white'}`}>
-        {title}
-      </h2>
-      {subtitle && <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">{subtitle}</p>}
-    </div>
-  )
-}
-
-// ─── CTA Button ───────────────────────────────────────────────────────────────
-function CTAButton({ label, onClick, variant = 'primary', icon, small = false }) {
-  const base = 'inline-flex items-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-transparent cursor-pointer select-none'
-  const size = small ? 'px-4 py-2 text-sm' : 'px-5 py-3 text-sm sm:text-base'
-  const styles = {
-    primary:  'bg-[#d4a017] hover:bg-[#b8860b] text-black focus:ring-[#d4a017]',
-    secondary:'bg-white/8 hover:bg-white/14 text-white border border-white/15 focus:ring-white/30',
-    purple:   'bg-[#a78bfa]/15 hover:bg-[#a78bfa]/25 text-[#a78bfa] border border-[#a78bfa]/30 focus:ring-[#a78bfa]',
-    green:    'bg-[#34d399]/15 hover:bg-[#34d399]/25 text-[#34d399] border border-[#34d399]/30 focus:ring-[#34d399]',
-    ghost:    'text-[#d4a017] hover:text-white border border-[#d4a017]/40 hover:border-[#d4a017] focus:ring-[#d4a017]',
+// ── Button ────────────────────────────────────────────────────
+function Btn({ label, onClick, variant = 'primary', icon, small = false, full = false }) {
+  const base = `inline-flex items-center justify-center gap-2 font-semibold rounded-xl
+    transition-all duration-200 focus:outline-none cursor-pointer select-none
+    ${full ? 'w-full' : ''}
+    ${small ? 'px-4 py-2.5 text-sm' : 'px-6 py-3.5 text-sm sm:text-base'}`
+  const v = {
+    primary:   'bg-[#d4a017] hover:bg-[#c49215] active:bg-[#b07f10] text-black shadow-lg shadow-[#d4a017]/20',
+    green:     'bg-[#34d399]/15 hover:bg-[#34d399]/25 text-[#34d399] border border-[#34d399]/30',
+    purple:    'bg-[#a78bfa]/15 hover:bg-[#a78bfa]/25 text-[#a78bfa] border border-[#a78bfa]/30',
+    secondary: 'bg-white/6 hover:bg-white/12 text-white border border-white/12',
+    ghost:     'border border-[#d4a017]/40 hover:border-[#d4a017]/80 text-[#d4a017] hover:bg-[#d4a017]/8',
+    dark:      'bg-[#0d1426] hover:bg-[#131d35] text-white border border-white/10',
   }
   return (
-    <button onClick={onClick} className={`${base} ${size} ${styles[variant] || styles.primary}`}>
+    <button onClick={onClick} className={`${base} ${v[variant] || v.primary}`}>
       {icon && <Icon name={icon} className="w-4 h-4 shrink-0" />}
       <span>{label}</span>
     </button>
   )
 }
 
-// ─── PWA Install Guide ─────────────────────────────────────────────────────────
-function PWAInstallGuide() {
+// ── Divider ───────────────────────────────────────────────────
+function Divider() {
+  return <div className="max-w-7xl mx-auto px-6"><div className="border-t border-white/6" /></div>
+}
+
+// ── Stat pill ─────────────────────────────────────────────────
+function Stat({ value, label }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className="font-display font-bold text-2xl sm:text-3xl text-[#d4a017]">{value}</span>
+      <span className="text-slate-400 text-xs sm:text-sm text-center leading-tight">{label}</span>
+    </div>
+  )
+}
+
+// ── Feature pill ──────────────────────────────────────────────
+function FeaturePill({ text }) {
+  return (
+    <div className="flex items-center gap-2 bg-white/4 border border-white/8 rounded-lg px-3 py-2">
+      <Icon name="check" className="w-3.5 h-3.5 text-[#34d399] shrink-0" />
+      <span className="text-slate-300 text-xs sm:text-sm">{text}</span>
+    </div>
+  )
+}
+
+// ── Warning chip ──────────────────────────────────────────────
+function WarnChip({ text, severity = 'high' }) {
+  const c = severity === 'high'
+    ? 'bg-red-500/8 border-red-500/25 text-red-300'
+    : 'bg-amber-500/8 border-amber-500/25 text-amber-300'
+  return (
+    <div className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${c}`}>
+      <Icon name="alert" className="w-3.5 h-3.5 shrink-0" />
+      <span className="text-xs">{text}</span>
+    </div>
+  )
+}
+
+// ── Shortcut card (the big dashboard / PWA quick-access tiles) ─
+function ShortcutCard({ icon, title, subtitle, desc, onClick, variant = 'default', badge }) {
+  const bg = {
+    gold:   'border-[#d4a017]/30 bg-[#d4a017]/6 hover:bg-[#d4a017]/10',
+    green:  'border-[#34d399]/25 bg-[#34d399]/5 hover:bg-[#34d399]/10',
+    purple: 'border-[#a78bfa]/25 bg-[#a78bfa]/5 hover:bg-[#a78bfa]/10',
+    blue:   'border-sky-500/25 bg-sky-500/5 hover:bg-sky-500/10',
+    default:'border-white/10 bg-white/3 hover:bg-white/7',
+  }
+  const ic = {
+    gold:   'text-[#d4a017]',
+    green:  'text-[#34d399]',
+    purple: 'text-[#a78bfa]',
+    blue:   'text-sky-400',
+    default:'text-slate-300',
+  }
+  return (
+    <button onClick={onClick}
+      className={`relative w-full text-left rounded-2xl border p-5 sm:p-6 transition-all duration-200 group ${bg[variant] || bg.default}`}>
+      {badge && (
+        <span className="absolute top-3 right-3 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
+          bg-[#d4a017]/20 text-[#d4a017] border border-[#d4a017]/30">
+          {badge}
+        </span>
+      )}
+      <Icon name={icon} className={`w-7 h-7 mb-3 ${ic[variant] || ic.default}`} />
+      <p className="text-white font-bold text-base sm:text-lg leading-tight mb-1">{title}</p>
+      {subtitle && <p className={`text-xs font-semibold mb-2 ${ic[variant] || 'text-slate-500'}`}>{subtitle}</p>}
+      <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{desc}</p>
+      <div className={`mt-4 flex items-center gap-1.5 text-xs font-semibold ${ic[variant] || ic.default} opacity-70 group-hover:opacity-100 transition-opacity`}>
+        Open <Icon name="arrow" className="w-3.5 h-3.5" />
+      </div>
+    </button>
+  )
+}
+
+// ── PWA install accordion ─────────────────────────────────────
+function PWAAccordion() {
   const [open, setOpen] = useState(false)
   return (
-    <div>
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="text-xs text-slate-400 hover:text-[#d4a017] underline underline-offset-2 transition-colors"
-      >
-        {open ? 'Hide install guide ▲' : 'How to install ▼'}
+    <div className="rounded-xl border border-white/8 overflow-hidden">
+      <button onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-400 hover:text-white hover:bg-white/4 transition-colors">
+        <span className="flex items-center gap-2"><Icon name="smartphone" className="w-4 h-4" /> How to install the Navigation PWA</span>
+        <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path d="M19 9l-7 7-7-7" strokeLinecap="round" />
+        </svg>
       </button>
       {open && (
-        <div className="mt-3 rounded-lg border border-white/10 bg-black/30 p-4 text-xs text-slate-300 space-y-3">
-          <div>
-            <p className="text-[#34d399] font-semibold mb-1">📱 Android / Chrome</p>
-            <p>Open the Navigation PWA link in Chrome → tap the ⋮ menu → <em>"Add to Home screen"</em> or look for the install banner at the bottom of the screen.</p>
+        <div className="px-4 pb-4 pt-2 space-y-3 border-t border-white/6 bg-black/20">
+          <div className="flex items-start gap-3">
+            <span className="text-[#34d399] text-lg leading-none mt-0.5">📱</span>
+            <div>
+              <p className="text-[#34d399] font-semibold text-xs mb-1">Android / Chrome</p>
+              <p className="text-slate-400 text-xs leading-relaxed">Open the Navigation PWA link → tap <strong className="text-white">⋮ menu</strong> → <em>"Add to Home screen"</em> or tap the install banner.</p>
+            </div>
           </div>
-          <div>
-            <p className="text-[#d4a017] font-semibold mb-1">🍎 iOS / Safari</p>
-            <p>Open the Navigation PWA link in Safari → tap the <em>Share button (□↑)</em> → scroll down → tap <em>"Add to Home Screen"</em> → tap <em>"Add"</em>.</p>
+          <div className="flex items-start gap-3">
+            <span className="text-[#d4a017] text-lg leading-none mt-0.5">🍎</span>
+            <div>
+              <p className="text-[#d4a017] font-semibold text-xs mb-1">iOS / Safari</p>
+              <p className="text-slate-400 text-xs leading-relaxed">Open in Safari → tap <strong className="text-white">Share (□↑)</strong> → <em>"Add to Home Screen"</em> → <em>"Add"</em>.</p>
+            </div>
           </div>
-          <p className="text-slate-500 mt-2 leading-relaxed">
-            Once installed, the Navigation PWA appears on your home screen and runs in standalone mode — no browser chrome, full screen, ready for use on the move.
-          </p>
+          <p className="text-slate-600 text-xs">Installed PWA runs full-screen, offline-capable — no app store required.</p>
         </div>
       )}
     </div>
   )
 }
 
-// ─── Main Landing Page ─────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  MAIN LANDING PAGE
+// ══════════════════════════════════════════════════════════════
 export default function Landing() {
   const navigate = useNavigate()
+  const go = (r) => navigate(r)
 
-  // Scroll to top on mount
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
 
-  const go = (route) => navigate(route)
-
-  // ── SECTION 1 — HERO ──────────────────────────────────────────────────────
-  const Hero = () => (
-    <section className="relative min-h-[92vh] flex flex-col justify-center items-center text-center px-4 sm:px-6 overflow-hidden">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-[#d4a017]/6 blur-[120px]" />
-        <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[200px] rounded-full bg-[#a78bfa]/6 blur-[100px]" />
-        <div className="absolute bottom-0 right-1/4 w-[250px] h-[180px] rounded-full bg-[#34d399]/5 blur-[100px]" />
-      </div>
-
-      {/* Badge */}
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-[#d4a017]/8 px-4 py-1.5 text-xs font-semibold text-[#d4a017] tracking-wider uppercase">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#34d399] animate-pulse inline-block" />
-        Powered by 4P3X Intelligent AI™ — Created by Kyzel Kreates™
-      </div>
-
-      {/* Title */}
-      <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-white mb-2 leading-tight tracking-tight">
-        Big V&apos;s Best Routes™
-      </h1>
-      <p className="text-[#d4a017] font-semibold text-base sm:text-lg mb-6 tracking-wide">
-        Safety &amp; Legal Compliance First Route Planning Platform
-      </p>
-
-      {/* Hero body */}
-      <p className="max-w-2xl text-slate-300 text-base sm:text-lg leading-relaxed mb-4">
-        Route planning built around the <span className="text-white font-semibold">vehicle</span>, the <span className="text-white font-semibold">driver</span>, the <span className="text-white font-semibold">route</span>, and the <span className="text-[#d4a017] font-semibold">safety &amp; legal checks</span> that ordinary navigation tools often miss.
-      </p>
-      <p className="max-w-xl text-slate-400 text-sm sm:text-base leading-relaxed mb-10">
-        Big V&apos;s Best Routes™ combines vehicle profiles, route planning, driver workflow, advisory compliance checks, live and demo modes, and an installable Navigation PWA — all in one structured platform.
-      </p>
-      <p className="max-w-xl text-[#d4a017]/75 text-xs sm:text-sm leading-relaxed mb-10 font-medium">
-        Built for single users with multiple vehicles who need safer, more suitable route planning than standard sat nav can provide.
-      </p>
-
-      {/* CTA Buttons */}
-      <div className="flex flex-wrap justify-center gap-3 mb-8">
-        <CTAButton label="Open Route Planner Dashboard" icon="layers"     variant="primary"   onClick={() => go(ROUTES.DASHBOARD)} />
-        <CTAButton label="Navigation PWA Demo"            icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
-        <CTAButton label="Torquay → Edinburgh Demo"       icon="route"      variant="secondary" onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
-        <CTAButton label="Backend / Live Mode"            icon="server"     variant="ghost"     onClick={() => go(ROUTES.DEPLOYMENT)} />
-      </div>
-
-      {/* PWA install hint */}
-      <div className="mb-6">
-        <PWAInstallGuide />
-      </div>
-
-      {/* Scroll hint */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-500 text-xs animate-bounce">
-        <span>Scroll to explore</span>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-      </div>
-    </section>
-  )
-
-  // ── SECTION 2 — WHY IT WAS BUILT ──────────────────────────────────────────
-  const WhyBuilt = () => (
-    <Section id="why">
-      <Heading
-        title="Why Big V's Best Routes™ Was Built"
-        subtitle="Standard navigation apps are usually designed for ordinary cars and basic A-to-B travel."
-        gold
-      />
-      <div className="grid gap-5 md:grid-cols-2">
-        <Card gold>
-          <h3 className="text-white font-semibold text-base mb-3 flex items-center gap-2">
-            <Icon name="info" className="w-4 h-4 text-[#d4a017]" />
-            The Gap in Mainstream Navigation
-          </h3>
-          <p className="text-slate-300 text-sm leading-relaxed mb-3">
-            Most mainstream navigation platforms are not built around detailed vehicle-specific compliance workflows. They do not always consider the real-world needs of vans, larger vehicles, work vehicles, delivery vehicles, mixed vehicle use, restricted routes, or legal-sensitive routing.
-          </p>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Driver evidence, route assignment, trip reporting, and operational safety typically live across multiple disconnected tools — or are not captured at all.
-          </p>
-        </Card>
-        <Card gold>
-          <h3 className="text-white font-semibold text-base mb-3 flex items-center gap-2">
-            <Icon name="shield" className="w-4 h-4 text-[#34d399]" />
-            A Structured Planning Layer
-          </h3>
-          <p className="text-slate-300 text-sm leading-relaxed mb-3">
-            Big V&apos;s Best Routes™ is designed to add a safety-first planning layer around route decisions — bringing vehicle profile, route suitability, driver workflow, trip session, reporting, and safety/legal advisory checks together in one structured place.
-          </p>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            It is advisory support software, not a replacement for professional judgement. The driver and operator always retain responsibility for final decisions.
-          </p>
-        </Card>
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 3 — WHO IT HELPS ───────────────────────────────────────────────
-  const personas = [
-    { icon: 'truck',      label: 'Van & Delivery Drivers',     desc: 'Plan safer routes for specific vehicle sizes, load types, and time-sensitive deliveries.' },
-    { icon: 'user',       label: 'Single Operators',           desc: 'Manage multiple vehicles from one dashboard without needing enterprise fleet software.' },
-    { icon: 'star',       label: 'Multi-Vehicle Operators',         desc: 'Plan routes, track trips, and maintain evidence-style records across multiple vehicles.' },
-    { icon: 'check',      label: 'Trade & Mobile Businesses',  desc: 'Plan work routes that factor in vehicle type, access, and daily job assignments.' },
-    { icon: 'map',        label: 'Route Planners',             desc: 'Build and review route plans with vehicle-aware safety and compliance advisory checks.' },
-    { icon: 'shield',     label: 'Compliance-Conscious Ops',   desc: 'Maintain route evidence, check missing legal-critical data, and track driver acknowledgements.' },
-    { icon: 'smartphone', label: 'Field & Mobile Workers',     desc: 'Receive assigned routes on a mobile-installable PWA and submit reports from anywhere.' },
-    { icon: 'layers',     label: 'Anyone Needing Clarity',     desc: 'Build a clearer record of vehicle-aware planning and trip evidence beyond standard apps.' },
-  ]
-  const WhoItHelps = () => (
-    <Section id="who">
-      <Heading title="Who It Helps" subtitle="Built for operators who need more than a standard navigation app." />
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {personas.map(({ icon, label, desc }) => (
-          <Card key={label} className="flex flex-col gap-2">
-            <div className="w-9 h-9 rounded-lg bg-[#d4a017]/12 flex items-center justify-center shrink-0">
-              <Icon name={icon} className="w-4 h-4 text-[#d4a017]" />
-            </div>
-            <p className="text-white font-semibold text-sm">{label}</p>
-            <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
-          </Card>
-        ))}
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 4 — CONTROL DASHBOARD ─────────────────────────────────────────
-  const dashFeatures = [
-    'Manage and store multiple vehicle profiles',
-    'Plan routes with vehicle-aware advisory checks',
-    'Review safety and legal compliance status',
-    'Send selected routes to the Navigation PWA',
-    'Monitor route assignments and trip sessions',
-    'Review driver reports and trip evidence',
-    'View sync and live backend status',
-    'Manage Demo Mode and Live Mode settings',
-    'Prepare evidence-style operational records',
-    'Use 4P3X Intelligent AI™ advisory checks',
-  ]
-  const Dashboard_ = () => (
-    <Section id="dashboard">
-      <div className="grid gap-8 lg:grid-cols-2 items-center">
-        <div>
-          <div className="inline-block text-xs font-semibold text-[#d4a017] border border-[#d4a017]/30 rounded-full px-3 py-1 mb-4">Control Dashboard</div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4">What the Control Dashboard Does</h2>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-            The Control Dashboard is the operator&apos;s central command centre. Manage your vehicles, plan routes, monitor your drivers, review trip sessions, and control your backend configuration — all from one responsive interface.
-          </p>
-          <CTAButton label="Open Control Dashboard" icon="layers" variant="primary" onClick={() => go(ROUTES.DASHBOARD)} />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {dashFeatures.map(f => (
-            <div key={f} className="flex items-start gap-2 p-3 rounded-lg border border-white/6 bg-white/2">
-              <Icon name="check" className="w-3.5 h-3.5 text-[#34d399] shrink-0 mt-0.5" />
-              <span className="text-slate-300 text-xs leading-relaxed">{f}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 5 — DRIVER PWA ─────────────────────────────────────────────────
-  const pwaFeatures = [
-    'Receive assigned routes on mobile',
-    'Open a mobile-first, touch-optimised driver view',
-    'Start and manage trip sessions',
-    'Follow the safe navigation workflow',
-    'Update trip status in real time',
-    'Submit driver reports and notes',
-    'Record issues and incidents on the road',
-    'Install as a standalone PWA on any device',
-    'Work with Demo Mode locally — no backend needed',
-    'Connect to Live Mode when backend is configured',
-  ]
-  const DriverPWA_ = () => (
-    <Section id="driver-pwa">
-      <div className="grid gap-8 lg:grid-cols-2 items-center">
-        <div className="order-2 lg:order-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {pwaFeatures.map(f => (
-            <div key={f} className="flex items-start gap-2 p-3 rounded-lg border border-[#34d399]/12 bg-[#34d399]/3">
-              <Icon name="smartphone" className="w-3.5 h-3.5 text-[#34d399] shrink-0 mt-0.5" />
-              <span className="text-slate-300 text-xs leading-relaxed">{f}</span>
-            </div>
-          ))}
-        </div>
-        <div className="order-1 lg:order-2">
-          <div className="inline-block text-xs font-semibold text-[#34d399] border border-[#34d399]/30 rounded-full px-3 py-1 mb-4">Navigation PWA</div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4">What the Navigation PWA Does</h2>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
-            The Navigation PWA is the mobile route experience. It runs as an installable Progressive Web App — no app store required — and gives you a clean, focused mobile interface for opening routes, running trip sessions, and submitting reports.
-          </p>
-          <p className="text-slate-400 text-sm leading-relaxed mb-6">
-            Offline live actions may be saved locally only where supported, and require reconnection to sync. Demo Mode works fully without a backend.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <CTAButton label="Navigation PWA Demo"   icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
-            <CTAButton label="Open Navigation PWA"    icon="smartphone" variant="secondary" onClick={() => go('/driver-app')} />
-            <CTAButton label="Navigation PWA Setup"   icon="zap"        variant="ghost"     onClick={() => go(ROUTES.DRIVER_SETUP)} />
-          </div>
-          <div className="mt-4">
-            <PWAInstallGuide />
-          </div>
-        </div>
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 6 — SAFETY & LEGAL ADVISORY ───────────────────────────────────
-  const safetyBullets = [
-    { label: 'Vehicle-aware planning',               desc: 'Route decisions informed by vehicle dimensions, type, and legal profile.' },
-    { label: 'Missing vehicle information warnings', desc: 'Alerts when legal-critical fields are absent from the vehicle record.' },
-    { label: 'Route restriction awareness',          desc: 'Where data is available, restriction indicators are surfaced for review.' },
-    { label: 'Driver/operator acknowledgement',      desc: 'Drivers must acknowledge route safety checks before starting a trip.' },
-    { label: 'Data freshness warnings',              desc: 'Indicators flag when data may be stale or from an outdated source.' },
-    { label: 'Route confidence warnings',            desc: 'Advisory scores reflect planning completeness — not guaranteed safety.' },
-    { label: 'Evidence and report capture',          desc: 'Trip sessions, driver reports, and incident records provide evidence trails.' },
-    { label: 'Human review and override',            desc: 'All checks are advisory. Human review and override are always required.' },
-    { label: 'Advisory AI checks',                   desc: '4P3X Intelligent AI™ analyses route and vehicle data to surface risks.' },
-    { label: 'Clear responsibility boundaries',      desc: 'The platform does not remove the driver/operator\'s legal responsibility.' },
-  ]
-  const SafetySection = () => (
-    <Section id="safety">
-      <div className="rounded-2xl border border-[#34d399]/20 bg-[#34d399]/3 p-6 sm:p-10">
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#34d399]/30 bg-[#34d399]/10 px-4 py-1.5 text-xs font-semibold text-[#34d399] tracking-wider uppercase mb-4">
-            <Icon name="shield" className="w-3.5 h-3.5" />
-            Safety &amp; Legal Advisory Layer
-          </div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">Built Around Safety-First Route Planning</h2>
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Big V&apos;s Best Routes™ is designed to check route decisions against available vehicle information, route suitability indicators, missing legal-critical data, driver acknowledgements, route confidence, backend sync status, and report evidence.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-          {safetyBullets.map(({ label, desc }) => (
-            <div key={label} className="rounded-lg border border-[#34d399]/15 bg-black/20 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="check" className="w-3.5 h-3.5 text-[#34d399] shrink-0" />
-                <span className="text-white font-semibold text-xs">{label}</span>
-              </div>
-              <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-        {/* Hard disclaimer */}
-        <div className="rounded-xl border border-[#fbbf24]/25 bg-[#fbbf24]/5 p-5">
-          <p className="text-[#fbbf24] text-xs sm:text-sm font-semibold mb-2">⚠️ Advisory Disclaimer — Please Read</p>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-2">
-            Big V&apos;s Best Routes™ is advisory route-planning support software. It does not guarantee legal compliance, does not replace professional judgement, and does not remove the driver&apos;s or operator&apos;s responsibility to check route suitability, restrictions, signage, and applicable laws.
-          </p>
-          <p className="text-slate-400 text-xs leading-relaxed">
-            Backend connectivity, AI checks, map data, and route provider responses can support decision-making, but they do not guarantee that a route is legal, safe, or suitable in every real-world situation. Human review and override are always required.
-          </p>
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3 justify-center">
-          <CTAButton label="View Route Safety AI" icon="shield" variant="green"    onClick={() => go(ROUTES.SAFETY)} />
-          <CTAButton label="Legal Awareness"       icon="check" variant="secondary" onClick={() => go(ROUTES.COMPLIANCE)} />
-        </div>
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 7 — DEMO VS LIVE MODE ─────────────────────────────────────────
-  const DemoLive = () => (
-    <Section id="demo-live">
-      <Heading
-        title={`"Demo Mode shows the product. Live Mode runs the product."`}
-        subtitle="Two clear operational states — one for exploring, one for running."
-        gold
-      />
-      <div className="grid gap-5 md:grid-cols-2">
-        <Card className="border-[#fbbf24]/20 bg-[#fbbf24]/3">
-          <div className="inline-block text-xs font-semibold text-[#fbbf24] border border-[#fbbf24]/30 rounded-full px-3 py-1 mb-4">Demo Mode</div>
-          <ul className="space-y-2 mb-4">
-            {[
-              'Uses safe sample and local data only',
-              'Does not require any backend setup',
-              'Lets investors, users, and testers understand the product',
-              'Shows the full dashboard and Navigation PWA workflow',
-              'Never sends demo records to Supabase or any backend',
-              'Does not start realtime subscriptions',
-              'Ideal for exploring, testing, and investor demos',
-            ].map(t => (
-              <li key={t} className="flex items-start gap-2 text-xs text-slate-300">
-                <Icon name="check" className="w-3.5 h-3.5 text-[#fbbf24] shrink-0 mt-0.5" />
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <Card className="border-[#34d399]/20 bg-[#34d399]/3">
-          <div className="inline-block text-xs font-semibold text-[#34d399] border border-[#34d399]/30 rounded-full px-3 py-1 mb-4">Live Mode</div>
-          <ul className="space-y-2 mb-4">
-            {[
-              'Activated when Demo Mode is switched off',
-              'Requires Supabase or another backend configuration',
-              'Uses real backend records — separate from demo data',
-              'Supports real users, authentication, and persistence',
-              'Enables live sync and realtime subscriptions where configured',
-              'Never mixes demo records with real operational records',
-              'Backend must be configured before Live Mode activates',
-            ].map(t => (
-              <li key={t} className="flex items-start gap-2 text-xs text-slate-300">
-                <Icon name="check" className="w-3.5 h-3.5 text-[#34d399] shrink-0 mt-0.5" />
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
-      <div className="mt-5 flex justify-center">
-        <CTAButton label="Open Backend / Live Mode Settings" icon="server" variant="ghost" onClick={() => go(ROUTES.DEPLOYMENT)} />
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 8 — MODULAR BASE ARCHITECTURE ────────────────────────────────
-  const ModularBase = () => (
-    <Section id="architecture">
-      <div className="rounded-2xl border border-[#a78bfa]/20 bg-[#a78bfa]/3 p-6 sm:p-10">
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#a78bfa]/30 bg-[#a78bfa]/10 px-4 py-1.5 text-xs font-semibold text-[#a78bfa] tracking-wider uppercase mb-4">
-            <Icon name="layers" className="w-3.5 h-3.5" />
-            Modular Base Architecture
-          </div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
-            One Architecture. Many Products.
-          </h2>
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Big V&apos;s Best Routes™ is not just one app. It is part of the Kyzel Kreates™ modular product architecture — a reusable base structure that can be refactored into specialist platforms across many industries.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-          {[
-            { label: 'Dashboard + PWA + AI',        desc: 'The Control Dashboard, Navigation PWA, and AI advisory layer can all be reused across product variants.' },
-            { label: 'Demo / Live Mode Strategy',    desc: 'Every variant can include a safe Demo Mode for testing and a backend-ready Live Mode for real operation.' },
-            { label: 'Backend-Ready by Default',     desc: 'Supabase configuration, RLS, and realtime are built into the base — ready to connect or configure per product.' },
-            { label: 'Controlled Refactoring',       desc: 'New products are created by changing the data model, branding, workflows, and roles — not rebuilding from scratch.' },
-            { label: 'Reusable Reporting Layer',     desc: 'Trip sessions, driver reports, incident capture, and evidence trails are built into the base and reusable.' },
-            { label: '4P3X Verse™ Ecosystem',        desc: 'Each product variant becomes part of the wider 4P3X Verse™ — a growing suite of AI-powered operational tools.' },
-          ].map(({ label, desc }) => (
-            <div key={label} className="rounded-lg border border-[#a78bfa]/15 bg-black/20 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="zap" className="w-3.5 h-3.5 text-[#a78bfa] shrink-0" />
-                <span className="text-white font-semibold text-xs">{label}</span>
-              </div>
-              <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-        <div className="rounded-xl border border-[#a78bfa]/20 bg-black/20 p-5">
-          <p className="text-[#a78bfa] font-semibold text-xs sm:text-sm mb-3">Architecture Statement</p>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-            Big V&apos;s Best Routes™ demonstrates how a modular base can become a specialist route-planning platform through controlled refactoring. The same architecture pattern can be adapted into many other products while preserving the core dashboard, PWA, AI guidance, demo/live mode, reporting, and backend-ready structure.
-          </p>
-        </div>
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 9 — POSSIBLE REFACTORS ────────────────────────────────────────
-  const refactors = [
-    { label: 'Field Service Route OS™',              desc: 'Route planning and job assignment for field service engineers and mobile technicians.' },
-    { label: 'Delivery Compliance Planner™',         desc: 'Compliance-aware route planning for last-mile and parcel delivery operations.' },
-    { label: 'Mobile Worker Safety OS™',             desc: 'Safety-first workflow management for lone workers and mobile site operatives.' },
-    { label: 'Inspection Route Manager™',            desc: 'Structured route and inspection workflow tool for regulatory compliance visits.' },
-    { label: 'Community Response Route Planner™',    desc: 'Volunteer and community responder route coordination and trip evidence system.' },
-    { label: 'Contractor Job Route Planner™',        desc: 'Multi-site contractor job management with route planning and evidence capture.' },
-    { label: 'Event Logistics Route OS™',            desc: 'Event logistics planning, driver coordination, and vehicle-aware route management.' },
-    { label: 'Local Authority Route Support™',       desc: 'Advisory route support for local authority vehicles, maintenance, and welfare services.' },
-    { label: 'Vehicle Evidence & Trip Reporting OS™',desc: 'Trip evidence capture and reporting system for insurance, compliance, and operations.' },
-    { label: 'Multi-Site Operations Planner™',       desc: 'Cross-site vehicle coordination and operational route planning for multi-location businesses.' },
-  ]
-  const Refactors = () => (
-    <Section id="refactors">
-      <Heading
-        title="Possible Product Refactors"
-        subtitle="The same modular base — adapted for different industries and use cases. These are indicative product directions, not all currently live products."
-      />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {refactors.map(({ label, desc }) => (
-          <Card key={label} purple className="flex flex-col gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#a78bfa]/12 flex items-center justify-center shrink-0">
-              <Icon name="layers" className="w-3.5 h-3.5 text-[#a78bfa]" />
-            </div>
-            <p className="text-white font-semibold text-xs leading-snug">{label}</p>
-            <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
-            <span className="mt-auto inline-block text-[10px] font-semibold text-[#a78bfa]/60 border border-[#a78bfa]/15 rounded-full px-2 py-0.5 w-fit">Possible Refactor</span>
-          </Card>
-        ))}
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 10 — INVESTOR / EMPLOYER VALUE ────────────────────────────────
-  const values = [
-    'Product thinking from brief to working platform',
-    'Safety-first system design and advisory UX',
-    'Modular architecture — one base, many products',
-    'AI-assisted advisory workflows (4P3X Intelligent AI™)',
-    'PWA development — installable, mobile-first, offline-capable',
-    'Demo / Live product strategy — testable without a live backend',
-    'Backend-ready planning — Supabase, RLS, realtime, auth',
-    'Route workflow modelling and operational problem solving',
-    'Compliance-aware UX that protects operators and users',
-    'Evidence-based reporting — trip sessions, incidents, driver records',
-    'Investor-demo-ready from day one — full working product',
-    'Adaptable base — refactorable into multiple product directions',
-  ]
-  const InvestorValue = () => (
-    <Section id="investor">
-      <div className="rounded-2xl border border-[#d4a017]/20 bg-[#d4a017]/3 p-6 sm:p-10">
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-[#d4a017]/10 px-4 py-1.5 text-xs font-semibold text-[#d4a017] tracking-wider uppercase mb-4">
-            <Icon name="star" className="w-3.5 h-3.5" />
-            Investor · Funder · Employer Value
-          </div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">What This Project Demonstrates</h2>
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Built by Kyzel Kreates™, this project demonstrates strong system thinking, modular software planning, AI-assisted product design, and the ability to transform one working base into multiple real-world product opportunities.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-          {values.map(v => (
-            <div key={v} className="flex items-start gap-2 p-3 rounded-lg border border-[#d4a017]/12 bg-black/20">
-              <Icon name="check" className="w-3.5 h-3.5 text-[#d4a017] shrink-0 mt-0.5" />
-              <span className="text-slate-300 text-xs leading-relaxed">{v}</span>
-            </div>
-          ))}
-        </div>
-        <div className="rounded-xl border border-[#d4a017]/20 bg-black/20 p-5">
-          <p className="text-[#d4a017] font-semibold text-xs sm:text-sm mb-2">Kyzel Kreates™ — Architecture Capability Statement</p>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-            Built by Kyzel Kreates™, this project demonstrates strong reverse-engineering ability, system thinking, modular software planning, AI-assisted product design, and the ability to transform one working base into multiple real-world product opportunities — all while maintaining safety-first design principles and honest product boundaries.
-          </p>
-        </div>
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 11 — QUICK LAUNCHPAD ──────────────────────────────────────────
-  const launchItems = [
-    { label: 'Control Dashboard',        route: ROUTES.DASHBOARD,    icon: 'layers',     variant: 'primary',   desc: 'Open the main operator dashboard' },
-    { label: 'Navigation PWA Demo',      route: ROUTES.DRIVER_APP_DEMO, icon: 'map',    variant: 'green',     desc: 'Demo: Torquay → Edinburgh route, no pairing code' },
-    { label: 'Route Planner',            route: ROUTES.DISPATCH,     icon: 'route',      variant: 'secondary', desc: 'Plan and manage routes' },
-    { label: 'Vehicle Profiles',         route: ROUTES.FLEET,        icon: 'truck',      variant: 'secondary', desc: 'Manage your vehicles' },
-    { label: 'Navigation PWA Setup',     route: ROUTES.DRIVER_SETUP, icon: 'zap',        variant: 'secondary', desc: 'Set up and pair the Navigation PWA' },
-    { label: 'Route Safety AI',          route: ROUTES.SAFETY,       icon: 'shield',     variant: 'secondary', desc: 'Safety monitoring and alerts' },
-    { label: 'Investor & Safety Page',    route: ROUTES.INVESTOR_SAFETY, icon: 'star',    variant: 'secondary', desc: 'Bridge strike facts, investor & grant readiness' },
-    { label: 'Legal Awareness',          route: ROUTES.COMPLIANCE,   icon: 'check',      variant: 'secondary', desc: 'Route compliance advisory' },
-    { label: '4P3X AI Command',          route: ROUTES.AI,           icon: 'brain',      variant: 'purple',    desc: 'AI intelligence and advisory panel' },
-    { label: 'Backend / Live Mode',      route: ROUTES.DEPLOYMENT,   icon: 'server',     variant: 'ghost',     desc: 'Supabase and deployment settings' },
-  ]
-
-  // ── BRIDGE STRIKE / INVESTOR SHORTCUT CARD (Run 14) ──────────────────────
-  const BridgeStrikeCard = () => (
-    <Section id="investor-safety-link" className="bg-[#0a0a0c]">
-      <div className="max-w-3xl mx-auto rounded-2xl border border-[#d4a017]/25 bg-[#d4a017]/5 p-7 sm:p-10 text-center">
-        <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#d4a017] border border-[#d4a017]/30 rounded-full px-4 py-1.5 mb-5">
-          <Icon name="shield" className="w-3.5 h-3.5" />
-          Investor · Safety · Bridge Strike Impact · Grant Readiness
-        </div>
-        <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3 leading-tight">
-          Investor, Safety &amp; Bridge Strike Impact
-        </h2>
-        <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6 max-w-xl mx-auto">
-          Why Big V&apos;s Best Routes™ was built for safer, smarter, vehicle-aware route planning.
-          Includes Network Rail bridge strike data, safety &amp; legal positioning, modular architecture overview, and investor/grant readiness context.
-        </p>
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 mb-7 max-w-2xl mx-auto">
-          {[
-            { value: '1,666', label: 'Bridge strikes', sub: 'Network Rail 2024/25' },
-            { value: '£13k',  label: 'Avg cost each',  sub: 'Network Rail data'    },
-            { value: '150k+', label: 'Delay minutes',  sub: '2023/24 report'       },
-            { value: '~£20m', label: 'Annual impact',  sub: '2023/24 total'        },
-          ].map(({ value, label, sub }) => (
-            <div key={label} className="rounded-xl border border-[#d4a017]/15 bg-[#d4a017]/5 p-3 text-center">
-              <p className="font-display font-bold text-xl text-[#d4a017]">{value}</p>
-              <p className="text-white text-xs font-semibold mt-0.5">{label}</p>
-              <p className="text-slate-600 text-[10px] mt-0.5">{sub}</p>
-            </div>
-          ))}
-        </div>
-        <CTAButton
-          label="View Safety & Investor Page"
-          icon="shield"
-          variant="primary"
-          onClick={() => go(ROUTES.INVESTOR_SAFETY)}
-        />
-      </div>
-    </Section>
-  )
-
-  const Launchpad = () => (
-    <Section id="launchpad">
-      <Heading title="Quick Access — Demo Launchpad" subtitle="Jump directly to any section of the platform." gold />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {launchItems.map(({ label, route, icon, variant, desc }) => (
-          <button
-            key={label}
-            onClick={() => go(route)}
-            className="flex items-center gap-4 p-4 rounded-xl border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/15 transition-all duration-200 text-left group"
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-              variant === 'primary'   ? 'bg-[#d4a017]/15 text-[#d4a017]' :
-              variant === 'green'    ? 'bg-[#34d399]/12 text-[#34d399]' :
-              variant === 'purple'   ? 'bg-[#a78bfa]/12 text-[#a78bfa]' :
-              variant === 'ghost'    ? 'bg-[#d4a017]/8  text-[#d4a017]' :
-              'bg-white/6 text-slate-300'
-            }`}>
-              <Icon name={icon} className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-semibold text-sm group-hover:text-[#d4a017] transition-colors truncate">{label}</p>
-              <p className="text-slate-400 text-xs leading-relaxed mt-0.5">{desc}</p>
-            </div>
-            <Icon name="arrow" className="w-4 h-4 text-slate-600 group-hover:text-[#d4a017] ml-auto shrink-0 transition-colors" />
-          </button>
-        ))}
-      </div>
-    </Section>
-  )
-
-  // ── SECTION 12 — FOOTER ───────────────────────────────────────────────────
-  const Footer = () => (
-    <footer className="border-t border-white/8 py-10 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-          <div>
-            <p className="font-display font-bold text-[#d4a017] text-base mb-1">Big V&apos;s Best Routes™</p>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Safety &amp; Legal Compliance First Route Planning Platform.<br />
-              Powered by 4P3X Intelligent AI™ — Created by Kyzel Kreates™
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold text-white text-xs mb-2">Mode</p>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Demo Mode shows the product. Live Mode runs the product.<br />
-              Demo Mode works without any backend configuration.
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold text-white text-xs mb-2">Advisory Disclaimer</p>
-            <p className="text-slate-500 text-xs leading-relaxed">
-              Big V&apos;s Best Routes™ is advisory route-planning support software. It does not guarantee legal compliance, does not replace professional judgement, and does not remove the driver&apos;s or operator&apos;s responsibility.
-            </p>
-          </div>
-        </div>
-        <div className="border-t border-white/6 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="text-slate-600 text-xs">© Kyzel Kreates™ · Big V&apos;s Best Routes™ · 4P3X Intelligent AI™ · 4P3X Verse™</p>
-          <div className="flex gap-4 flex-wrap justify-center">
-            <button onClick={() => go(ROUTES.DASHBOARD)}    className="text-xs text-slate-500 hover:text-[#d4a017] transition-colors">Dashboard</button>
-            <button onClick={() => go(ROUTES.DRIVER_APP_DEMO)} className="text-xs text-slate-500 hover:text-[#34d399] transition-colors">Navigation Demo</button>
-            <button onClick={() => go(ROUTES.SAFETY)}        className="text-xs text-slate-500 hover:text-white transition-colors">Safety AI</button>
-            <button onClick={() => go(ROUTES.DEPLOYMENT)}    className="text-xs text-slate-500 hover:text-white transition-colors">Backend Settings</button>
-          </div>
-        </div>
-      </div>
-    </footer>
-  )
-
-  // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#070708] text-white font-sans overflow-x-hidden">
-      {/* Top nav bar */}
-      <nav className="sticky top-0 z-50 border-b border-white/8 bg-[#070708]/90 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="font-display font-bold text-[#d4a017] text-sm sm:text-base tracking-tight hover:opacity-80 transition-opacity">
+
+      {/* ── TOP NAV ─────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 border-b border-white/6 bg-[#070708]/90 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+          <button onClick={() => go(ROUTES.LANDING)}
+            className="font-display font-bold text-[#d4a017] text-sm sm:text-base hover:opacity-80 transition-opacity shrink-0">
             Big V&apos;s Best Routes™
           </button>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <CTAButton label="Dashboard"     icon="layers" variant="secondary" small onClick={() => go(ROUTES.DASHBOARD)} />
-            <CTAButton label="Demo Route"     icon="map"    variant="green"     small onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+          <div className="flex items-center gap-2">
+            <Btn label="Dashboard"   icon="layers"     variant="secondary" small onClick={() => go(ROUTES.DASHBOARD)} />
+            <Btn label="PWA Demo"    icon="map"        variant="green"     small onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
           </div>
         </div>
       </nav>
 
-      {/* Page sections */}
-      <Hero />
-      <WhyBuilt />
-      <WhoItHelps />
-      <Dashboard_ />
-      <DriverPWA_ />
-      <SafetySection />
-      <DemoLive />
-      <ModularBase />
-      <Refactors />
-      <InvestorValue />
-      <BridgeStrikeCard />
-      <Launchpad />
-      <Footer />
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 1 — HERO
+      ══════════════════════════════════════════════════════════ */}
+      <section className="relative min-h-[90vh] flex flex-col justify-center items-center text-center px-4 sm:px-6 py-20 overflow-hidden">
+
+        {/* Background glows */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] rounded-full bg-[#d4a017]/5 blur-[140px]" />
+          <div className="absolute bottom-1/4 left-1/4 w-[350px] h-[250px] rounded-full bg-[#a78bfa]/5 blur-[100px]" />
+          <div className="absolute top-1/2 right-1/4 w-[300px] h-[200px] rounded-full bg-[#34d399]/4 blur-[100px]" />
+        </div>
+
+        {/* Badge */}
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-[#d4a017]/8 px-4 py-1.5 text-xs font-semibold text-[#d4a017] tracking-wider uppercase">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#34d399] animate-pulse inline-block" />
+          Powered by 4P3X Intelligent AI™ — Created by Kyzel Kreates™
+        </div>
+
+        {/* Title */}
+        <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-7xl text-white mb-3 leading-[1.05] tracking-tight max-w-4xl">
+          Big V&apos;s Best Routes™
+        </h1>
+        <p className="text-[#d4a017] font-semibold text-base sm:text-xl mb-8 tracking-wide">
+          Single User · Multi-Vehicle · Safe &amp; Legal Route Planner
+        </p>
+
+        {/* Hero description */}
+        <p className="max-w-2xl text-slate-300 text-base sm:text-lg leading-relaxed mb-4">
+          Route planning built around <span className="text-white font-semibold">your vehicle</span>, <span className="text-white font-semibold">your route</span>, and the <span className="text-[#d4a017] font-semibold">safety &amp; legal checks</span> that standard sat nav completely ignores.
+        </p>
+        <p className="max-w-xl text-slate-500 text-sm sm:text-base leading-relaxed mb-12">
+          Built for single users with multiple vehicles — van drivers, motorhome owners, recovery drivers, trailer operators — who need smarter, safer, vehicle-aware routing.
+        </p>
+
+        {/* PRIMARY SHORTCUTS — hero */}
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <Btn label="Open Route Planner Dashboard" icon="layers"     variant="primary"   onClick={() => go(ROUTES.DASHBOARD)} />
+          <Btn label="Navigation PWA Demo"          icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+          <Btn label="Torquay → Edinburgh Demo"     icon="route"      variant="secondary" onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+          <Btn label="Safety &amp; Investor Page"   icon="shield"     variant="ghost"     onClick={() => go(ROUTES.INVESTOR_SAFETY)} />
+        </div>
+
+        {/* PWA install hint */}
+        <div className="max-w-sm w-full">
+          <PWAAccordion />
+        </div>
+
+        {/* Scroll hint */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-600 text-xs animate-bounce">
+          <span>Scroll to explore</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path d="M19 9l-7 7-7-7" strokeLinecap="round" />
+          </svg>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 2 — BRIDGE STRIKE FACTS (impact statement)
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="rounded-2xl border border-[#d4a017]/20 bg-[#d4a017]/4 p-7 sm:p-10">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#d4a017] border border-[#d4a017]/30 rounded-full px-3 py-1 mb-4 uppercase tracking-wider">
+              <Icon name="alert" className="w-3.5 h-3.5" /> Why vehicle-aware routing matters
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
+              Bridge Strikes Cost Everyone
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+              Standard sat nav doesn&apos;t know your vehicle height. It doesn&apos;t check bridge clearances, weight limits, or narrow road suitability. Big V&apos;s Best Routes™ does.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <Stat value="1,666"  label="Bridge strikes — Network Rail 2024/25" />
+            <Stat value="£13k"   label="Average cost per bridge strike incident" />
+            <Stat value="150k+"  label="Delay minutes caused — 2023/24 season" />
+            <Stat value="~£20m"  label="Estimated total annual UK impact" />
+          </div>
+
+          <p className="text-center text-slate-500 text-xs">
+            Network Rail published data. Big V&apos;s Best Routes™ is designed to reduce bridge strike risk through vehicle-aware route planning. Advisory only — does not guarantee legal compliance.
+          </p>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 3 — QUICK ACCESS SHORTCUTS
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">Quick Access</h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+            Open any part of the platform directly from here.
+          </p>
+        </div>
+
+        {/* TOP ROW — 2 big primary cards */}
+        <div className="grid gap-4 sm:grid-cols-2 mb-4">
+          <ShortcutCard
+            icon="layers"
+            title="Route Planner Dashboard"
+            subtitle="Main control centre"
+            desc="Plan routes, manage your vehicle profiles, view safety scores, run compliance checks, and monitor all your saved routes in one place."
+            variant="gold"
+            badge="Main App"
+            onClick={() => go(ROUTES.DASHBOARD)}
+          />
+          <ShortcutCard
+            icon="map"
+            title="Navigation PWA Demo"
+            subtitle="Torquay → Edinburgh"
+            desc="Open the demo Navigation PWA — no pairing code required. Shows the full driver experience: route summary, safety warnings, AI advisory, pre-trip checklist and live OSM map."
+            variant="green"
+            badge="Demo"
+            onClick={() => go(ROUTES.DRIVER_APP_DEMO)}
+          />
+        </div>
+
+        {/* BOTTOM ROW — 4 secondary cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ShortcutCard
+            icon="truck"
+            title="My Vehicles"
+            subtitle="Vehicle profiles"
+            desc="Add, edit and manage vehicle profiles. Height, weight, width, length and legal fields used for route filtering."
+            variant="purple"
+            onClick={() => go(ROUTES.FLEET)}
+          />
+          <ShortcutCard
+            icon="smartphone"
+            title="Navigation PWA"
+            subtitle="Live mode — pairing required"
+            desc="Open the real Navigation PWA. Requires a pairing code from the dashboard for live trip sessions and job sync."
+            variant="blue"
+            onClick={() => go('/driver-app')}
+          />
+          <ShortcutCard
+            icon="shield"
+            title="Safety &amp; Investor Page"
+            subtitle="Bridge strike · grant · architecture"
+            desc="Investor readiness, bridge strike impact data, modular architecture overview and safety positioning."
+            variant="gold"
+            onClick={() => go(ROUTES.INVESTOR_SAFETY)}
+          />
+          <ShortcutCard
+            icon="server"
+            title="Backend &amp; Live Mode"
+            subtitle="Provider config"
+            desc="Configure Supabase, Firebase, AWS or REST backend. Switch between Demo Mode and Live Mode safely."
+            variant="default"
+            onClick={() => go(ROUTES.DEPLOYMENT)}
+          />
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 4 — WHAT IT IS / WHY IT WAS BUILT
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="grid gap-10 lg:grid-cols-2 items-start">
+
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#a78bfa] border border-[#a78bfa]/30 rounded-full px-3 py-1 mb-5 uppercase tracking-wider">
+              <Icon name="info" className="w-3.5 h-3.5" /> What it is
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4 leading-tight">
+              Route Planning That Knows Your Vehicle
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4">
+              Standard sat nav plans routes for cars. It doesn&apos;t know your van is 3.1m tall, 2.2m wide, 7.2m long, or weighs 3.5 tonnes. It sends you under bridges, down narrow lanes, and across weight-restricted roads.
+            </p>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4">
+              Big V&apos;s Best Routes™ builds the route around your vehicle — checking height clearances, weight limits, width suitability, and road type before you set off. The 4P3X Intelligent AI™ layer adds advisory compliance scoring, risk warnings, and route confidence scoring on top.
+            </p>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+              It&apos;s designed for the single user who operates more than one vehicle and needs a planning tool that reflects that reality — not a consumer app built for someone in a hatchback.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#34d399] border border-[#34d399]/30 rounded-full px-3 py-1 mb-2 uppercase tracking-wider">
+              <Icon name="check" className="w-3.5 h-3.5" /> What it checks
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                'Vehicle height vs bridge clearance',
+                'Vehicle weight vs weight restrictions',
+                'Vehicle width vs road suitability',
+                'Low bridge risk flagging',
+                'Narrow road & rural lane risk',
+                'Weak bridge avoidance',
+                'Height restriction zones',
+                'Route confidence scoring',
+                'Safety score per route',
+                'Legal suitability score',
+                'Driver pre-trip checklist',
+                'Advisory compliance panel',
+                'Hazard markers on map',
+                'Data freshness warnings',
+                'Human override preserved',
+                'Demo & live mode support',
+              ].map(f => <FeaturePill key={f} text={f} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5 — WHO IT IS FOR
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 text-xs font-bold text-[#d4a017] border border-[#d4a017]/30 rounded-full px-3 py-1 mb-4 uppercase tracking-wider">
+            <Icon name="user" className="w-3.5 h-3.5" aria-hidden="true" /> Who it&apos;s for
+          </div>
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
+            Built for Single Users with Multiple Vehicles
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+            You don&apos;t need a fleet manager. You need the right tool for the right vehicle, every trip.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { icon: 'truck',      title: 'Van Drivers',          desc: 'Local, regional and long-distance van operators who need to know their route is safe for their specific van.' },
+            { icon: 'home',       title: 'Motorhome Users',      desc: 'Motorhome and campervan owners navigating height-restricted roads, narrow lanes and rural routes.' },
+            { icon: 'route',      title: 'Trailer Operators',    desc: 'Anyone towing a trailer, horsebox, boat, or car transport rig where width and weight matter.' },
+            { icon: 'zap',        title: 'Recovery Drivers',     desc: 'Recovery and breakdown operators who need fast, safe routes for large recovery vehicles under time pressure.' },
+            { icon: 'truck',      title: 'Delivery Drivers',     desc: 'Owner-drivers and small delivery operators running fixed or variable routes with specific vehicle constraints.' },
+            { icon: 'star',       title: 'Small Operators',      desc: 'Any single user managing two or more different vehicles who needs per-vehicle route awareness, not one-size-fits-all nav.' },
+          ].map(({ icon, title, desc }) => (
+            <div key={title} className="rounded-xl border border-white/8 bg-white/3 p-5 hover:bg-white/6 transition-colors">
+              <Icon name={icon} className="w-5 h-5 text-[#d4a017] mb-3" />
+              <p className="text-white font-semibold text-sm mb-2">{title}</p>
+              <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 6 — ROUTE PLANNER DASHBOARD (feature detail)
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="grid gap-10 lg:grid-cols-2 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#d4a017] border border-[#d4a017]/30 rounded-full px-3 py-1 mb-5 uppercase tracking-wider">
+              <Icon name="layers" className="w-3.5 h-3.5" /> Route Planner Dashboard
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4 leading-tight">
+              Your Planning &amp; Control Centre
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6">
+              The Route Planner Dashboard is where you plan trips, manage your saved vehicles, run safety checks, view AI compliance scores, and prepare route sessions before sending them to the Navigation PWA.
+            </p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                'Route planning & saving',
+                'Vehicle profile management',
+                'Safety score overview',
+                'AI compliance advisory',
+                'Demo & live mode toggle',
+                'Navigation PWA pairing',
+                'Trip session management',
+                'Backend configuration',
+              ].map(f => <FeaturePill key={f} text={f} />)}
+            </div>
+            <Btn label="Open Route Planner Dashboard" icon="layers" variant="primary" onClick={() => go(ROUTES.DASHBOARD)} />
+          </div>
+
+          <div className="rounded-2xl border border-[#d4a017]/20 bg-[#d4a017]/4 p-6 sm:p-8 space-y-4">
+            <p className="text-[#d4a017] font-bold text-sm uppercase tracking-wider mb-2">Dashboard sections</p>
+            {[
+              { icon: 'truck',  title: 'My Vehicles',           desc: 'Saved vehicle profiles — height, weight, width, length, legal status.' },
+              { icon: 'route',  title: 'Route Planner',         desc: 'Plan a route with vehicle-aware filtering and save it for navigation.' },
+              { icon: 'shield', title: 'Safety & Compliance',   desc: 'AI compliance scoring, legal suitability checks, hazard review.' },
+              { icon: 'map',    title: 'Navigation PWA Setup',  desc: 'Generate pairing codes, pair the mobile PWA, sync routes to driver.' },
+              { icon: 'server', title: 'Backend & Live Mode',   desc: 'Configure Supabase/Firebase/REST, switch demo ↔ live, test connection.' },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#d4a017]/15 flex items-center justify-center shrink-0">
+                  <Icon name={icon} className="w-4 h-4 text-[#d4a017]" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-semibold">{title}</p>
+                  <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 7 — NAVIGATION PWA (feature detail)
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="grid gap-10 lg:grid-cols-2 items-center">
+
+          <div className="order-2 lg:order-1 rounded-2xl border border-[#34d399]/20 bg-[#34d399]/4 p-6 sm:p-8 space-y-4">
+            <p className="text-[#34d399] font-bold text-sm uppercase tracking-wider mb-2">PWA features</p>
+            {[
+              { icon: 'map',        title: 'Live OSM / Leaflet Map',   desc: 'Real-time map with route overlay, vehicle position, hazard markers.' },
+              { icon: 'route',      title: 'Turn-by-Turn Navigation',  desc: 'Step-by-step directions with safety warnings inline.' },
+              { icon: 'shield',     title: 'Safety Advisory Panel',    desc: 'Bridge, weight, width risk warnings shown before and during journey.' },
+              { icon: 'zap',        title: 'AI Compliance Layer',      desc: '4P3X Intelligent AI™ advisory scoring — legal suitability, route confidence, risk summary.' },
+              { icon: 'check',      title: 'Pre-Trip Checklist',       desc: 'Driver acknowledgement checklist before route is activated.' },
+              { icon: 'download',   title: 'Installable PWA',          desc: 'Install on iOS or Android home screen — no app store. Offline capable.' },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#34d399]/15 flex items-center justify-center shrink-0">
+                  <Icon name={icon} className="w-4 h-4 text-[#34d399]" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-semibold">{title}</p>
+                  <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="order-1 lg:order-2">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#34d399] border border-[#34d399]/30 rounded-full px-3 py-1 mb-5 uppercase tracking-wider">
+              <Icon name="smartphone" className="w-3.5 h-3.5" /> Navigation PWA
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4 leading-tight">
+              The Mobile Driver Experience
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4">
+              The Navigation PWA is the on-the-move experience. Install it on your phone, pair it with the dashboard, and get a clean, focused mobile navigation interface purpose-built for your vehicle.
+            </p>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6">
+              In Demo Mode, no pairing code is needed — open it directly from here and see the full Torquay → Edinburgh demo route with live map, safety warnings, AI advisory, and driver checklist.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Btn label="Navigation PWA Demo"   icon="map"        variant="green"     onClick={() => go(ROUTES.DRIVER_APP_DEMO)} />
+              <Btn label="Open Real PWA"         icon="smartphone" variant="secondary" onClick={() => go('/driver-app')} />
+            </div>
+            <div className="mt-4">
+              <PWAAccordion />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 8 — SAFETY & LEGAL ADVISORY
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 text-xs font-bold text-red-400 border border-red-400/30 rounded-full px-3 py-1 mb-4 uppercase tracking-wider">
+            <Icon name="shield" className="w-3.5 h-3.5" /> Safety &amp; legal
+          </div>
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
+            What the System Warns You About
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+            Before and during every route, the system surfaces risk factors that standard sat nav ignores.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+          {[
+            { text: 'Low bridge clearance risk',         severity: 'high' },
+            { text: 'Weak bridge weight risk',           severity: 'high' },
+            { text: 'Height restriction zones',          severity: 'high' },
+            { text: 'Weight restriction roads',          severity: 'high' },
+            { text: 'Narrow road & rural lane risk',     severity: 'medium' },
+            { text: 'Unsuitable road type for vehicle',  severity: 'medium' },
+            { text: 'Dangerous turn or junction risk',   severity: 'medium' },
+            { text: 'Width restriction areas',           severity: 'medium' },
+            { text: 'Data freshness & accuracy warnings', severity: 'medium' },
+          ].map(w => <WarnChip key={w.text} {...w} />)}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { label: 'Safety Score',        desc: 'Composite advisory score for the route based on vehicle profile and known hazard data.' },
+            { label: 'Legal Suitability',   desc: 'Advisory score indicating how well the route suits the vehicle within known legal restrictions.' },
+            { label: 'Route Confidence',    desc: 'System confidence level in the route data — lower when data is older or less verified.' },
+          ].map(({ label, desc }) => (
+            <div key={label} className="rounded-xl border border-white/8 bg-white/3 p-5 text-center">
+              <p className="text-[#d4a017] font-bold text-sm mb-2">{label}</p>
+              <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded-xl border border-amber-500/25 bg-amber-500/6 p-5">
+          <div className="flex items-start gap-3">
+            <Icon name="shield" className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-amber-400 font-semibold text-sm mb-1">Important: Advisory Only</p>
+              <p className="text-amber-300/70 text-xs leading-relaxed">
+                Big V&apos;s Best Routes™ is advisory route-planning support software. It does not guarantee legal compliance, route safety, or suitability for your specific vehicle. The driver and operator retain full responsibility for all route decisions. Always follow road signs, official restrictions, police instructions, and real-world conditions regardless of what any route planner shows.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 9 — DEMO vs LIVE MODE
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
+            Demo Mode &amp; Live Mode
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+            Demo Mode shows the product. Live Mode runs the product.
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 mb-8">
+          <div className="rounded-2xl border border-[#34d399]/20 bg-[#34d399]/4 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
+              <p className="text-[#34d399] font-bold text-sm uppercase tracking-wider">Demo Mode</p>
+            </div>
+            <ul className="space-y-2">
+              {[
+                'Uses local & demo route data — no backend required',
+                'Navigation PWA opens without a pairing code',
+                'Torquay → Edinburgh demo route preloaded',
+                'All safety & AI advisory panels functional',
+                'Safe for investor demos and presentations',
+                'No API keys or live data providers needed',
+                'Full product visible and explorable',
+              ].map(i => (
+                <li key={i} className="flex items-start gap-2 text-slate-300 text-xs leading-relaxed">
+                  <Icon name="check" className="w-3.5 h-3.5 text-[#34d399] mt-0.5 shrink-0" />{i}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-[#a78bfa]/20 bg-[#a78bfa]/4 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-2 h-2 rounded-full bg-[#a78bfa]" />
+              <p className="text-[#a78bfa] font-bold text-sm uppercase tracking-wider">Live Mode</p>
+            </div>
+            <ul className="space-y-2">
+              {[
+                'Connects to configured backend (Supabase / Firebase / AWS / REST)',
+                'Real route data from configured providers',
+                'Navigation PWA requires pairing code from dashboard',
+                'Live trip sessions and driver sync active',
+                'Row-level security (RLS) enforced on all data',
+                'Full sync: routes, jobs, telemetry, reports',
+                'Switch between demo and live at any time',
+              ].map(i => (
+                <li key={i} className="flex items-start gap-2 text-slate-300 text-xs leading-relaxed">
+                  <Icon name="check" className="w-3.5 h-3.5 text-[#a78bfa] mt-0.5 shrink-0" />{i}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <Btn label="Configure Backend & Live Mode" icon="server" variant="ghost" onClick={() => go(ROUTES.DEPLOYMENT)} />
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 10 — MODULAR ARCHITECTURE
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="grid gap-10 lg:grid-cols-2 items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#a78bfa] border border-[#a78bfa]/30 rounded-full px-3 py-1 mb-5 uppercase tracking-wider">
+              <Icon name="layers" className="w-3.5 h-3.5" /> 4P3X Verse™ Modular Architecture
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-4 leading-tight">
+              Built Once. Refactored Many Times.
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4">
+              Big V&apos;s Best Routes™ is part of the 4P3X Verse™ — a modular product architecture where one structured base can be refactored into multiple sector-ready products.
+            </p>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4">
+              The same dashboard + PWA + AI advisory + demo/live mode + backend config pattern used here can be adapted into safety inspection tools, delivery management systems, field-service apps, compliance reporting platforms, and more — without rebuilding from scratch.
+            </p>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+              Each variant inherits the core architecture and adapts only what needs to change for that sector.
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            {[
+              { icon: 'truck',      label: 'Vehicle-Aware Route Planning',    desc: 'This product — Big V\'s Best Routes™' },
+              { icon: 'shield',     label: 'Safety Inspection Platform',       desc: 'Field-based safety audit & evidence reporting' },
+              { icon: 'route',      label: 'Delivery Management System',       desc: 'Owner-driver delivery optimisation & tracking' },
+              { icon: 'zap',        label: 'AI Compliance Reporting',          desc: 'Sector compliance, documentation & advisory tools' },
+              { icon: 'brain',      label: 'Field Operations Navigator',       desc: 'Navigation + job dispatch for field-service workers' },
+            ].map(({ icon, label, desc }) => (
+              <div key={label} className="flex items-start gap-4 rounded-xl border border-white/8 bg-white/3 p-4">
+                <div className="w-8 h-8 rounded-lg bg-[#a78bfa]/15 flex items-center justify-center shrink-0">
+                  <Icon name={icon} className="w-4 h-4 text-[#a78bfa]" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-semibold">{label}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">{desc}</p>
+                </div>
+              </div>
+            ))}
+            <Btn label="Investor, Safety & Architecture Overview" icon="star" variant="ghost" onClick={() => go(ROUTES.INVESTOR_SAFETY)} />
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 11 — BOTTOM SHORTCUT LAUNCHPAD
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
+            Jump Straight In
+          </h2>
+          <p className="text-slate-400 text-sm max-w-xl mx-auto">
+            Every section of the platform is one tap away.
+          </p>
+        </div>
+
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+          {[
+            { label: 'Route Planner Dashboard', icon: 'layers',     variant: 'primary',   route: ROUTES.DASHBOARD,        desc: 'Main control centre' },
+            { label: 'Navigation PWA Demo',      icon: 'map',        variant: 'green',     route: ROUTES.DRIVER_APP_DEMO,  desc: 'Torquay → Edinburgh' },
+            { label: 'My Vehicles',              icon: 'truck',      variant: 'secondary', route: ROUTES.FLEET,            desc: 'Vehicle profiles' },
+            { label: 'Route Safety AI',          icon: 'shield',     variant: 'secondary', route: ROUTES.SAFETY,           desc: 'AI safety scoring' },
+            { label: 'Legal Awareness',          icon: 'check',      variant: 'secondary', route: ROUTES.COMPLIANCE,       desc: 'Compliance checks' },
+            { label: 'Journey Analytics',        icon: 'star',       variant: 'secondary', route: ROUTES.ANALYTICS,        desc: 'Trip reports' },
+            { label: 'Safety & Investor Page',   icon: 'star',       variant: 'ghost',     route: ROUTES.INVESTOR_SAFETY,  desc: 'Bridge strike data' },
+            { label: 'Backend & Live Mode',      icon: 'server',     variant: 'ghost',     route: ROUTES.DEPLOYMENT,       desc: 'Config & live mode' },
+          ].map(({ label, icon, variant, route, desc }) => (
+            <button key={label} onClick={() => go(route)}
+              className={`flex flex-col items-start gap-2 p-4 rounded-xl border text-left transition-all duration-150 group
+                ${variant === 'primary'
+                  ? 'border-[#d4a017]/30 bg-[#d4a017]/8 hover:bg-[#d4a017]/14'
+                  : variant === 'green'
+                  ? 'border-[#34d399]/25 bg-[#34d399]/6 hover:bg-[#34d399]/12'
+                  : variant === 'ghost'
+                  ? 'border-[#d4a017]/20 bg-transparent hover:bg-[#d4a017]/6'
+                  : 'border-white/8 bg-white/3 hover:bg-white/7'}`}>
+              <Icon name={icon}
+                className={`w-5 h-5 ${variant === 'primary' ? 'text-[#d4a017]' : variant === 'green' ? 'text-[#34d399]' : variant === 'ghost' ? 'text-[#d4a017]' : 'text-slate-400'}`} />
+              <div>
+                <p className="text-white font-semibold text-xs sm:text-sm leading-tight">{label}</p>
+                <p className="text-slate-600 text-[10px] mt-0.5">{desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          FOOTER
+      ══════════════════════════════════════════════════════════ */}
+      <footer className="border-t border-white/6 bg-black/30 py-10 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 mb-8">
+            <div>
+              <p className="font-display font-bold text-[#d4a017] text-base mb-1">Big V&apos;s Best Routes™</p>
+              <p className="text-slate-500 text-xs">Single User Multi-Vehicle Safe &amp; Legal Route Planner</p>
+              <p className="text-slate-600 text-xs mt-1">Powered by 4P3X Intelligent AI™ — Created by Kyzel Kreates™</p>
+            </div>
+            <div className="flex flex-wrap justify-center sm:justify-end gap-2">
+              <button onClick={() => go(ROUTES.DASHBOARD)}       className="text-xs text-slate-500 hover:text-[#d4a017] transition-colors px-2">Dashboard</button>
+              <button onClick={() => go(ROUTES.DRIVER_APP_DEMO)} className="text-xs text-slate-500 hover:text-[#34d399] transition-colors px-2">Navigation Demo</button>
+              <button onClick={() => go(ROUTES.INVESTOR_SAFETY)} className="text-xs text-slate-500 hover:text-[#d4a017] transition-colors px-2">Investor Page</button>
+              <button onClick={() => go(ROUTES.DEPLOYMENT)}      className="text-xs text-slate-500 hover:text-white   transition-colors px-2">Live Mode</button>
+              <button onClick={() => go('/driver-app')}          className="text-xs text-slate-500 hover:text-[#34d399] transition-colors px-2">Navigation PWA</button>
+            </div>
+          </div>
+
+          <div className="border-t border-white/6 pt-6">
+            <p className="text-slate-700 text-[10px] leading-relaxed text-center max-w-3xl mx-auto">
+              Advisory software only. Big V&apos;s Best Routes™ does not guarantee legal compliance, route safety, or vehicle suitability. The driver and operator retain full responsibility for all route decisions. Always follow road signs, official restrictions, and real-world conditions. Network Rail bridge strike data referenced for informational purposes. Demo data is not live routing data.
+            </p>
+            <p className="text-slate-800 text-[10px] text-center mt-3">
+              © 2026 Kyzel Kreates™ · Big V&apos;s Best Routes™ · 4P3X Verse™ · 4P3X Intelligent AI™
+            </p>
+          </div>
+        </div>
+      </footer>
+
     </div>
   )
 }
