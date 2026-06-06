@@ -11,6 +11,7 @@
  * ============================================================
  */
 
+import { getSupabaseClient } from './services_supabase_supabaseClient'
 import { vehicleTable, subscribe, DB_KEYS } from './services_local_localDB'
 import { useFleetStore } from './core_storage'
 import {

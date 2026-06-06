@@ -10,6 +10,7 @@
  * ============================================================
  */
 
+import { getSupabaseClient } from './services_supabase_supabaseClient'
 import { driverTable, subscribe, DB_KEYS } from './services_local_localDB'
 import { useDriverStore } from './core_storage'
 import {
