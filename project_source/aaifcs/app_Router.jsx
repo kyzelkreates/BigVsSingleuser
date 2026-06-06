@@ -1,7 +1,8 @@
 /**
  * ============================================================
  * Big V's Best Routes™ — Application Router
- * First-run redirects to /auth/setup to create accounts.
+ * Run 13 — Landing page added at root ('/landing')
+ * Root '/' still redirects to dashboard for direct URL access.
  * ============================================================
  */
 
@@ -16,8 +17,11 @@ import DriverLogin   from './pages_auth_DriverLogin'
 import ResetConfirm  from './pages_auth_ResetConfirm'
 import Setup         from './pages_auth_Setup'
 import DriverImport  from './pages_DriverImport'
-import DriverSetup  from './pages_DriverSetup'
-import DriverApp    from './pages_DriverApp'
+import DriverSetup   from './pages_DriverSetup'
+import DriverApp     from './pages_DriverApp'
+
+// Landing Page (Run 13)
+import Landing       from './pages_Landing'
 
 // App Pages
 import Dashboard   from './pages_Dashboard'
@@ -47,6 +51,10 @@ const RootRedirect = () => <Navigate to="/dashboard" replace />
 const LoginOrSetup = ({ element }) => element
 
 export const router = createHashRouter([
+
+  // ── Landing Page — public, no shell ───────────────────────
+  // Route: /#/landing — premium homepage / project explainer
+  { path: '/landing', element: <Landing /> },
 
   // ── First-run Setup (public, before any account exists) ───
   { path: '/auth/setup',         element: <Setup /> },

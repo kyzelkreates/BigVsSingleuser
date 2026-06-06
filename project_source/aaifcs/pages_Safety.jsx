@@ -227,7 +227,7 @@ export default function Safety() {
     const sub = safetyService.subscribeToAlerts(newAlert => {
       setAlerts(prev => [newAlert, ...prev].slice(0, 100))
     })
-    return () => sub.unsubscribe()
+    return () => typeof sub === 'function' ? sub() : sub?.unsubscribe?.()
   }, [])
 
   const handleResolve = async (id) => {

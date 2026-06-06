@@ -12,6 +12,7 @@
 export const ROUTES = {
   // ── Core ──────────────────────────────────────────────────
   ROOT:       '/',
+  LANDING:    '/landing',   // Run 13 — Project explainer homepage
   DASHBOARD:  '/dashboard',
 
   // ── Vehicles (was Fleet) — internal path kept ─────────────
@@ -71,6 +72,13 @@ export const ROUTES = {
 
 // ─── Nav structure for sidebar ────────────────────────────────
 export const NAV_ITEMS = [
+  {
+    id:    'landing',
+    label: 'Project Home',
+    route: '/landing',
+    icon:  'Home',
+    group: 'meta',
+  },
   {
     id:    'dashboard',
     label: 'Dashboard',
@@ -175,6 +183,7 @@ export const NAV_ITEMS = [
 ]
 
 export const NAV_GROUPS = {
+  meta:         { label: null,                    order: -1 },
   core:         { label: null,                    order: 0 },
   vehicles:     { label: 'Vehicles',              order: 1 },
   planning:     { label: 'Route Planning',        order: 2 },
