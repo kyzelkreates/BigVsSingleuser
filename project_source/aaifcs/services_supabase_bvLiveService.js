@@ -17,10 +17,14 @@
  *   webhook secrets · admin tokens
  * Uses only: Supabase URL + anon key + SDK-managed session tokens
  *
- * ── Advisory ──────────────────────────────────────────────────
+ * ── Advisory (mandatory — do not weaken) ────────────────────────
  * Live sync does NOT guarantee route safety, legal compliance,
  * road restriction accuracy, or live road conditions.
- * Drivers must follow road signs and professional judgement.
+ * Drivers must follow road signs, legal obligations, and
+ * professional judgement. Data freshness can affect route and
+ * legal suitability. Human override is always required.
+ * The platform operator remains responsible for final route
+ * decisions. This service provides advisory support only.
  *
  * ── Demo Mode Rule ────────────────────────────────────────────
  * This file is ONLY active when Demo Mode is OFF.

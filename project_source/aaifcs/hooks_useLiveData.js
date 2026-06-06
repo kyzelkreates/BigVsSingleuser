@@ -95,7 +95,7 @@ export function useLiveSession() {
       if (event === 'SIGNED_IN' && sbSession) {
         setSession({ session: sbSession, user: sbSession.user, userId: sbSession.user?.id || null })
         setError(null)
-      } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !sbSession) {
+      } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !sbSession)) {
         setSession(null)
         // Unsubscribe realtime on sign out
         unsubscribeLiveChannels()
@@ -104,6 +104,9 @@ export function useLiveSession() {
     return unsub
   }, [isDemoMode, isLiveSyncOn])
 
+  // Live Mode is active only when all three are true.
+  // isLive === false does not indicate an error — it may mean Demo Mode is on
+  // or backend is not yet configured. All advisory rules still apply regardless.
   const isLive = !isDemoMode && isLiveSyncOn && !!session
 
   return {

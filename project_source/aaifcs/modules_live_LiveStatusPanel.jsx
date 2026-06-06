@@ -188,6 +188,9 @@ function LiveStatusPanel({ variant = 'dashboard', className = '' }) {
     setSignOutLoading(true)
     try {
       await signOutLive()
+      // Unsubscribe realtime channels immediately on sign out
+      const { unsubscribeLiveChannels } = await import('./services_supabase_bvRealtimeService')
+      unsubscribeLiveChannels()
       setSignedOut()
       setShowSignIn(false)
     } catch (e) {
@@ -269,7 +272,14 @@ function LiveStatusPanel({ variant = 'dashboard', className = '' }) {
           <div className="flex-1 min-w-0">
             <div className="text-xs font-bold text-cyan-300">Live Mode Active</div>
             <div className="text-2xs text-slate-500 truncate">
-              {sbConfig.url ? sbConfig.url.replace('https://', '').substring(0, 35) + '…' : 'Supabase connected'}
+              {sbConfig.url
+                ? sbConfig.url.replace('https://', '').split('.')[0].substring(0, 20) + '…supabase.co'
+                : 'Supabase connected'}
+              {sbConfig.anonKey && (
+                <span className="ml-1 text-slate-700 font-mono text-2xs">
+                  · key {sbConfig.anonKey.substring(0, 8)}••••
+                </span>
+              )}
             </div>
           </div>
           <div className="flex-shrink-0">

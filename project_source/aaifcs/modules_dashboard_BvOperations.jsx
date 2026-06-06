@@ -27,6 +27,10 @@ import {
   createAssignment, reviewReport, runSyncNow,
   recordAuditEvent,
 } from './services_sync_bvSyncService'
+import {
+  useLiveAssignments, useLiveTripSessions, useLiveDriverReports,
+} from './hooks_useLiveData'
+import { REALTIME_STATUS } from './services_supabase_bvRealtimeService'
 
 // ─── Shared helpers ───────────────────────────────────────────
 const fmtTime = (iso) => {
@@ -368,10 +372,14 @@ function AssignmentCard({ asgn, vehicles, routePlans, onCancel, onDelete }) {
 
 function AssignmentsPanel({ vehicles, routePlans }) {
   const [showForm,   setShowForm]   = useState(false)
-  const { assignments, cancelAssignment, deleteAssignment } = useAssignmentStore()
+  const { assignments: localAssignments, cancelAssignment, deleteAssignment } = useAssignmentStore()
+  const { isLive, assignments: liveAssignments, isLoading: liveLoading, error: liveError, realtimeStatus } = useLiveAssignments()
 
-  const sorted = [...assignments].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
-  const pendingCount = assignments.filter(a => a.syncStatus === 'pending').length
+  // Live Mode: use Supabase records. Demo Mode: use local SSOT only.
+  // Demo records are never shown in Live Mode.
+  const assignments = isLive ? liveAssignments : localAssignments
+  const sorted = [...assignments].sort((a,b) => new Date(b.createdAt||b.created_at||0) - new Date(a.createdAt||a.created_at||0))
+  const pendingCount = localAssignments.filter(a => a.syncStatus === 'pending').length
 
   return (
     <div className="bg-[#07080d] border border-[#b8860b]/20 rounded-xl overflow-hidden">
@@ -393,12 +401,49 @@ function AssignmentsPanel({ vehicles, routePlans }) {
         {showForm && (
           <AssignmentForm vehicles={vehicles} routePlans={routePlans} onCreated={() => setShowForm(false)} />
         )}
-        {sorted.length === 0 && !showForm ? (
-          <EmptyState
-            icon="ClipboardList"
-            text="No route assignments yet."
-            subtext="Create an assignment to send a route to the Driver PWA."
-          />
+        {/* ── Live loading state ── */}
+        {isLive && liveLoading && (
+          <div className="flex items-center gap-2 py-6 justify-center text-2xs text-cyan-400">
+            <span className="w-3.5 h-3.5 border border-t-cyan-400 border-slate-700 rounded-full animate-spin" />
+            Loading live assignments…
+          </div>
+        )}
+
+        {/* ── Live error state ── */}
+        {isLive && !liveLoading && liveError && (
+          <div className="flex items-start gap-2 p-3 bg-red-950/25 border border-red-700/25 rounded-lg text-2xs text-red-400">
+            <Icon name="AlertTriangle" size={12} className="flex-shrink-0 mt-0.5" />
+            <span className="break-words">{liveError}</span>
+          </div>
+        )}
+
+        {/* ── Live realtime pill ── */}
+        {isLive && !liveLoading && (
+          <div className={`flex items-center gap-1.5 text-2xs px-2 py-1 rounded-full w-fit ${
+            realtimeStatus === REALTIME_STATUS.ACTIVE
+              ? 'bg-violet-500/8 border border-violet-500/20 text-violet-300'
+              : 'bg-slate-900/40 border border-slate-800/40 text-slate-600'
+          }`}>
+            <Icon name={realtimeStatus === REALTIME_STATUS.ACTIVE ? 'Radio' : 'RadioTower'} size={9}
+              className={realtimeStatus === REALTIME_STATUS.ACTIVE ? 'animate-pulse' : ''} />
+            {realtimeStatus === REALTIME_STATUS.ACTIVE ? 'Live realtime active' : 'Live schema ready, realtime not active'}
+          </div>
+        )}
+
+        {sorted.length === 0 && !showForm && !liveLoading ? (
+          isLive ? (
+            <EmptyState
+              icon="ClipboardList"
+              text="Live Mode is active. No live records found yet."
+              subtext="Demo records are hidden in Live Mode. Create or sync live assignments to begin."
+            />
+          ) : (
+            <EmptyState
+              icon="ClipboardList"
+              text="No route assignments yet."
+              subtext="Create an assignment to send a route to the Driver PWA."
+            />
+          )
         ) : (
           sorted.map(a => (
             <AssignmentCard
@@ -540,8 +585,26 @@ function TripSessionsPanel({ vehicles, routePlans }) {
         <TripSessionDetail session={detail} vehicles={vehicles} routePlans={routePlans} onClose={() => setDetail(null)} />
       )}
       <div className="p-4 space-y-2">
-        {sorted.length === 0 ? (
-          <EmptyState icon="Route" text="No trip sessions yet." subtext="Trip sessions are recorded when the driver starts navigation on an assigned route." />
+        {isLive && liveTripLoading && (
+          <div className="flex items-center gap-2 py-6 justify-center text-2xs text-cyan-400">
+            <span className="w-3.5 h-3.5 border border-t-cyan-400 border-slate-700 rounded-full animate-spin" />
+            Loading live trip sessions…
+          </div>
+        )}
+        {isLive && !liveTripLoading && liveTripError && (
+          <div className="flex items-start gap-2 p-3 bg-red-950/25 border border-red-700/25 rounded-lg text-2xs text-red-400">
+            <Icon name="AlertTriangle" size={12} className="flex-shrink-0 mt-0.5" />
+            <span className="break-words">{liveTripError}</span>
+          </div>
+        )}
+        {!liveTripLoading && sorted.length === 0 ? (
+          isLive
+            ? <EmptyState icon="Route"
+                text="Live Mode is active. No live trip sessions found yet."
+                subtext="Demo records are hidden in Live Mode. Sessions appear here when a driver starts navigation in Live Mode." />
+            : <EmptyState icon="Route"
+                text="No trip sessions yet."
+                subtext="Trip sessions are recorded when the driver starts navigation on an assigned route." />
         ) : sorted.map(s => {
           const st = TRIP_STATUS_STYLE[s.status] || TRIP_STATUS_STYLE.notStarted
           const { assignments } = useAssignmentStore.getState()
@@ -626,9 +689,12 @@ function ReportDetail({ report, vehicles, routePlans, onClose }) {
 }
 
 function DriverReportsPanel({ vehicles, routePlans }) {
-  const { reports }   = useDriverReportStore()
+  const { reports: localReports }   = useDriverReportStore()
+  const { isLive, reports: liveReports, isLoading: liveRptLoading, error: liveRptError } = useLiveDriverReports()
+  // Live Mode: show Supabase records only. Demo Mode: show local SSOT.
+  const reports = isLive ? liveReports : localReports
   const [detail, setDetail] = useState(null)
-  const sorted = [...reports].sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+  const sorted = [...reports].sort((a,b) => new Date(b.submittedAt||b.submitted_at||b.createdAt||0) - new Date(a.submittedAt||a.submitted_at||a.createdAt||0))
   const newCount = reports.filter(r => r.status === 'new').length
 
   return (
@@ -638,8 +704,26 @@ function DriverReportsPanel({ vehicles, routePlans }) {
         <ReportDetail report={detail} vehicles={vehicles} routePlans={routePlans} onClose={() => setDetail(null)} />
       )}
       <div className="p-4 space-y-2">
-        {sorted.length === 0 ? (
-          <EmptyState icon="FileText" text="No driver reports yet." subtext="Driver reports are submitted from the Driver PWA during or after navigation." />
+        {isLive && liveRptLoading && (
+          <div className="flex items-center gap-2 py-6 justify-center text-2xs text-cyan-400">
+            <span className="w-3.5 h-3.5 border border-t-cyan-400 border-slate-700 rounded-full animate-spin" />
+            Loading live driver reports…
+          </div>
+        )}
+        {isLive && !liveRptLoading && liveRptError && (
+          <div className="flex items-start gap-2 p-3 bg-red-950/25 border border-red-700/25 rounded-lg text-2xs text-red-400">
+            <Icon name="AlertTriangle" size={12} className="flex-shrink-0 mt-0.5" />
+            <span className="break-words">{liveRptError}</span>
+          </div>
+        )}
+        {!liveRptLoading && sorted.length === 0 ? (
+          isLive
+            ? <EmptyState icon="FileText"
+                text="Live Mode is active. No live driver reports found yet."
+                subtext="Demo records are hidden in Live Mode. Reports appear here when submitted from the Driver PWA in Live Mode." />
+            : <EmptyState icon="FileText"
+                text="No driver reports yet."
+                subtext="Driver reports are submitted from the Driver PWA during or after navigation." />
         ) : sorted.map(r => {
           const sv = SEVERITY_STYLE[r.severity] || SEVERITY_STYLE.info
           const st = RPT_STATUS_STYLE[r.status] || RPT_STATUS_STYLE.new

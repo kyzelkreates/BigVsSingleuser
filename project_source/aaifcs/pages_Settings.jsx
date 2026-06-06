@@ -1812,16 +1812,54 @@ function BackendPanel() {
         )}
       </div>
 
+      {/* ── Test result (honest only) ── */}
+      {!testing && connStatus === 'connected' && (
+        <div className="flex items-center gap-2 p-2.5 bg-emerald-500/8 border border-emerald-500/20 rounded-lg text-2xs text-emerald-300 mt-2">
+          <Icon name="CheckCircle2" size={12} />
+          Connection test passed — Supabase is reachable with this URL and anon key.
+          Live Mode can be activated.
+        </div>
+      )}
+      {!testing && connStatus === 'failed' && (
+        <div className="flex items-start gap-2 p-2.5 bg-red-950/30 border border-red-700/30 rounded-lg text-2xs text-red-400 mt-2">
+          <Icon name="XCircle" size={12} className="flex-shrink-0 mt-0.5" />
+          <span className="break-words">
+            Connection test failed. Check the Supabase URL and anon key.
+            Confirm the project is active and RLS is configured.
+          </span>
+        </div>
+      )}
+      {!testing && connStatus === 'invalid_config' && (
+        <div className="flex items-center gap-2 p-2.5 bg-amber-950/20 border border-amber-700/20 rounded-lg text-2xs text-amber-400 mt-2">
+          <Icon name="AlertTriangle" size={12} />
+          URL and anon key are required before testing.
+        </div>
+      )}
+
       <SectionHead label="Database Schema" />
       <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800/60 text-xs text-slate-500 font-mono space-y-1">
         <div className="text-slate-400 font-semibold mb-1.5">Required tables:</div>
-        {['drivers', 'tasks', 'fleet_nodes', 'dashboard_events', 'settings'].map(t => (
-          <div key={t} className="flex items-center gap-2">
-            <Icon name="Table2" size={10} className="text-slate-600" />
-            <span>{t}</span>
+        {[
+          { t: 'bv_vehicles',           note: 'RLS ✓' },
+          { t: 'bv_routes',             note: 'RLS ✓' },
+          { t: 'bv_route_assignments',  note: 'RLS ✓ · Realtime ✓' },
+          { t: 'bv_trip_sessions',      note: 'RLS ✓ · Realtime ✓' },
+          { t: 'bv_driver_reports',     note: 'RLS ✓ · Realtime ✓' },
+          { t: 'bv_compliance_checks',  note: 'RLS ✓ · Realtime ✓' },
+          { t: 'bv_sync_logs',          note: 'RLS ✓' },
+        ].map(({ t, note }) => (
+          <div key={t} className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Icon name="Table2" size={10} className="text-slate-600" />
+              <span className="font-mono">{t}</span>
+            </div>
+            <span className="text-slate-700 text-2xs">{note}</span>
           </div>
         ))}
-        <div className="text-slate-600 mt-2 font-sans">See supabase_schema.sql for full schema</div>
+        <div className="text-slate-600 mt-2 font-sans">Run SQL: supabase/big-vs-best-routes-run11-live-mode.sql</div>
+        <div className="text-slate-700 mt-1 font-sans leading-relaxed">
+          All tables: RLS ENABLED · source_mode = &apos;live&apos; · auth.uid() = user_id scope
+        </div>
       </div>
     </div>
   )
