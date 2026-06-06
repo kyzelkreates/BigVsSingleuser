@@ -38,6 +38,22 @@ const isDemoMode = () => {
   } catch { return true }
 }
 
+
+// ─── Run 11: Live Mode bridge ──────────────────────────────────
+// Fires-and-forgets Supabase writes when live mode is active.
+// Non-fatal — local SSOT always wins. Live sync is additional.
+function _fireLiveWrite(fn, ...args) {
+  try {
+    const bcStore = useBackendConfigStore.getState()
+    if (bcStore.isDemoMode() || !bcStore.isLiveSyncActive()) return
+    import('./services_supabase_bvLiveService').then(svc => {
+      fn(svc, ...args)
+    }).catch(e => {
+      console.debug('[BvSync] Live write import failed (non-fatal):', e.message)
+    })
+  } catch {}
+}
+
 // ─── Enqueue helper ───────────────────────────────────────────
 export function enqueueSync(entityType, entityId, action, payload = {}) {
   const demo = isDemoMode()
@@ -71,6 +87,12 @@ export function updateAssignmentStatus(assignmentId, status, source = 'driverPwa
     cancelled: 'Assignment cancelled',
   }
   recordAuditEvent(`assignment_${status}`, labels[status] || `Status: ${status}`, 'routeAssignment', assignmentId, { status }, source)
+  // Live Mode bridge — also update in Supabase if active
+  _fireLiveWrite((svc) => {
+    svc.updateLiveAssignmentStatus(assignmentId, status)
+      .then(r => { if (!r.success) console.debug('[BvSync] Live assignment update:', r.error?.message) })
+      .catch(() => {})
+  })
 }
 
 // ─── Trip session operations ──────────────────────────────────
@@ -81,6 +103,12 @@ export function startTripSession(assignment, navSession = {}) {
   recordAuditEvent('navigation_started', 'Navigation started', 'tripSession', trip.id, { assignmentId: assignment?.id }, 'driverPwa')
   // Also update assignment status
   if (assignment?.id) updateAssignmentStatus(assignment.id, 'inProgress', 'driverPwa')
+  // Live Mode bridge
+  _fireLiveWrite((svc) => {
+    svc.startLiveTripSession(trip)
+      .then(r => { if (!r.success) console.debug('[BvSync] Live trip start:', r.error?.message) })
+      .catch(() => {})
+  })
   return trip
 }
 
@@ -110,6 +138,12 @@ export function submitDriverReport(data) {
   if (data.assignmentId && (data.severity === 'critical' || data.severity === 'high')) {
     updateAssignmentStatus(data.assignmentId, 'needsReview', 'driverPwa')
   }
+  // Live Mode bridge — also submit to Supabase if active
+  _fireLiveWrite((svc) => {
+    svc.submitLiveDriverReport(rpt)
+      .then(r => { if (!r.success) console.debug('[BvSync] Live report submit:', r.error?.message) })
+      .catch(() => {})
+  })
   return rpt
 }
 

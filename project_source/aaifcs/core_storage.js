@@ -72,6 +72,7 @@ export const STORAGE_KEYS = {
   BV_PROVIDER_HEALTH:     'bigv:providerHealth',     // last health check per provider
 
   // AI
+  BV_LIVE_SESSION:    'bigv:liveSession',    // Live Mode auth session status (non-secret — uid/email only)
   AI_PROVIDER:        'apex:ai:provider',
   AI_MODEL:           'apex:ai:model',
   AI_CONFIG:          'apex:ai:config',
@@ -1219,6 +1220,58 @@ export const selectors = {
   }
 }
 
+
+// ─── Big V Run 11 SSOT — Live Session Store ──────────────────
+// Persists a minimal, non-secret representation of the current
+// Supabase Auth session state for UI display.
+// NEVER stores auth tokens, passwords, or secret keys.
+// Tokens are managed by the Supabase SDK only.
+export const useLiveSessionStore = create((set, get) => ({
+  liveSession: persist.get(STORAGE_KEYS.BV_LIVE_SESSION, {
+    userId:             null,
+    email:              null,
+    isSignedIn:         false,
+    signedInAt:         null,
+    lastSeenAt:         null,
+    realtimeChannels:   {},
+    activeChannelCount: 0,
+  }),
+
+  setSignedIn: (userId, email) => {
+    const s = {
+      userId, email, isSignedIn: true,
+      signedInAt:  new Date().toISOString(),
+      lastSeenAt:  new Date().toISOString(),
+      realtimeChannels:   {},
+      activeChannelCount: 0,
+    }
+    persist.set(STORAGE_KEYS.BV_LIVE_SESSION, s)
+    set({ liveSession: s })
+  },
+
+  setSignedOut: () => {
+    const s = {
+      userId: null, email: null, isSignedIn: false,
+      signedInAt: null, lastSeenAt: null,
+      realtimeChannels: {}, activeChannelCount: 0,
+    }
+    persist.set(STORAGE_KEYS.BV_LIVE_SESSION, s)
+    set({ liveSession: s })
+  },
+
+  updateLastSeen: () => {
+    const updated = { ...get().liveSession, lastSeenAt: new Date().toISOString() }
+    persist.set(STORAGE_KEYS.BV_LIVE_SESSION, updated)
+    set({ liveSession: updated })
+  },
+
+  setRealtimeChannels: (channels, activeCount) => {
+    const updated = { ...get().liveSession, realtimeChannels: channels, activeChannelCount: activeCount }
+    persist.set(STORAGE_KEYS.BV_LIVE_SESSION, updated)
+    set({ liveSession: updated })
+  },
+}))
+
 export default {
   STORAGE_KEYS,
   Storage,
@@ -1238,6 +1291,7 @@ export default {
   useBackendConfigStore,
   useDeploymentChecklistStore,
   useAIStore,
+  useLiveSessionStore,
   useDriverStore,
   useNavStore,
   useRealtimeStore,

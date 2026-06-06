@@ -19,7 +19,8 @@
  */
 
 import { useState, useEffect, memo } from 'react'
-import { useBackendConfigStore, useSyncQueueStore } from './core_storage'
+import { useBackendConfigStore, useSyncQueueStore, useLiveSessionStore } from './core_storage'
+import { REALTIME_STATUS, REALTIME_STATUS_LABELS } from './services_supabase_bvRealtimeService'
 import Icon from './components_ui_Icon'
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -138,6 +139,11 @@ export const BvModeBar = memo(function BvModeBar({ variant = 'dashboard', onOpen
             </span>
           )}
         </div>
+
+        {/* ── Auth + Realtime status pills (live mode only) ─── */}
+        {liveSyncOn && (
+          <LiveAuthRealtimePills />
+        )}
 
         {/* Demo warning */}
         {demo && (
@@ -312,5 +318,41 @@ export const BvModeBar = memo(function BvModeBar({ variant = 'dashboard', onOpen
     </div>
   )
 })
+
+// ─── Auth + Realtime Pills ───────────────────────────────────
+function LiveAuthRealtimePills() {
+  const liveSession   = useLiveSessionStore(s => s.liveSession)
+  const isSignedIn    = liveSession?.isSignedIn || false
+  const email         = liveSession?.email || null
+  const activeChannels = liveSession?.activeChannelCount || 0
+  const rtLabel       = activeChannels > 0
+    ? 'Live realtime active'
+    : REALTIME_STATUS_LABELS[REALTIME_STATUS.INACTIVE]
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {/* Auth status */}
+      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-2xs font-medium ${
+        isSignedIn
+          ? 'bg-emerald-500/8 border-emerald-500/20 text-emerald-300'
+          : 'bg-amber-500/8 border-amber-500/20 text-amber-400'
+      }`}>
+        <Icon name={isSignedIn ? 'UserCheck' : 'UserX'} size={9} />
+        <span>{isSignedIn ? (email ? email.split('@')[0] : 'Signed in') : 'Not signed in'}</span>
+      </div>
+
+      {/* Realtime status */}
+      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-2xs font-medium ${
+        activeChannels > 0
+          ? 'bg-violet-500/8 border-violet-500/20 text-violet-300'
+          : 'bg-slate-900/60 border-slate-800/40 text-slate-600'
+      }`}>
+        <Icon name={activeChannels > 0 ? 'Radio' : 'RadioTower'} size={9}
+          className={activeChannels > 0 ? 'text-violet-400 animate-pulse' : ''} />
+        <span>{rtLabel}</span>
+      </div>
+    </div>
+  )
+}
 
 export default BvModeBar

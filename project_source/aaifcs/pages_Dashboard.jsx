@@ -18,7 +18,8 @@ import { getRouteReadinessLabel, getRiskLevelStyle, RISK_LEVELS } from './servic
 const RouteMapPreview = lazy(() => import('./modules_navigation_RouteMap'))
 import BvOperations from './modules_dashboard_BvOperations'
 import BvAiOverview from './modules_dashboard_BvAiOverview'
-import BvAboutPanel from './modules_dashboard_BvAboutPanel'
+import BvAboutPanel      from './modules_dashboard_BvAboutPanel'
+import LiveStatusPanel   from './modules_live_LiveStatusPanel'
 import BvModeBar   from './modules_status_BvModeBar'
 import { fleetService, VEHICLE_STATUS } from './services_fleet_fleetService'
 import { driverService, DRIVER_STATUS } from './services_drivers_driverService'
@@ -1918,6 +1919,14 @@ export default function Dashboard() {
             4P3X Intelligent AI™ Safety &amp; Legal Advisory Layer
           </div>
           <BvAiOverview />
+        </div>
+
+        {/* ── Run 11: Live Mode Status Panel ──────────────────────────── */}
+        <div>
+          <div className="text-2xs text-slate-600 tracking-widest uppercase font-semibold mb-3">
+            Live Mode · Backend Auth · Realtime Status
+          </div>
+          <LiveStatusPanel variant="dashboard" />
         </div>
 
         {/* ── Run 9: About / Demo Guide Panel ────────────────────────── */}

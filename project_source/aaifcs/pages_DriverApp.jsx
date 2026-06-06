@@ -80,7 +80,8 @@ import ExportCenter      from './modules_safety_ui_ExportCenter'
 import { startSafetySync, stopSafetySync } from './services_safety_syncService'
 
 // ── Run 5: BV Safe Navigation Module ─────────────────────────
-import BvRouteNav  from './modules_driver_BvRouteNav'
+import BvRouteNav      from './modules_driver_BvRouteNav'
+import LiveStatusPanel from './modules_live_LiveStatusPanel'
 import BvModeBar   from './modules_status_BvModeBar'
 
 // ── Fix default Leaflet marker icons ─────────────────────────
@@ -2443,6 +2444,9 @@ function DriverAppMain({ profile, onLogout }) {
       {/* ══════════ JOBS TAB ══════════ */}
       {tab === 'jobs' && (
         <div className="flex-1 overflow-y-auto scrollbar-none p-4 space-y-3">
+
+          {/* ── Run 11: Live Mode Status (compact driver variant) ── */}
+          <LiveStatusPanel variant="driver" />
 
           {/* Fleet sync status banner */}
           {(() => {

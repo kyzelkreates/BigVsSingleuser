@@ -25,6 +25,7 @@ import {
   submitDriverReport,
   runSyncNow,
 } from './services_sync_bvSyncService'
+import { useLiveAssignmentActions, useLiveAssignments, useLiveDriverReports } from './hooks_useLiveData'
 
 // ─── Helpers ─────────────────────────────────────────────────
 const fmtTime = (iso) => {
@@ -82,10 +83,13 @@ function ReportForm({ assignment, tripSessionId, gpsPosition, vehicles, routePla
   const [submitting, setSubmitting] = useState(false)
   const [submitted,  setSubmitted]  = useState(false)
 
-  const handleSubmit = useCallback(() => {
+  const { submitReport: submitLiveReport, isLive } = useLiveAssignmentActions()
+
+  const handleSubmit = useCallback(async () => {
     if (!notes.trim()) return
     setSubmitting(true)
-    submitDriverReport({
+    // Always save locally via SSOT first
+    const localReport = submitDriverReport({
       reportType:      type,
       severity,
       notes:           notes.trim(),
@@ -96,8 +100,18 @@ function ReportForm({ assignment, tripSessionId, gpsPosition, vehicles, routePla
       gpsPosition,
       manualLocation:  location.trim(),
     })
-    setTimeout(() => { setSubmitting(false); setSubmitted(true) }, 400)
-  }, [type, severity, notes, location, assignment, tripSessionId, gpsPosition])
+    // If Live Mode is active, also write to Supabase
+    if (isLive && localReport?.id) {
+      try {
+        await submitLiveReport(localReport)
+      } catch (e) {
+        // Non-fatal — local record is already saved
+        console.warn('[BvInbox] Live report sync failed (non-fatal):', e.message)
+      }
+    }
+    setSubmitting(false)
+    setSubmitted(true)
+  }, [type, severity, notes, location, assignment, tripSessionId, gpsPosition, isLive, submitLiveReport])
 
   if (submitted) return (
     <div className="flex flex-col items-center gap-3 py-8">
