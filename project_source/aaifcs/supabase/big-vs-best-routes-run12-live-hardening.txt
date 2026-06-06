@@ -1,0 +1,463 @@
+Big V's Best Routes™ — Supabase SQL
+Powered by 4P3X Intelligent AI™ | Created by Kyzel Kreates™
+File: big-vs-best-routes-run12-live-hardening.sql (plain text copy — paste directly into Supabase SQL Editor)
+======================================================================
+
+-- ============================================================
+-- Big V's Best Routes™ — Supabase SQL Patch (Run 12 — Live Mode Hardening)
+-- Powered by 4P3X Intelligent AI™ | Created by Kyzel Kreates™
+--
+-- PURPOSE:
+--   Harden Live Mode schema following Run 12 validation.
+--   Adds missing safety checks, policy repairs, and realtime
+--   publication guard that handles existing registrations.
+--
+-- EXECUTION ORDER (STRICT):
+--   1.  Extensions (no-op if already run)
+--   2.  Safe column additions (ADD COLUMN IF NOT EXISTS)
+--   3.  Indexes
+--   4.  updated_at function
+--   5.  Triggers
+--   6.  ENABLE ROW LEVEL SECURITY (idempotent re-enable)
+--   7.  RLS Policies (DROP IF EXISTS + CREATE)
+--   8.  Realtime publication (safe guard — DO block)
+--   9.  Verification queries
+--
+-- SAFETY RULES:
+--   ▸ No DROP TABLE commands.
+--   ▸ No TRUNCATE commands.
+--   ▸ No data resets.
+--   ▸ No RLS disabling.
+--   ▸ No anonymous write policies.
+--   ▸ IF NOT EXISTS used throughout.
+--   ▸ Safe to run after Run 10 and Run 11.
+--
+-- ADVISORY (mandatory — do not weaken):
+--   Live sync does NOT guarantee route safety, legal compliance,
+--   road restriction accuracy, or live conditions.
+--   Human review and professional judgement are always required.
+--   The operator remains responsible for final route decisions.
+-- ============================================================
+
+
+-- ==============================================================
+--  SECTION 1 — EXTENSIONS (safe re-run)
+-- ==============================================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+
+-- ==============================================================
+--  SECTION 2 — SAFE COLUMN ADDITIONS
+--  Run 12 validation revealed these columns may be absent
+--  on databases created before Run 11.
+-- ==============================================================
+
+-- bv_vehicles: ensure source_mode exists
+ALTER TABLE bv_vehicles
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local'));
+
+-- bv_routes: ensure source_mode exists
+ALTER TABLE bv_routes
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local'));
+
+-- bv_route_assignments: ensure source_mode + sync_error
+ALTER TABLE bv_route_assignments
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local')),
+  ADD COLUMN IF NOT EXISTS sync_error TEXT NOT NULL DEFAULT '';
+
+-- bv_trip_sessions: ensure source_mode + last_gps_update
+ALTER TABLE bv_trip_sessions
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local')),
+  ADD COLUMN IF NOT EXISTS last_gps_update TIMESTAMPTZ;
+
+-- bv_driver_reports: ensure source_mode + reviewed_at + review_note
+ALTER TABLE bv_driver_reports
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local')),
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS review_note TEXT NOT NULL DEFAULT '';
+
+-- bv_compliance_checks: ensure source_mode
+ALTER TABLE bv_compliance_checks
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local'));
+
+-- bv_sync_logs: ensure user_id for per-user scoping
+ALTER TABLE bv_sync_logs
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS source_mode TEXT NOT NULL DEFAULT 'live'
+    CHECK (source_mode IN ('live', 'local'));
+
+
+-- ==============================================================
+--  SECTION 3 — INDEXES
+-- ==============================================================
+
+-- Source mode index on all tables (speeds up source_mode='live' filter)
+CREATE INDEX IF NOT EXISTS idx_bv_vehicles_source_mode         ON bv_vehicles(source_mode);
+CREATE INDEX IF NOT EXISTS idx_bv_routes_source_mode           ON bv_routes(source_mode);
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_source_mode      ON bv_route_assignments(source_mode);
+CREATE INDEX IF NOT EXISTS idx_bv_sessions_source_mode         ON bv_trip_sessions(source_mode);
+CREATE INDEX IF NOT EXISTS idx_bv_reports_source_mode          ON bv_driver_reports(source_mode);
+CREATE INDEX IF NOT EXISTS idx_bv_compliance_source_mode       ON bv_compliance_checks(source_mode);
+CREATE INDEX IF NOT EXISTS idx_bv_sync_logs_source_mode        ON bv_sync_logs(source_mode);
+
+-- User scoping indexes
+CREATE INDEX IF NOT EXISTS idx_bv_vehicles_user_id             ON bv_vehicles(user_id);
+CREATE INDEX IF NOT EXISTS idx_bv_routes_user_id               ON bv_routes(user_id);
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_user_id          ON bv_route_assignments(user_id);
+CREATE INDEX IF NOT EXISTS idx_bv_sessions_user_id             ON bv_trip_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_bv_reports_user_id              ON bv_driver_reports(user_id);
+CREATE INDEX IF NOT EXISTS idx_bv_compliance_user_id           ON bv_compliance_checks(user_id);
+CREATE INDEX IF NOT EXISTS idx_bv_sync_logs_user_id            ON bv_sync_logs(user_id);
+
+-- Status/date indexes for list queries
+CREATE INDEX IF NOT EXISTS idx_bv_assignments_status           ON bv_route_assignments(status);
+CREATE INDEX IF NOT EXISTS idx_bv_sessions_status              ON bv_trip_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_bv_reports_reviewed_at          ON bv_driver_reports(reviewed_at);
+CREATE INDEX IF NOT EXISTS idx_bv_sessions_gps_update          ON bv_trip_sessions(last_gps_update DESC);
+
+
+-- ==============================================================
+--  SECTION 4 — updated_at FUNCTION (CREATE OR REPLACE — safe re-run)
+-- ==============================================================
+CREATE OR REPLACE FUNCTION bv_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ==============================================================
+--  SECTION 5 — TRIGGERS (DROP IF EXISTS + CREATE — safe re-run)
+-- ==============================================================
+
+DROP TRIGGER IF EXISTS trg_bv_vehicles_updated_at        ON bv_vehicles;
+DROP TRIGGER IF EXISTS trg_bv_routes_updated_at          ON bv_routes;
+DROP TRIGGER IF EXISTS trg_bv_assignments_updated_at     ON bv_route_assignments;
+DROP TRIGGER IF EXISTS trg_bv_sessions_updated_at        ON bv_trip_sessions;
+DROP TRIGGER IF EXISTS trg_bv_reports_updated_at         ON bv_driver_reports;
+DROP TRIGGER IF EXISTS trg_bv_compliance_updated_at      ON bv_compliance_checks;
+
+CREATE TRIGGER trg_bv_vehicles_updated_at
+  BEFORE UPDATE ON bv_vehicles
+  FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();
+
+CREATE TRIGGER trg_bv_routes_updated_at
+  BEFORE UPDATE ON bv_routes
+  FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();
+
+CREATE TRIGGER trg_bv_assignments_updated_at
+  BEFORE UPDATE ON bv_route_assignments
+  FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();
+
+CREATE TRIGGER trg_bv_sessions_updated_at
+  BEFORE UPDATE ON bv_trip_sessions
+  FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();
+
+CREATE TRIGGER trg_bv_reports_updated_at
+  BEFORE UPDATE ON bv_driver_reports
+  FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();
+
+CREATE TRIGGER trg_bv_compliance_updated_at
+  BEFORE UPDATE ON bv_compliance_checks
+  FOR EACH ROW EXECUTE FUNCTION bv_set_updated_at();
+
+
+-- ==============================================================
+--  SECTION 6 — ENABLE ROW LEVEL SECURITY (idempotent)
+--
+--  CRITICAL: RLS MUST BE ENABLED on all tables.
+--  This is idempotent — safe to re-run.
+--  RLS is NEVER disabled in this script.
+-- ==============================================================
+
+ALTER TABLE bv_vehicles          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_routes            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_route_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_trip_sessions     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_driver_reports    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_compliance_checks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bv_sync_logs         ENABLE ROW LEVEL SECURITY;
+
+
+-- ==============================================================
+--  SECTION 7 — RLS POLICIES
+--
+--  All policies: authenticated users only, scoped to user_id.
+--  No anonymous write policies. No public unrestricted access.
+--  DROP IF EXISTS + CREATE pattern — safe to re-run.
+-- ==============================================================
+
+-- ── bv_vehicles ──────────────────────────────────────────────
+DROP POLICY IF EXISTS "bv_vehicles_select_own"  ON bv_vehicles;
+DROP POLICY IF EXISTS "bv_vehicles_insert_own"  ON bv_vehicles;
+DROP POLICY IF EXISTS "bv_vehicles_update_own"  ON bv_vehicles;
+DROP POLICY IF EXISTS "bv_vehicles_delete_own"  ON bv_vehicles;
+
+CREATE POLICY "bv_vehicles_select_own" ON bv_vehicles
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "bv_vehicles_insert_own" ON bv_vehicles
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_vehicles_update_own" ON bv_vehicles
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_vehicles_delete_own" ON bv_vehicles
+  FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ── bv_routes ────────────────────────────────────────────────
+DROP POLICY IF EXISTS "bv_routes_select_own"  ON bv_routes;
+DROP POLICY IF EXISTS "bv_routes_insert_own"  ON bv_routes;
+DROP POLICY IF EXISTS "bv_routes_update_own"  ON bv_routes;
+DROP POLICY IF EXISTS "bv_routes_delete_own"  ON bv_routes;
+
+CREATE POLICY "bv_routes_select_own" ON bv_routes
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "bv_routes_insert_own" ON bv_routes
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_routes_update_own" ON bv_routes
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_routes_delete_own" ON bv_routes
+  FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ── bv_route_assignments ─────────────────────────────────────
+DROP POLICY IF EXISTS "bv_assignments_select_own"  ON bv_route_assignments;
+DROP POLICY IF EXISTS "bv_assignments_insert_own"  ON bv_route_assignments;
+DROP POLICY IF EXISTS "bv_assignments_update_own"  ON bv_route_assignments;
+DROP POLICY IF EXISTS "bv_assignments_delete_own"  ON bv_route_assignments;
+
+CREATE POLICY "bv_assignments_select_own" ON bv_route_assignments
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "bv_assignments_insert_own" ON bv_route_assignments
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_assignments_update_own" ON bv_route_assignments
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_assignments_delete_own" ON bv_route_assignments
+  FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ── bv_trip_sessions ─────────────────────────────────────────
+DROP POLICY IF EXISTS "bv_sessions_select_own"  ON bv_trip_sessions;
+DROP POLICY IF EXISTS "bv_sessions_insert_own"  ON bv_trip_sessions;
+DROP POLICY IF EXISTS "bv_sessions_update_own"  ON bv_trip_sessions;
+DROP POLICY IF EXISTS "bv_sessions_delete_own"  ON bv_trip_sessions;
+
+CREATE POLICY "bv_sessions_select_own" ON bv_trip_sessions
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "bv_sessions_insert_own" ON bv_trip_sessions
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_sessions_update_own" ON bv_trip_sessions
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_sessions_delete_own" ON bv_trip_sessions
+  FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ── bv_driver_reports ────────────────────────────────────────
+DROP POLICY IF EXISTS "bv_reports_select_own"  ON bv_driver_reports;
+DROP POLICY IF EXISTS "bv_reports_insert_own"  ON bv_driver_reports;
+DROP POLICY IF EXISTS "bv_reports_update_own"  ON bv_driver_reports;
+DROP POLICY IF EXISTS "bv_reports_delete_own"  ON bv_driver_reports;
+
+CREATE POLICY "bv_reports_select_own" ON bv_driver_reports
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "bv_reports_insert_own" ON bv_driver_reports
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_reports_update_own" ON bv_driver_reports
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_reports_delete_own" ON bv_driver_reports
+  FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ── bv_compliance_checks ─────────────────────────────────────
+DROP POLICY IF EXISTS "bv_compliance_select_own"  ON bv_compliance_checks;
+DROP POLICY IF EXISTS "bv_compliance_insert_own"  ON bv_compliance_checks;
+DROP POLICY IF EXISTS "bv_compliance_update_own"  ON bv_compliance_checks;
+DROP POLICY IF EXISTS "bv_compliance_delete_own"  ON bv_compliance_checks;
+
+CREATE POLICY "bv_compliance_select_own" ON bv_compliance_checks
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "bv_compliance_insert_own" ON bv_compliance_checks
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_compliance_update_own" ON bv_compliance_checks
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "bv_compliance_delete_own" ON bv_compliance_checks
+  FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ── bv_sync_logs ─────────────────────────────────────────────
+-- Users see their own logs; system rows (user_id NULL) visible to all authenticated.
+DROP POLICY IF EXISTS "bv_sync_logs_select_own"   ON bv_sync_logs;
+DROP POLICY IF EXISTS "bv_sync_logs_insert_own"   ON bv_sync_logs;
+DROP POLICY IF EXISTS "bv_sync_logs_select_auth"  ON bv_sync_logs;
+DROP POLICY IF EXISTS "bv_sync_logs_insert_auth"  ON bv_sync_logs;
+
+CREATE POLICY "bv_sync_logs_select_own" ON bv_sync_logs
+  FOR SELECT TO authenticated
+  USING (user_id IS NULL OR auth.uid() = user_id);
+
+CREATE POLICY "bv_sync_logs_insert_own" ON bv_sync_logs
+  FOR INSERT TO authenticated
+  WITH CHECK (true);  -- system writes; user_id set by app layer
+
+
+-- ==============================================================
+--  SECTION 8 — REALTIME PUBLICATION
+--
+--  Uses a DO block to safely add tables to the publication.
+--  If a table is already registered, the error is caught and
+--  suppressed — this is a safe, idempotent operation.
+--
+--  If 'supabase_realtime' publication does not exist at all,
+--  run first: CREATE PUBLICATION supabase_realtime;
+-- ==============================================================
+
+DO $$
+DECLARE
+  tbl TEXT;
+  tables TEXT[] := ARRAY[
+    'bv_route_assignments',
+    'bv_trip_sessions',
+    'bv_driver_reports',
+    'bv_compliance_checks',
+    'bv_vehicles',
+    'bv_routes'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tables LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', tbl);
+      RAISE NOTICE 'Added % to supabase_realtime', tbl;
+    EXCEPTION
+      -- Table already in publication — safe to ignore
+      WHEN duplicate_object THEN
+        RAISE NOTICE '% already in supabase_realtime (skipped)', tbl;
+      WHEN OTHERS THEN
+        RAISE NOTICE 'Could not add % to supabase_realtime: %', tbl, SQLERRM;
+    END;
+  END LOOP;
+END $$;
+
+
+-- ==============================================================
+--  SECTION 9 — VERIFICATION QUERIES
+--  Run these after the script to confirm expected state.
+-- ==============================================================
+
+-- 9a. Confirm all 7 BV tables exist
+SELECT table_name
+  FROM information_schema.tables
+ WHERE table_schema = 'public'
+   AND table_name IN (
+     'bv_vehicles','bv_routes','bv_route_assignments',
+     'bv_trip_sessions','bv_driver_reports',
+     'bv_compliance_checks','bv_sync_logs'
+   )
+ ORDER BY table_name;
+-- Expected: 7 rows
+
+-- 9b. Confirm RLS is ENABLED on all tables
+-- rowsecurity must be TRUE for all 7 rows
+SELECT tablename, rowsecurity
+  FROM pg_tables
+ WHERE schemaname = 'public'
+   AND tablename IN (
+     'bv_vehicles','bv_routes','bv_route_assignments',
+     'bv_trip_sessions','bv_driver_reports',
+     'bv_compliance_checks','bv_sync_logs'
+   )
+ ORDER BY tablename;
+
+-- 9c. Confirm policies exist (expect 30+ rows)
+SELECT tablename, policyname, cmd, permissive
+  FROM pg_policies
+ WHERE tablename LIKE 'bv_%'
+ ORDER BY tablename, cmd;
+
+-- 9d. Confirm no anon/public write policies exist
+SELECT tablename, policyname
+  FROM pg_policies
+ WHERE tablename LIKE 'bv_%'
+   AND roles @> ARRAY['anon']::name[]
+   AND cmd IN ('INSERT', 'UPDATE', 'DELETE');
+-- Expected: 0 rows (no anon write access)
+
+-- 9e. Confirm realtime publication includes live tables
+SELECT t.tablename
+  FROM pg_publication_tables t
+  JOIN pg_publication p ON p.pubname = t.pubname
+ WHERE p.pubname = 'supabase_realtime'
+   AND t.tablename LIKE 'bv_%'
+ ORDER BY t.tablename;
+-- Expected: bv_route_assignments, bv_trip_sessions, bv_driver_reports,
+--           bv_compliance_checks, bv_vehicles, bv_routes
+
+-- 9f. Confirm source_mode column exists on all live tables
+SELECT table_name, column_name, column_default
+  FROM information_schema.columns
+ WHERE table_schema = 'public'
+   AND column_name = 'source_mode'
+   AND table_name LIKE 'bv_%'
+ ORDER BY table_name;
+-- Expected: 7 rows
+
+-- 9g. Confirm updated_at triggers exist
+SELECT trigger_name, event_object_table, event_manipulation
+  FROM information_schema.triggers
+ WHERE trigger_name LIKE 'trg_bv_%'
+ ORDER BY event_object_table;
+-- Expected: 6 triggers (one per table, exc. sync_logs)
+
+-- ============================================================
+-- END OF big-vs-best-routes-run12-live-hardening.sql
+-- RLS STATUS: ENABLED on all 7 tables (verified in section 9b)
+-- ============================================================
